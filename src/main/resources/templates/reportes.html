@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reportes</title>
+  <link rel="stylesheet" href="/modern-styles.css">
+  <link rel="stylesheet" href="/unified-styles.css">
+  <link rel="stylesheet" href="">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.css">
+</head>
+<body class="page-reportes">
+<div id="navbar"></div>
+<div id="sidebar"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.js"></script>
+
+<div class="content" id="app">
+  <div class="table-container">
+    <h1>Reportes y Estadísticas</h1>
+    <div class="stats-container">
+      <div class="stat-card hover-lift" onclick="window.location.href='/web/ventas'">
+        <i class="fas fa-chart-line" style="font-size: 3rem; color: var(--primary-color); margin-bottom: var(--spacing-md);"></i>
+        <h3 style="font-size: 1.25rem; margin-bottom: var(--spacing-xs);">Reporte de Ventas</h3>
+        <p>Análisis de ventas y facturación</p>
+      </div>
+      <div class="stat-card hover-lift" onclick="window.location.href='/web/gastos'">
+        <i class="fas fa-chart-pie" style="font-size: 3rem; color: var(--primary-color); margin-bottom: var(--spacing-md);"></i>
+        <h3 style="font-size: 1.25rem; margin-bottom: var(--spacing-xs);">Reporte de Gastos</h3>
+        <p>Control y análisis de gastos</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/script.js"></script>
+
+</body>
+</html>

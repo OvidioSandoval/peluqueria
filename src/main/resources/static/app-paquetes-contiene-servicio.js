@@ -1,0 +1,298 @@
+import config from './config.js';
+import NotificationSystem from './notification-system.js';
+
+new Vue({
+    vuetify: new Vuetify({
+        locale: {
+            current: 'es',
+        },
+    }),
+    el: '#app',
+    data() {
+        return {
+            relaciones: [],
+            relacionesFiltradas: [],
+            paquetes: [],
+            servicios: [],
+            filtroBusqueda: '',
+            paginaActual: 1,
+            itemsPorPagina: 10,
+            formularioVisible: false,
+            nuevaRelacion: { 
+                id: null, 
+                paqueteId: null,
+                servicioId: null,
+                cantidad: 1
+            },
+            relacionSeleccionada: '',
+            intervalId: null,
+            mostrarSalir: false,
+        };
+    },
+    mounted() {
+        this.fetchRelaciones();
+        this.fetchPaquetes();
+        this.fetchServicios();
+        this.startAutoRefresh();
+    },
+    computed: {
+        totalPaginas() {
+            return Math.ceil(this.relacionesFiltradas.length / this.itemsPorPagina);
+        },
+        relacionesPaginadas() {
+            const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
+            return this.relacionesFiltradas.slice(inicio, inicio + this.itemsPorPagina);
+        }
+    },
+    methods: {
+        async checkAuthAndRedirect() {
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/usuarios/usuario-sesion`);
+                if (!response.ok) {
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                console.error('Error verificando sesión:', error);
+                window.location.href = '/web/paquetes-contiene-servicio';
+            }
+        },
+        async fetchRelaciones() {
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/paquetes-servicios`);
+                if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+                this.relaciones = await response.json();
+                this.filtrarRelaciones();
+            } catch (error) {
+                console.error('Error al cargar relaciones:', error);
+                NotificationSystem.error(`Error al cargar las relaciones: ${error.message}`);
+            }
+        },
+        async fetchPaquetes() {
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/paquetes`);
+                this.paquetes = await response.json();
+            } catch (error) {
+                console.error('Error al cargar paquetes:', error);
+            }
+        },
+        async fetchServicios() {
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/servicios`);
+                this.servicios = await response.json();
+            } catch (error) {
+                console.error('Error al cargar servicios:', error);
+            }
+        },
+        filtrarRelaciones() {
+            if (this.filtroBusqueda.trim() === '') {
+                this.relacionesFiltradas = this.relaciones;
+            } else {
+                const busqueda = this.filtroBusqueda.toLowerCase();
+                this.relacionesFiltradas = this.relaciones.filter(relacion =>
+                    relacion.paqueteDescripcion?.toLowerCase().includes(busqueda) ||
+                    relacion.servicioNombre?.toLowerCase().includes(busqueda)
+                );
+            }
+        },
+        async agregarRelacion() {
+            if (!this.nuevaRelacion.paqueteId || !this.nuevaRelacion.servicioId) {
+                NotificationSystem.error('Debe seleccionar paquete y servicio');
+                return;
+            }
+            try {
+                const relacionData = {
+                    paquete: { id: this.nuevaRelacion.paqueteId },
+                    servicio: { id: this.nuevaRelacion.servicioId },
+                    cantidad: parseInt(this.nuevaRelacion.cantidad)
+                };
+                const response = await fetch(`${config.apiBaseUrl}/paquetes-servicios/agregar_paquete_servicio`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(relacionData)
+                });
+                if (response.ok) {
+                    const relacion = await response.json();
+                    this.relaciones.push(relacion);
+                    this.filtrarRelaciones();
+                    this.toggleFormulario();
+                    NotificationSystem.success('Relación agregada exitosamente');
+                } else {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error al agregar relación:', error);
+                NotificationSystem.error(`Error al agregar relación: ${error.message}`);
+            }
+        },
+        async modificarRelacion() {
+            if (!this.nuevaRelacion.paqueteId || !this.nuevaRelacion.servicioId) {
+                NotificationSystem.error('Debe seleccionar paquete y servicio');
+                return;
+            }
+            try {
+                const relacionData = {
+                    paquete: { id: this.nuevaRelacion.paqueteId },
+                    servicio: { id: this.nuevaRelacion.servicioId },
+                    cantidad: parseInt(this.nuevaRelacion.cantidad)
+                };
+                const response = await fetch(`${config.apiBaseUrl}/paquetes-servicios/actualizar_paquete_servicio/${this.nuevaRelacion.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(relacionData)
+                });
+                if (response.ok) {
+                    const relacion = await response.json();
+                    const index = this.relaciones.findIndex(r => r.id === relacion.id);
+                    if (index !== -1) this.relaciones[index] = relacion;
+                    this.filtrarRelaciones();
+                    this.toggleFormulario();
+                    NotificationSystem.success('Relación actualizada exitosamente');
+                } else {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error al modificar relación:', error);
+                NotificationSystem.error(`Error al modificar relación: ${error.message}`);
+            }
+        },
+        async eliminarRelacion(relacion) {
+            NotificationSystem.confirm('¿Eliminar esta relación?', async () => {
+                try {
+                    await fetch(`${config.apiBaseUrl}/paquetes-servicios/eliminar_paquete/${relacion.id}`, {
+                        method: 'DELETE'
+                    });
+                    this.relaciones = this.relaciones.filter(r => r.id !== relacion.id);
+                    this.filtrarRelaciones();
+                    NotificationSystem.success('Relación eliminada exitosamente');
+                } catch (error) {
+                    console.error('Error al eliminar relación:', error);
+                    NotificationSystem.error('Error al eliminar relación');
+                }
+            });
+        },
+        toggleFormulario() {
+            this.formularioVisible = !this.formularioVisible;
+            this.nuevaRelacion = { 
+                id: null, 
+                paqueteId: null,
+                servicioId: null,
+                cantidad: 1
+            };
+            this.relacionSeleccionada = '';
+        },
+        cargarRelacion(relacion) {
+            this.nuevaRelacion = { 
+                id: relacion.id,
+                paqueteId: relacion.paqueteId,
+                servicioId: relacion.servicioId,
+                cantidad: relacion.cantidad
+            };
+            this.formularioVisible = true;
+            this.relacionSeleccionada = `${relacion.paqueteDescripcion} - ${relacion.servicioNombre}`;
+        },
+        cambiarPagina(pagina) {
+            if (pagina >= 1 && pagina <= this.totalPaginas) {
+                this.paginaActual = pagina;
+            }
+        },
+        getPaqueteDescripcion(relacion) {
+            return relacion.paqueteDescripcion || 'Paquete no encontrado';
+        },
+        getServicioName(relacion) {
+            return relacion.servicioNombre || 'Servicio no encontrado';
+        },
+        startAutoRefresh() {
+            this.intervalId = setInterval(() => {
+                this.fetchRelaciones();
+            }, 300000);
+        },
+        stopAutoRefresh() {
+            if (this.intervalId) {
+                clearInterval(this.intervalId);
+            }
+        },
+        formatearNumero(numero) {
+            return Number(numero).toLocaleString('es-ES');
+        },
+        redirigirPaquetesContieneServicio() {
+            window.location.href = '/web/paquetes-contiene-servicio';
+        },
+        cerrarSesion() {
+            this.mostrarSalir = true;
+        },
+        cerrarSesionConfirmado() {
+            this.mostrarSalir = false;
+            window.location.href = '/home';
+        },
+    },
+    template: `
+        <div class="glass-container">
+            <div id="app">
+                <h1 style="text-align: center; margin-top: 60px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Paquetes - Servicios</h1>
+                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i></button>
+                <main style="padding: 20px;">
+                    <label>Buscar Relación:</label>
+                    <input type="text" v-model="filtroBusqueda" @input="filtrarRelaciones" placeholder="Buscar por paquete o servicio..." class="search-bar"/>
+                    <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Paquete</button>
+                    
+                    <div v-if="formularioVisible" class="form-container">
+                        <h3>{{ nuevaRelacion.id ? 'Modificar Relación - ' + relacionSeleccionada : 'Agregar Relación' }}</h3>
+                        <label>Paquete:</label>
+                        <select v-model="nuevaRelacion.paqueteId" required>
+                            <option value="" disabled>Seleccionar Paquete</option>
+                            <option v-for="paquete in paquetes" :key="paquete.id" :value="paquete.id">
+                                {{ paquete.descripcion }}
+                            </option>
+                        </select>
+                        <label>Servicio:</label>
+                        <select v-model="nuevaRelacion.servicioId" required>
+                            <option value="" disabled>Seleccionar Servicio</option>
+                            <option v-for="servicio in servicios" :key="servicio.id" :value="servicio.id">
+                                {{ servicio.nombre }}
+                            </option>
+                        </select>
+                        <br>
+                        <label>Cantidad:</label>
+                        <input type="number" v-model="nuevaRelacion.cantidad" placeholder="Cantidad" min="1" required/>
+                        <div style="display: flex; gap: 10px;">
+                            <button @click="nuevaRelacion.id ? modificarRelacion() : agregarRelacion()" class="btn">
+                                {{ nuevaRelacion.id ? 'Modificar' : 'Agregar' }}
+                            </button>
+                            <button @click="toggleFormulario()" class="btn" style="background: #6c757d !important;">Cancelar</button>
+                        </div>
+                    </div>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Paquete</th>
+                                <th>Servicio</th>
+                                <th>Cantidad</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="relacion in relacionesPaginadas" :key="relacion.id">
+                                <td>{{ relacion.id }}</td>
+                                <td>{{ getPaqueteDescripcion(relacion) }}</td>
+                                <td>{{ getServicioName(relacion) }}</td>
+                                <td>{{ formatearNumero(relacion.cantidad) }}</td>
+                                <td>
+                                    <button @click="cargarRelacion(relacion)" class="btn-small">Editar</button>
+                                    <button @click="eliminarRelacion(relacion)" class="btn-small btn-danger">Eliminar</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="pagination">
+                        <button @click="cambiarPagina(paginaActual - 1)" :disabled="paginaActual === 1">Anterior</button>
+                        <span>Página {{ paginaActual }} de {{ totalPaginas }}</span>
+                        <button @click="cambiarPagina(paginaActual + 1)" :disabled="paginaActual === totalPaginas">Siguiente</button>
+                    </div>
+                </main>
+            </div>
+        </div>
+    `
+});

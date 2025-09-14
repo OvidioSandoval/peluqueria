@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Fecha</title>
+</head>
+<body>
+    <h1>Debug Información Stock</h1>
+    <div id="result"></div>
+    
+    <script>
+        fetch('http://localhost:8080/api/informacion-stock')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Datos recibidos:', data);
+                document.getElementById('result').innerHTML = 
+                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = 'Error: ' + error;
+            });
+    </script>
+</body>
+</html>

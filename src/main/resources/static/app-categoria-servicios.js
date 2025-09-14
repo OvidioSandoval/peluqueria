@@ -1,0 +1,242 @@
+import config from './config.js';
+import NotificationSystem from './notification-system.js';
+
+new Vue({
+    vuetify: new Vuetify({
+        locale: {
+            current: 'es',
+        },
+    }),
+    el: '#app',
+    data() {
+        return {
+            categorias: [],
+            categoriasFiltradas: [],
+            filtroBusqueda: '',
+            paginaActual: 1,
+            itemsPorPagina: 10,
+            formularioVisible: false,
+            nuevaCategoria: { 
+                id: null, 
+                descripcion: ''
+            },
+            categoriaSeleccionada: '',
+            intervalId: null,
+            mostrarSalir: false,
+        };
+    },
+    mounted() {
+        this.fetchCategorias();
+        this.startAutoRefresh();
+    },
+    beforeDestroy() {
+        this.stopAutoRefresh();
+    },
+    computed: {
+        totalPaginas() {
+            return Math.ceil(this.categoriasFiltradas.length / this.itemsPorPagina);
+        },
+        categoriasPaginadas() {
+            const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
+            return this.categoriasFiltradas.slice(inicio, inicio + this.itemsPorPagina);
+        }
+    },
+    methods: {
+        async checkAuthAndRedirect() {
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/usuarios/usuario-sesion`);
+                if (!response.ok) {
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                console.error('Error verificando sesión:', error);
+                window.location.href = '/web/categoria-servicios';
+            }
+        },
+        async fetchCategorias() {
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/categoria-servicios`);
+                if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+                this.categorias = await response.json();
+                this.filtrarCategorias();
+            } catch (error) {
+                console.error('Error al cargar categorías:', error);
+                alert(`Error al cargar las categorías: ${error.message}`);
+            }
+        },
+        filtrarCategorias() {
+            if (this.filtroBusqueda) {
+                this.categoriasFiltradas = this.categorias.filter(categoria =>
+                    categoria.descripcion.toLowerCase().includes(this.filtroBusqueda.toLowerCase())
+                );
+            } else {
+                this.categoriasFiltradas = this.categorias;
+            }
+        },
+        async agregarCategoria() {
+            try {
+                const categoriaData = {
+                    ...this.nuevaCategoria,
+                    descripcion: this.capitalizarTexto(this.nuevaCategoria.descripcion)
+                };
+                const response = await fetch(`${config.apiBaseUrl}/categoria-servicios/agregar_categoria`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(categoriaData)
+                });
+                if (response.ok) {
+                    this.toggleFormulario();
+                    await this.fetchCategorias();
+                    NotificationSystem.success('Categoría agregada exitosamente');
+                } else {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error al agregar categoría:', error);
+                NotificationSystem.error(`Error al agregar categoría: ${error.message}`);
+            }
+        },
+        async modificarCategoria() {
+            try {
+                const categoriaData = {
+                    ...this.nuevaCategoria,
+                    descripcion: this.capitalizarTexto(this.nuevaCategoria.descripcion)
+                };
+                const response = await fetch(`${config.apiBaseUrl}/categoria-servicios/actualizar_categoria/${this.nuevaCategoria.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(categoriaData)
+                });
+                if (response.ok) {
+                    this.toggleFormulario();
+                    await this.fetchCategorias();
+                    NotificationSystem.success('Categoría actualizada exitosamente');
+                } else {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error al modificar categoría:', error);
+                NotificationSystem.error(`Error al modificar categoría: ${error.message}`);
+            }
+        },
+        async eliminarCategoria(categoria) {
+            NotificationSystem.confirm(`¿Eliminar categoría "${categoria.descripcion}"?`, async () => {
+                try {
+                    const response = await fetch(`${config.apiBaseUrl}/categoria-servicios/eliminar_categoria/${categoria.id}`, {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        await this.fetchCategorias();
+                        NotificationSystem.success('Categoría eliminada exitosamente');
+                    } else if (response.status === 404) {
+                        NotificationSystem.error('La categoría no existe o ya fue eliminada');
+                        await this.fetchCategorias();
+                    } else {
+                        NotificationSystem.error('No se puede eliminar la categoría porque tiene servicios asociados');
+                    }
+                } catch (error) {
+                    console.error('Error al eliminar categoría:', error);
+                    NotificationSystem.error('Error al eliminar categoría');
+                }
+            });
+        },
+        async toggleFormulario() {
+            this.formularioVisible = !this.formularioVisible;
+            this.nuevaCategoria = { 
+                id: null, 
+                descripcion: ''
+            };
+            this.categoriaSeleccionada = '';
+            if (!this.formularioVisible) {
+                await this.fetchCategorias();
+            }
+        },
+        cargarCategoria(categoria) {
+            this.nuevaCategoria = { ...categoria };
+            this.formularioVisible = true;
+            this.categoriaSeleccionada = categoria.descripcion;
+        },
+        cambiarPagina(pagina) {
+            if (pagina >= 1 && pagina <= this.totalPaginas) {
+                this.paginaActual = pagina;
+            }
+        },
+        startAutoRefresh() {
+            this.intervalId = setInterval(() => {
+                this.fetchCategorias();
+            }, 300000);
+        },
+        stopAutoRefresh() {
+            if (this.intervalId) {
+                clearInterval(this.intervalId);
+            }
+        },
+        redirigirCategoriaServicios() {
+            window.location.href = '/web/categoria-servicios';
+        },
+        cerrarSesion() {
+            this.mostrarSalir = true;
+        },
+        cerrarSesionConfirmado() {
+            this.mostrarSalir = false;
+            window.location.href = '/home';
+        },
+        capitalizarTexto(texto) {
+            if (!texto) return '';
+            return texto.split(' ').map(palabra => 
+                palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase()
+            ).join(' ');
+        },
+    },
+    template: `
+        <div class="glass-container">
+            <div id="app">
+                <h1 style="text-align: center; margin-top: 60px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Categorías</h1>
+                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i></button>
+                <main style="padding: 20px;">
+                    <label>Buscar Categoría:</label>
+                    <input type="text" v-model="filtroBusqueda" @input="filtrarCategorias" placeholder="Buscar categoría..." class="search-bar"/>
+                    <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nueva Categoría</button>
+                    
+                    <div v-if="formularioVisible" class="form-container">
+                        <h3>{{ nuevaCategoria.id ? 'Modificar Categoría: ' + categoriaSeleccionada : 'Agregar Categoría' }}</h3>
+                        <label>Descripción:</label>
+                        <textarea v-model="nuevaCategoria.descripcion" placeholder="Descripción" required></textarea>
+                        <div class="form-buttons">
+                            <button @click="nuevaCategoria.id ? modificarCategoria() : agregarCategoria()" class="btn">
+                                {{ nuevaCategoria.id ? 'Modificar' : 'Agregar' }}
+                            </button>
+                            <button @click="toggleFormulario()" class="btn" style="background: #6c757d !important;">Cancelar</button>
+                        </div>
+                    </div>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Descripción</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="categoria in categoriasPaginadas" :key="categoria.id">
+                                <td>{{ categoria.id }}</td>
+                                <td>{{ categoria.descripcion }}</td>
+                                <td>
+                                    <button @click="cargarCategoria(categoria)" class="btn-small">Editar</button>
+                                    <button @click="eliminarCategoria(categoria)" class="btn-small btn-danger">Eliminar</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="pagination">
+                        <button @click="cambiarPagina(paginaActual - 1)" :disabled="paginaActual === 1">Anterior</button>
+                        <span>Página {{ paginaActual }} de {{ totalPaginas }}</span>
+                        <button @click="cambiarPagina(paginaActual + 1)" :disabled="paginaActual === totalPaginas">Siguiente</button>
+                    </div>
+                </main>
+            </div>
+        </div>
+    `
+});
