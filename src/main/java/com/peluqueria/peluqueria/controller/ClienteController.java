@@ -74,9 +74,21 @@ public class ClienteController {
         return clienteService.buscarPorTelefono(telefono);
     }
 
+    @GetMapping("/buscar/ruc")
+    public List<Cliente> buscarPorRuc(@RequestParam String ruc) {
+        LOGGER.info("IN: Buscando clientes por RUC [{}]", ruc);
+        return clienteService.buscarPorRuc(ruc);
+    }
+
     @GetMapping("/buscar")
     public List<Cliente> buscarPorNombreOTelefono(@RequestParam String criterio) {
         LOGGER.info("IN: Buscando clientes por criterio [{}]", criterio);
         return clienteService.buscarPorNombreOTelefono(criterio);
+    }
+
+    @GetMapping("/buscar/completo")
+    public List<Cliente> buscarPorNombreTelefonoORuc(@RequestParam String criterio) {
+        LOGGER.info("IN: Buscando clientes por criterio completo [{}]", criterio);
+        return clienteService.buscarPorNombreTelefonoORuc(criterio);
     }
 }

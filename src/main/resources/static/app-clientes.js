@@ -20,10 +20,14 @@ new Vue({
                 id: null,
                 nombreCompleto: '',
                 telefono: '',
+                ruc: '',
                 correo: '',
                 redesSociales: '',
                 fechaNacimiento: null
             },
+            filtroNombre: '',
+            filtroTelefono: '',
+            filtroRuc: '',
             clienteSeleccionado: '',
 
             mostrarSalir: false,
@@ -56,19 +60,46 @@ new Vue({
             }
         },
         filtrarClientes() {
-            if (this.filtroBusqueda.trim() === '') {
-                this.clientesFiltrados = this.clientes;
-            } else {
+            let clientesFiltrados = this.clientes;
+            
+            if (this.filtroNombre.trim() !== '') {
+                const nombre = this.filtroNombre.toLowerCase();
+                clientesFiltrados = clientesFiltrados.filter(cliente =>
+                    cliente.nombreCompleto && cliente.nombreCompleto.toLowerCase().includes(nombre)
+                );
+            }
+            
+            if (this.filtroTelefono.trim() !== '') {
+                const telefono = this.filtroTelefono.toLowerCase();
+                clientesFiltrados = clientesFiltrados.filter(cliente =>
+                    cliente.telefono && cliente.telefono.toLowerCase().includes(telefono)
+                );
+            }
+            
+            if (this.filtroRuc.trim() !== '') {
+                const ruc = this.filtroRuc.toLowerCase();
+                clientesFiltrados = clientesFiltrados.filter(cliente =>
+                    cliente.ruc && cliente.ruc.toLowerCase().includes(ruc)
+                );
+            }
+            
+            if (this.filtroBusqueda.trim() !== '') {
                 const busqueda = this.filtroBusqueda.toLowerCase();
-                this.clientesFiltrados = this.clientes.filter(cliente =>
+                clientesFiltrados = clientesFiltrados.filter(cliente =>
                     (cliente.nombreCompleto && cliente.nombreCompleto.toLowerCase().includes(busqueda)) ||
                     (cliente.telefono && cliente.telefono.toLowerCase().includes(busqueda)) ||
+                    (cliente.ruc && cliente.ruc.toLowerCase().includes(busqueda)) ||
                     (cliente.correo && cliente.correo.toLowerCase().includes(busqueda))
                 );
             }
+            
+            this.clientesFiltrados = clientesFiltrados;
         },
         limpiarFiltros() {
             this.filtroBusqueda = '';
+            this.filtroNombre = '';
+            this.filtroTelefono = '';
+            this.filtroRuc = '';
             this.filtrarClientes();
         },
         async agregarCliente() {
@@ -149,6 +180,7 @@ new Vue({
                 id: null,
                 nombreCompleto: '',
                 telefono: '',
+                ruc: '',
                 correo: '',
                 redesSociales: '',
                 fechaNacimiento: null
@@ -160,6 +192,7 @@ new Vue({
                 id: cliente.id,
                 nombreCompleto: this.capitalizarTexto(cliente.nombreCompleto || ''),
                 telefono: cliente.telefono || '',
+                ruc: cliente.ruc || '',
                 correo: cliente.correo || '',
                 redesSociales: cliente.redesSociales || '',
                 fechaNacimiento: cliente.fechaNacimiento || null
@@ -219,10 +252,22 @@ new Vue({
                 <main style="padding: 20px;">
                     <div class="filters-container">
                         <div class="filter-group">
-                            <label>Buscar Cliente:</label>
-                            <input type="text" v-model="filtroBusqueda" @input="filtrarClientes" placeholder="Nombre, teléfono o email..." class="search-bar"/>
+                            <label>Buscar General:</label>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarClientes" placeholder="Buscar en todos los campos..." class="search-bar"/>
                         </div>
-                        <button @click="limpiarFiltros" class="btn btn-secondary">Limpiar</button>
+                        <div class="filter-group">
+                            <label>Por Nombre:</label>
+                            <input type="text" v-model="filtroNombre" @input="filtrarClientes" placeholder="Filtrar por nombre..." class="search-bar"/>
+                        </div>
+                        <div class="filter-group">
+                            <label>Por Teléfono:</label>
+                            <input type="text" v-model="filtroTelefono" @input="filtrarClientes" placeholder="Filtrar por teléfono..." class="search-bar"/>
+                        </div>
+                        <div class="filter-group">
+                            <label>Por RUC:</label>
+                            <input type="text" v-model="filtroRuc" @input="filtrarClientes" placeholder="Filtrar por RUC..." class="search-bar"/>
+                        </div>
+                        <button @click="limpiarFiltros" class="btn btn-secondary">Limpiar Filtros</button>
                         <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Cliente</button>
                     </div>
                     
@@ -240,9 +285,15 @@ new Vue({
                         </div>
                         <div class="form-row">
                             <div class="form-col">
+                                <label>RUC:</label>
+                                <input type="text" v-model="nuevoCliente.ruc" placeholder="RUC" maxlength="20"/>
+                            </div>
+                            <div class="form-col">
                                 <label>Correo Electrónico:</label>
                                 <input type="email" v-model="nuevoCliente.correo" placeholder="Correo"/>
                             </div>
+                        </div>
+                        <div class="form-row">
                             <div class="form-col">
                                 <label>Fecha de Nacimiento:</label>
                                 <input type="date" v-model="nuevoCliente.fechaNacimiento"/>
@@ -264,6 +315,7 @@ new Vue({
                                 <th>ID</th>
                                 <th>Nombre Completo</th>
                                 <th>Teléfono</th>
+                                <th>RUC</th>
                                 <th>Correo</th>
                                 <th>Fecha Nacimiento</th>
                                 <th>Redes Sociales</th>
@@ -275,6 +327,7 @@ new Vue({
                                 <td>{{ cliente.id }}</td>
                                 <td>{{ cliente.nombreCompleto }}</td>
                                 <td>{{ cliente.telefono }}</td>
+                                <td>{{ cliente.ruc }}</td>
                                 <td>{{ cliente.correo }}</td>
                                 <td>{{ formatearFecha(cliente.fechaNacimiento) }}</td>
                                 <td>{{ cliente.redesSociales }}</td>
@@ -299,6 +352,36 @@ new Vue({
 // Estilos para mejorar visibilidad del mensaje de confirmación
 const style = document.createElement('style');
 style.textContent = `
+    .filters-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+        padding: 20px;
+        background: rgba(255,255,255,0.9);
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    .filter-group label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #5d4037;
+    }
+    .search-bar {
+        padding: 8px 12px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+    }
+    .search-bar:focus {
+        border-color: #5d4037;
+        outline: none;
+    }
     .swal2-popup {
         color: #000 !important;
     }

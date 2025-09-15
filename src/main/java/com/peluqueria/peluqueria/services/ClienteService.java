@@ -94,6 +94,7 @@ public class ClienteService {
                 Cliente actualCliente = clienteExistente.get();
                 actualCliente.setNombreCompleto(cliente.getNombreCompleto());
                 actualCliente.setTelefono(cliente.getTelefono());
+                actualCliente.setRuc(cliente.getRuc());
                 actualCliente.setCorreo(cliente.getCorreo());
                 actualCliente.setRedesSociales(cliente.getRedesSociales());
                 actualCliente.setFechaNacimiento(cliente.getFechaNacimiento());
@@ -116,6 +117,7 @@ public class ClienteService {
             Cliente guardarCliente = new Cliente();
             guardarCliente.setNombreCompleto(cliente.getNombreCompleto());
             guardarCliente.setTelefono(cliente.getTelefono());
+            guardarCliente.setRuc(cliente.getRuc());
             guardarCliente.setCorreo(cliente.getCorreo());
             guardarCliente.setRedesSociales(cliente.getRedesSociales());
             guardarCliente.setFechaNacimiento(cliente.getFechaNacimiento());
@@ -150,6 +152,17 @@ public class ClienteService {
         }
     }
 
+    public List<Cliente> buscarPorRuc(String ruc) {
+        try {
+            List<Cliente> clientes = clienteRepository.findByRucContainingIgnoreCase(ruc);
+            LOGGER.info("OUT: Clientes encontrados por RUC [{}]: [{}]", ruc, clientes.size());
+            return clientes;
+        } catch (Exception e) {
+            LOGGER.error("Error al buscar clientes por RUC", e);
+            throw e;
+        }
+    }
+
     public List<Cliente> buscarPorNombreOTelefono(String criterio) {
         try {
             List<Cliente> clientes = clienteRepository.findByNombreCompletoContainingIgnoreCaseOrTelefono(criterio, criterio);
@@ -157,6 +170,17 @@ public class ClienteService {
             return clientes;
         } catch (Exception e) {
             LOGGER.error("Error al buscar clientes por nombre o teléfono", e);
+            throw e;
+        }
+    }
+
+    public List<Cliente> buscarPorNombreTelefonoORuc(String criterio) {
+        try {
+            List<Cliente> clientes = clienteRepository.findByNombreCompletoContainingIgnoreCaseOrTelefonoOrRucContainingIgnoreCase(criterio, criterio, criterio);
+            LOGGER.info("OUT: Clientes encontrados por criterio completo [{}]: [{}]", criterio, clientes.size());
+            return clientes;
+        } catch (Exception e) {
+            LOGGER.error("Error al buscar clientes por nombre, teléfono o RUC", e);
             throw e;
         }
     }

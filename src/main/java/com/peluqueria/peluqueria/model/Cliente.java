@@ -20,6 +20,9 @@ public class Cliente {
     @Column(name = "telefono", length = 10)
     private String telefono;
 
+    @Column(name = "ruc", length = 20)
+    private String ruc;
+
     @Column(name = "correo", length = 100)
     private String correo;
 
@@ -63,6 +66,14 @@ public class Cliente {
 
     public void setTelefono(String telefono) {
         this.telefono = telefono;
+    }
+
+    public String getRuc() {
+        return ruc;
+    }
+
+    public void setRuc(String ruc) {
+        this.ruc = ruc;
     }
 
     public String getCorreo() {

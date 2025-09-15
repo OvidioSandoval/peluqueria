@@ -15,7 +15,7 @@
 /* Layout compacto */
 .content {
   padding: var(--compact-space-4) !important;
-  padding-top: 120px !important;
+  padding-top: 200px !important;
 }
 
 .glass-container {
@@ -255,7 +255,7 @@ textarea {
 @media (max-width: 768px) {
   .content {
     padding: var(--compact-space-3) !important;
-    padding-top: 110px !important;
+    padding-top: 200px !important;
   }
   
   .glass-container {
@@ -300,7 +300,7 @@ textarea {
 @media (max-width: 480px) {
   .content {
     padding: var(--compact-space-2) !important;
-    padding-top: 65px !important;
+    padding-top: 200px !important;
   }
   
   .glass-container {
