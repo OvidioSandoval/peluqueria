@@ -12,34 +12,17 @@ new Vue({
         return {
             ventas: [],
             ventasFiltradas: [],
-            clientes: [],
-            empleados: [],
             filtroBusqueda: '',
             filtroFecha: new Date().toISOString().split('T')[0],
             paginaActual: 1,
             itemsPorPagina: 10,
-            formularioVisible: false,
-            nuevaVenta: { 
-                id: null, 
-                fechaVenta: null,
-                cantidadArticulos: null,
-                montoTotal: null,
-                descuentoAplicado: 0,
-                devolucion: false,
-                clienteId: null,
-                empleadoId: null,
-                metodoPago: 'EFECTIVO',
-                observaciones: ''
-            },
-            ventaSeleccionada: '',
             intervalId: null,
             mostrarSalir: false,
         };
     },
     mounted() {
         this.fetchVentas();
-        this.fetchClientes();
-        this.fetchEmpleados();
+
         this.startAutoRefresh();
     },
     beforeDestroy() {
@@ -62,7 +45,7 @@ new Vue({
             try {
                 const response = await fetch(`${config.apiBaseUrl}/usuarios/usuario-sesion`);
                 if (!response.ok) {
-                    window.location.href = '/login';
+                    window.location.href = '/web/panel-control';
                 }
             } catch (error) {
                 console.error('Error verificando sesión:', error);
@@ -81,22 +64,7 @@ new Vue({
             }
         },
 
-        async fetchClientes() {
-            try {
-                const response = await fetch(`${config.apiBaseUrl}/clientes`);
-                this.clientes = await response.json();
-            } catch (error) {
-                console.error('Error al cargar clientes:', error);
-            }
-        },
-        async fetchEmpleados() {
-            try {
-                const response = await fetch(`${config.apiBaseUrl}/empleados`);
-                this.empleados = await response.json();
-            } catch (error) {
-                console.error('Error al cargar empleados:', error);
-            }
-        },
+
         filtrarVentas() {
             let filtradas = [...this.ventas];
             
@@ -109,146 +77,23 @@ new Vue({
             }
             
             if (this.filtroFecha) {
-                filtradas = filtradas.filter(venta =>
-                    venta.fechaVenta && venta.fechaVenta.startsWith(this.filtroFecha)
-                );
+                filtradas = filtradas.filter(venta => {
+                    if (!venta.fechaVenta) return false;
+                    const fechaVenta = this.formatearFechaParaFiltro(venta.fechaVenta);
+                    return fechaVenta === this.filtroFecha;
+                });
             }
             
             this.ventasFiltradas = filtradas;
         },
-        async agregarVenta() {
-            if (!this.nuevaVenta.cantidadArticulos || !this.nuevaVenta.montoTotal) {
-                NotificationSystem.error('Cantidad de artículos y monto total son requeridos');
-                return;
-            }
-            try {
-                const ventaData = {
-                    fechaVenta: this.nuevaVenta.fechaVenta || new Date().toISOString(),
-                    cantidadArticulos: parseInt(this.nuevaVenta.cantidadArticulos),
-                    montoTotal: parseInt(this.nuevaVenta.montoTotal),
-                    descuentoAplicado: parseInt(this.nuevaVenta.descuentoAplicado) || 0,
-                    devolucion: this.nuevaVenta.devolucion,
-                    cliente: this.nuevaVenta.clienteId ? { id: this.nuevaVenta.clienteId } : null,
-                    empleado: this.nuevaVenta.empleadoId ? { id: this.nuevaVenta.empleadoId } : null,
-                    metodoPago: this.capitalizarTexto(this.nuevaVenta.metodoPago),
-                    observaciones: this.capitalizarTexto(this.nuevaVenta.observaciones)
-                };
-                const response = await fetch(`${config.apiBaseUrl}/ventas/agregar_venta`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(ventaData)
-                });
-                if (response.ok) {
-                    NotificationSystem.success('Venta agregada exitosamente');
-                    setTimeout(() => window.location.reload(), 1000);
-                } else {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-            } catch (error) {
-                console.error('Error al agregar venta:', error);
-                NotificationSystem.error(`Error al agregar venta: ${error.message}`);
-            }
-        },
-        async modificarVenta() {
-            if (!this.nuevaVenta.cantidadArticulos || !this.nuevaVenta.montoTotal) {
-                NotificationSystem.error('Cantidad de artículos y monto total son requeridos');
-                return;
-            }
-            try {
-                const ventaData = {
-                    fechaVenta: this.nuevaVenta.fechaVenta || new Date().toISOString(),
-                    cantidadArticulos: parseInt(this.nuevaVenta.cantidadArticulos),
-                    montoTotal: parseInt(this.nuevaVenta.montoTotal),
-                    descuentoAplicado: parseInt(this.nuevaVenta.descuentoAplicado) || 0,
-                    devolucion: this.nuevaVenta.devolucion,
-                    cliente: this.nuevaVenta.clienteId ? { id: this.nuevaVenta.clienteId } : null,
-                    empleado: this.nuevaVenta.empleadoId ? { id: this.nuevaVenta.empleadoId } : null,
-                    metodoPago: this.capitalizarTexto(this.nuevaVenta.metodoPago),
-                    observaciones: this.capitalizarTexto(this.nuevaVenta.observaciones)
-                };
-                const response = await fetch(`${config.apiBaseUrl}/ventas/actualizar_venta/${this.nuevaVenta.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(ventaData)
-                });
-                if (response.ok) {
-                    NotificationSystem.success('Venta actualizada exitosamente');
-                    setTimeout(() => window.location.reload(), 1000);
-                } else {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-            } catch (error) {
-                console.error('Error al modificar venta:', error);
-                NotificationSystem.error(`Error al modificar venta: ${error.message}`);
-            }
-        },
-        async eliminarVenta(venta) {
-            NotificationSystem.confirm(`¿Eliminar venta ID ${venta.id}?`, async () => {
-                try {
-                    const response = await fetch(`${config.apiBaseUrl}/ventas/eliminar_venta/${venta.id}`, {
-                        method: 'DELETE'
-                    });
-                    if (response.ok) {
-                        NotificationSystem.success('Venta eliminada exitosamente');
-                        setTimeout(() => window.location.reload(), 1000);
-                    } else {
-                        throw new Error(`Error ${response.status}: ${response.statusText}`);
-                    }
-                } catch (error) {
-                    console.error('Error al eliminar venta:', error);
-                    NotificationSystem.error(`Error al eliminar venta: ${error.message}`);
-                }
-            });
-        },
-        toggleFormulario() {
-            if (this.formularioVisible) {
-                setTimeout(() => window.location.reload(), 500);
-            }
-            this.formularioVisible = !this.formularioVisible;
-            this.nuevaVenta = { 
-                id: null, 
-                fechaVenta: new Date().toISOString().slice(0, 16),
-                cantidadArticulos: null,
-                montoTotal: null,
-                descuentoAplicado: 0,
-                devolucion: false,
-                clienteId: null,
-                empleadoId: null,
-                metodoPago: 'EFECTIVO',
-                observaciones: ''
-            };
-            this.ventaSeleccionada = '';
-        },
-        cargarVenta(venta) {
-            this.nuevaVenta = {
-                id: venta.id,
-                fechaVenta: venta.fechaVenta,
-                cantidadArticulos: venta.cantidadArticulos,
-                montoTotal: venta.montoTotal,
-                descuentoAplicado: venta.descuentoAplicado || 0,
-                devolucion: venta.devolucion || false,
-                clienteId: venta.cliente ? venta.cliente.id : null,
-                empleadoId: venta.empleado ? venta.empleado.id : null,
-                metodoPago: venta.metodoPago || 'EFECTIVO',
-                observaciones: venta.observaciones || ''
-            };
-            this.formularioVisible = true;
-            this.ventaSeleccionada = `Venta ${venta.id}`;
-        },
+
         getClienteName(venta) {
             return venta.cliente ? venta.cliente.nombreCompleto || venta.cliente.nombre : '-';
         },
         getEmpleadoName(venta) {
             return venta.empleado ? venta.empleado.nombreCompleto || venta.empleado.nombre : '-';
         },
-        getClienteNameById(clienteId) {
-            const cliente = this.clientes.find(c => c.id === clienteId);
-            return cliente ? cliente.nombreCompleto || cliente.nombre : '-';
-        },
-        getEmpleadoNameById(empleadoId) {
-            const empleado = this.empleados.find(e => e.id === empleadoId);
-            return empleado ? empleado.nombreCompleto || empleado.nombre : '-';
-        },
+
         cambiarPagina(pagina) {
             if (pagina >= 1 && pagina <= this.totalPaginas) {
                 this.paginaActual = pagina;
@@ -259,7 +104,24 @@ new Vue({
             return Number(numero).toLocaleString('es-ES');
         },
         formatearFecha(fecha) {
-            return fecha ? new Date(fecha).toLocaleDateString('es-ES') : '';
+            if (!fecha) return '';
+            if (Array.isArray(fecha)) {
+                const [year, month, day] = fecha;
+                return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+            }
+            const date = new Date(fecha);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        },
+        formatearFechaParaFiltro(fecha) {
+            if (!fecha) return '';
+            if (Array.isArray(fecha)) {
+                const [year, month, day] = fecha;
+                return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            }
+            return typeof fecha === 'string' ? fecha : new Date(fecha).toISOString().split('T')[0];
         },
         startAutoRefresh() {
             this.intervalId = setInterval(() => {
@@ -287,74 +149,30 @@ new Vue({
                 palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase()
             ).join(' ');
         },
+        limpiarFiltros() {
+            this.filtroBusqueda = '';
+            this.filtroFecha = '';
+            this.filtrarVentas();
+        },
     },
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 style="text-align: center; margin-top: 60px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Ventas</h1>
-                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i></button>
+                <h1 style="text-align: center; margin-top: 90px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Ventas</h1>
+                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
-                    <label>Buscar Venta:</label>
-                    <input type="text" v-model="filtroBusqueda" @input="filtrarVentas" placeholder="Buscar por ID, monto o cliente..." class="search-bar"/>
-                    <label>Filtrar por Fecha:</label>
-                    <input type="date" v-model="filtroFecha" @change="filtrarVentas" class="search-bar"/>
-                    <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nueva Venta</button>
-                    
-                    <div v-if="formularioVisible" class="form-container">
-                        <h3>{{ nuevaVenta.id ? 'Modificar' : 'Agregar' }} Venta</h3>
-                        <div v-if="nuevaVenta.id" class="info-section">
-                            <p><strong>Cliente:</strong> {{ getClienteNameById(nuevaVenta.clienteId) }}</p>
+                    <div class="filters-container">
+                        <div class="filter-group">
+                            <label>Buscar Venta:</label>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarVentas" placeholder="Buscar por ID, monto o cliente..." class="search-bar"/>
                         </div>
-                        <label>Cliente:</label>
-                        <select v-model="nuevaVenta.clienteId">
-                            <option value="" disabled>Seleccionar Cliente</option>
-                            <option v-for="cliente in clientes" :key="cliente.id" :value="cliente.id">
-                                {{ cliente.nombreCompleto || cliente.nombre }}
-                            </option>
-                        </select>
-                        <label>Empleado:</label>
-                        <select v-model="nuevaVenta.empleadoId">
-                            <option value="" disabled>Seleccionar Empleado</option>
-                            <option v-for="empleado in empleados" :key="empleado.id" :value="empleado.id">
-                                {{ empleado.nombreCompleto || empleado.nombre }}
-                            </option>
-                        </select>
-                        <br>
-                        <label>Fecha Venta:</label>
-                        <br>
-                        <input type="datetime-local" v-model="nuevaVenta.fechaVenta"/>
-                        <br>
-                        <label>Cantidad Artículos:</label>
-                        <input type="number" v-model="nuevaVenta.cantidadArticulos" placeholder="Cantidad de artículos" required/>
-                        <label>Monto Total:</label>
-                        <input type="number" v-model="nuevaVenta.montoTotal" placeholder="Monto total" required/>
-                        <label>Descuento Aplicado:</label>
-                        <input type="number" v-model="nuevaVenta.descuentoAplicado" placeholder="Descuento aplicado"/>
-                        <label>Método Pago:</label>
-                        <select v-model="nuevaVenta.metodoPago">
-                            <option value="EFECTIVO">Efectivo</option>
-                            <option value="TARJETA">Tarjeta</option>
-                            <option value="TRANSFERENCIA">Transferencia</option>
-                        </select>
-                        <br><br>
-                        <label>Observaciones:</label>
-                        <textarea v-model="nuevaVenta.observaciones" placeholder="Observaciones"></textarea>
-                        <br>
-                        <label>Devolución:</label>
-                        <select v-model="nuevaVenta.devolucion">
-                            <option :value="false">No</option>
-                            <option :value="true">Sí</option>
-                        </select>
-                        <br><br>
-                        <div class="form-buttons">
-                            <button @click="nuevaVenta.id ? modificarVenta() : agregarVenta()" class="btn">
-                                {{ nuevaVenta.id ? 'Modificar' : 'Agregar' }}
-                            </button>
-                            <button @click="toggleFormulario()" class="btn btn-secondary">
-                                Cancelar
-                            </button>
+                        <div class="filter-group">
+                            <label>Filtrar por Fecha:</label>
+                            <input type="date" v-model="filtroFecha" @change="filtrarVentas" class="search-bar"/>
                         </div>
+                        <button @click="limpiarFiltros" class="btn btn-secondary">Limpiar Filtros</button>
                     </div>
+
                     
                     <table>
                         <thead>
@@ -365,7 +183,7 @@ new Vue({
                                 <th>Fecha</th>
                                 <th>Monto Total</th>
                                 <th>Método Pago</th>
-                                <th>Acciones</th>
+
                             </tr>
                         </thead>
                         <tbody>
@@ -376,10 +194,7 @@ new Vue({
                                 <td>{{ formatearFecha(venta.fechaVenta) }}</td>
                                 <td>{{ formatearNumero(venta.montoTotal) }}</td>
                                 <td>{{ venta.metodoPago }}</td>
-                                <td>
-                                    <button @click="cargarVenta(venta)" class="btn-small">Editar</button>
-                                    <button @click="eliminarVenta(venta)" class="btn-small btn-danger">Eliminar</button>
-                                </td>
+
                             </tr>
                         </tbody>
                     </table>

@@ -12,7 +12,9 @@ new Vue({
         return {
             productos: [],
             productosFiltrados: [],
+            alertasStock: [],
             filtroBusqueda: '',
+            filtroStock: 'todos',
             paginaActual: 1,
             itemsPorPagina: 10,
             formularioVisible: false,
@@ -36,6 +38,7 @@ new Vue({
     },
     mounted() {
         this.fetchProductos();
+        this.fetchAlertasStock();
         this.startAutoRefresh();
     },
     beforeDestroy() {
@@ -55,7 +58,7 @@ new Vue({
             try {
                 const response = await fetch(`${config.apiBaseUrl}/usuarios/usuario-sesion`);
                 if (!response.ok) {
-                    window.location.href = '/login';
+                    window.location.href = '/web/panel-control';
                 }
             } catch (error) {
                 console.error('Error verificando sesión:', error);
@@ -73,16 +76,44 @@ new Vue({
                 NotificationSystem.error(`Error al cargar los productos: ${error.message}`);
             }
         },
+        async fetchAlertasStock() {
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/productos/bajo-stock`);
+                if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+                this.alertasStock = await response.json();
+            } catch (error) {
+                console.error('Error al cargar alertas de stock:', error);
+            }
+        },
         filtrarProductos() {
-            if (this.filtroBusqueda.trim() === '') {
-                this.productosFiltrados = this.productos;
-            } else {
+            let filtrados = this.productos;
+            
+            // Filtro por texto
+            if (this.filtroBusqueda.trim() !== '') {
                 const busqueda = this.filtroBusqueda.toLowerCase();
-                this.productosFiltrados = this.productos.filter(producto =>
+                filtrados = filtrados.filter(producto =>
                     producto.nombre.toLowerCase().includes(busqueda) ||
                     (producto.descripcion && producto.descripcion.toLowerCase().includes(busqueda))
                 );
             }
+            
+            // Filtro por estado de stock
+            if (this.filtroStock !== 'todos') {
+                filtrados = filtrados.filter(producto => {
+                    const status = this.getStockStatus(producto);
+                    return status === this.filtroStock;
+                });
+            }
+            
+            // Ordenar: stock bajo primero
+            filtrados.sort((a, b) => {
+                const statusA = this.getStockStatus(a);
+                const statusB = this.getStockStatus(b);
+                const prioridad = { 'bajo': 0, 'advertencia': 1, 'normal': 2 };
+                return prioridad[statusA] - prioridad[statusB];
+            });
+            
+            this.productosFiltrados = filtrados;
         },
         async agregarProducto() {
             if (!this.nuevoProducto.nombre.trim()) {
@@ -220,6 +251,7 @@ new Vue({
         startAutoRefresh() {
             this.intervalId = setInterval(() => {
                 this.fetchProductos();
+                this.fetchAlertasStock();
             }, 300000);
         },
         stopAutoRefresh() {
@@ -243,15 +275,46 @@ new Vue({
                 palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase()
             ).join(' ');
         },
+        tieneStockBajo(producto) {
+            if (!producto.minimoStock) return false;
+            const stockActual = producto.cantidadStockInicial || 0;
+            return stockActual < producto.minimoStock;
+        },
+        getStockStatus(producto) {
+            if (!producto.minimoStock) return 'normal';
+            const stockActual = producto.cantidadStockInicial || 0;
+            if (stockActual < producto.minimoStock) return 'bajo';
+            if (stockActual <= producto.minimoStock * 1.2) return 'advertencia';
+            return 'normal';
+        },
+        limpiarFiltros() {
+            this.filtroBusqueda = '';
+            this.filtroStock = 'todos';
+            this.filtrarProductos();
+        },
     },
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 style="text-align: center; margin-top: 60px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Productos</h1>
-                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i></button>
+                <h1 style="text-align: center; margin-top: 90px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Productos</h1>
+                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
-                    <label>Buscar Producto:</label>
-                    <input type="text" v-model="filtroBusqueda" @input="filtrarProductos" placeholder="Buscar producto..." class="search-bar"/>
+                    <div class="filters-container">
+                        <div class="filter-group">
+                            <label>Buscar Producto:</label>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarProductos" placeholder="Buscar producto..." class="search-bar"/>
+                        </div>
+                        <div class="filter-group">
+                            <label>Estado de Stock:</label>
+                            <select v-model="filtroStock" @change="filtrarProductos" class="filter-select">
+                                <option value="todos">Todos</option>
+                                <option value="bajo">Stock Bajo</option>
+                                <option value="advertencia">Advertencia</option>
+                                <option value="normal">Normal</option>
+                            </select>
+                        </div>
+                        <button @click="limpiarFiltros" class="btn btn-secondary">Limpiar Filtros</button>
+                    </div>
                     <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Producto</button>
                     
                     <div v-if="formularioVisible" class="form-container">
@@ -289,6 +352,11 @@ new Vue({
                             <button @click="toggleFormulario()" class="btn" style="background: #6c757d !important;">Cancelar</button>
                         </div>
                     </div>
+                    <div v-if="alertasStock.length > 0" class="alert-summary">
+                        <h3 style="margin: 0 0 10px 0; color: #856404;"><i class="fas fa-exclamation-triangle"></i> Alertas de Stock</h3>
+                        <p style="margin: 0; font-size: 16px;"><strong>{{ alertasStock.length }}</strong> producto(s) con stock por debajo del mínimo requerido</p>
+                    </div>
+                    
                     <table>
                         <thead>
                             <tr>
@@ -297,9 +365,10 @@ new Vue({
                                 <th>Descripción</th>
                                 <th>Precio Compra</th>
                                 <th>Precio Venta</th>
-                                <th>Stock Inicial</th>
+                                <th>Stock Actual</th>
                                 <th>Stock Óptimo</th>
                                 <th>Stock Mínimo</th>
+                                <th>Estado Stock</th>
                                 <th>Activo</th>
                                 <th>En Promoción</th>
                                 <th>Precio Promoción</th>
@@ -307,15 +376,31 @@ new Vue({
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="producto in productosPaginados" :key="producto.id">
+                            <tr v-for="producto in productosPaginados" :key="producto.id" :class="{
+                                'stock-bajo': getStockStatus(producto) === 'bajo',
+                                'stock-advertencia': getStockStatus(producto) === 'advertencia'
+                            }">
                                 <td>{{ producto.id }}</td>
-                                <td>{{ producto.nombre }}</td>
+                                <td>
+                                    <strong>{{ producto.nombre }}</strong>
+                                    <i v-if="tieneStockBajo(producto)" class="fas fa-exclamation-triangle stock-alert-icon" title="Stock bajo"></i>
+                                </td>
                                 <td>{{ producto.descripcion || '-' }}</td>
                                 <td>{{ formatearNumero(producto.precioCompra) }}</td>
                                 <td>{{ formatearNumero(producto.precioVenta) }}</td>
-                                <td>{{ formatearNumero(producto.cantidadStockInicial) }}</td>
+                                <td :class="{
+                                    'stock-critico': getStockStatus(producto) === 'bajo',
+                                    'stock-advertencia-text': getStockStatus(producto) === 'advertencia'
+                                }">
+                                    {{ formatearNumero(producto.cantidadStockInicial) }}
+                                </td>
                                 <td>{{ producto.cantidadOptimaStock ? formatearNumero(producto.cantidadOptimaStock) : '-' }}</td>
                                 <td>{{ producto.minimoStock ? formatearNumero(producto.minimoStock) : '-' }}</td>
+                                <td>
+                                    <span v-if="getStockStatus(producto) === 'bajo'" class="badge-critico">STOCK BAJO</span>
+                                    <span v-else-if="getStockStatus(producto) === 'advertencia'" class="badge-advertencia">ADVERTENCIA</span>
+                                    <span v-else class="badge-normal">NORMAL</span>
+                                </td>
                                 <td>{{ producto.activo ? 'Sí' : 'No' }}</td>
                                 <td>{{ producto.enPromocion ? 'Sí' : 'No' }}</td>
                                 <td>{{ producto.precioPromocion ? formatearNumero(producto.precioPromocion) : '-' }}</td>
@@ -337,3 +422,87 @@ new Vue({
         </div>
     `
 });
+
+// Estilos para alertas de stock
+const style = document.createElement('style');
+style.textContent = `
+    .stock-bajo { 
+        background-color: #fff3cd !important; 
+        border-left: 4px solid #dc3545 !important; 
+    }
+    .stock-advertencia { 
+        background-color: #fff3cd !important; 
+        border-left: 4px solid #ffc107 !important; 
+    }
+    .stock-critico { 
+        font-weight: bold !important; 
+        color: #dc3545 !important; 
+    }
+    .stock-advertencia-text { 
+        font-weight: bold !important; 
+        color: #856404 !important; 
+    }
+    .stock-alert-icon { 
+        color: #dc3545; 
+        margin-left: 8px; 
+        animation: pulse 2s infinite; 
+    }
+    .badge-critico { 
+        background: #dc3545; 
+        color: white; 
+        padding: 4px 8px; 
+        border-radius: 4px; 
+        font-size: 12px; 
+        font-weight: bold; 
+    }
+    .badge-advertencia { 
+        background: #ffc107; 
+        color: #212529; 
+        padding: 4px 8px; 
+        border-radius: 4px; 
+        font-size: 12px; 
+        font-weight: bold; 
+    }
+    .badge-normal { 
+        background: #28a745; 
+        color: white; 
+        padding: 4px 8px; 
+        border-radius: 4px; 
+        font-size: 12px; 
+        font-weight: bold; 
+    }
+    .alert-summary { 
+        background: #f8f9fa; 
+        padding: 15px; 
+        border-radius: 8px; 
+        margin-bottom: 20px; 
+        border-left: 4px solid #ffc107; 
+    }
+    .filters-container {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+        align-items: end;
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    .filter-select {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        background: white;
+    }
+    .btn-secondary {
+        background: #6c757d !important;
+        color: white !important;
+    }
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+`;
+document.head.appendChild(style);

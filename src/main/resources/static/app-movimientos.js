@@ -12,10 +12,7 @@ new Vue({
         return {
             movimientos: [],
             movimientosFiltrados: [],
-            filtroBusqueda: '',
-            filtroTipo: '',
-            fechaDesde: new Date().toISOString().split('T')[0],
-            fechaHasta: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+
             paginaActual: 1,
             itemsPorPagina: 10,
             formularioVisible: false,
@@ -60,7 +57,7 @@ new Vue({
             try {
                 const response = await fetch(`${config.apiBaseUrl}/usuarios/usuario-sesion`);
                 if (!response.ok) {
-                    window.location.href = '/login';
+                    window.location.href = '/web/panel-control';
                 }
             } catch (error) {
                 console.error('Error verificando sesión:', error);
@@ -87,34 +84,7 @@ new Vue({
             }
         },
         filtrarMovimientos() {
-            let filtrados = [...this.movimientos];
-            
-            if (this.filtroBusqueda) {
-                filtrados = filtrados.filter(mov =>
-                    mov.tipo.toLowerCase().includes(this.filtroBusqueda.toLowerCase()) ||
-                    mov.idAsociado.toString().includes(this.filtroBusqueda)
-                );
-            }
-            
-            if (this.filtroTipo) {
-                filtrados = filtrados.filter(mov => mov.tipo === this.filtroTipo);
-            }
-            
-            if (this.fechaDesde) {
-                filtrados = filtrados.filter(mov => {
-                    const fechaMov = new Date(mov.fecha || mov.fechaCreacion);
-                    return fechaMov >= new Date(this.fechaDesde);
-                });
-            }
-            
-            if (this.fechaHasta) {
-                filtrados = filtrados.filter(mov => {
-                    const fechaMov = new Date(mov.fecha || mov.fechaCreacion);
-                    return fechaMov <= new Date(this.fechaHasta);
-                });
-            }
-            
-            this.movimientosFiltrados = filtrados;
+            this.movimientosFiltrados = [...this.movimientos];
         },
         async agregarMovimiento() {
             if (!this.nuevoMovimiento.monto || !this.nuevoMovimiento.cajaId || !this.nuevoMovimiento.tipo) {
@@ -253,24 +223,10 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 style="text-align: center; margin-top: 60px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Movimientos</h1>
-                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i></button>
+                <h1 style="text-align: center; margin-top: 90px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Movimientos</h1>
+                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
-                    <label>Buscar Movimiento:</label>
-                    <input type="text" v-model="filtroBusqueda" @input="filtrarMovimientos" placeholder="Buscar por tipo o ID asociado..." class="search-bar"/>
-                    <label>Filtrar por Tipo:</label>
-                    <select v-model="filtroTipo" @change="filtrarMovimientos" class="search-bar">
-                        <option value="">Todos los tipos</option>
-                        <option value="INGRESO">Ingreso</option>
-                        <option value="EGRESO">Egreso</option>
-                        <option value="VENTA">Venta</option>
-                        <option value="COMPRA">Compra</option>
-                    </select>
-                    <br>
-                    <label>Desde:</label>
-                    <input type="date" v-model="fechaDesde" @change="filtrarMovimientos" class="search-bar"/>
-                    <label>Hasta:</label>
-                    <input type="date" v-model="fechaHasta" @change="filtrarMovimientos" class="search-bar"/>
+
                     <button @click="toggleFormulario()" class="btn">Nuevo Movimiento</button>
                     
                     <div v-if="formularioVisible" class="form-container">

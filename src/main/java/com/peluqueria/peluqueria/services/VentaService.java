@@ -11,8 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class VentaService {
@@ -131,6 +130,27 @@ public class VentaService {
         } catch (Exception e) {
             LOGGER.error("Error al guardar la venta", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    public List<Map<String, Object>> getHistorialDescuentos() {
+        try {
+            List<Venta> ventas = ventaRepository.findAll();
+            return ventas.stream()
+                .filter(venta -> venta.getDescuentoAplicado() != null && venta.getDescuentoAplicado() > 0)
+                .map(venta -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", venta.getId());
+                    map.put("ventaId", venta.getId());
+                    map.put("cliente", venta.getCliente() != null ? venta.getCliente().getNombreCompleto() : "Sin cliente");
+                    map.put("descuento", venta.getDescuentoAplicado());
+                    map.put("fecha", venta.getFechaVenta());
+                    return map;
+                })
+                .collect(java.util.stream.Collectors.toList());
+        } catch (Exception e) {
+            LOGGER.error("Error al obtener historial de descuentos", e);
+            throw e;
         }
     }
 }

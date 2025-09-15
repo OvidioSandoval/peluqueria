@@ -38,7 +38,12 @@ public class AlertaStockService {
 
     public List<InformacionStock> obtenerProductosConStockBajo() {
         try {
-            List<InformacionStock> productos = informacionStockRepository.findProductosConStockBajo();
+            List<InformacionStock> productos = informacionStockRepository.findAll().stream()
+                .filter(stock -> stock.getProducto() != null && 
+                               stock.getProducto().getCantidadStockInicial() != null &&
+                               stock.getProducto().getMinimoStock() != null &&
+                               stock.getProducto().getCantidadStockInicial() < stock.getProducto().getMinimoStock())
+                .collect(java.util.stream.Collectors.toList());
             LOGGER.info("Productos con stock bajo encontrados: {}", productos.size());
             return productos;
         } catch (Exception e) {

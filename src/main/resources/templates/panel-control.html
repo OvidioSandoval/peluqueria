@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Peluquería - Inicio</title>
   <link rel="stylesheet" href="/modern-styles.css">
+  <link rel="stylesheet" href="/unified-styles.css">
+  <link rel="stylesheet" href="/compact-styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.css">
 </head>
@@ -44,10 +46,16 @@
         <p>Gestión de personal</p>
       </div>
       
-      <div class="stat-card hover-lift" onclick="window.location.href='/web/ventas'">
-        <i class="fas fa-cash-register"></i>
-        <h3>Ventas</h3>
-        <p>Registro de ventas y facturación</p>
+      <div class="stat-card hover-lift" onclick="window.location.href='/web/registro-venta'">
+        <i class="fas fa-plus-circle"></i>
+        <h3>Nueva Venta</h3>
+        <p>Registro unificado de ventas</p>
+      </div>
+      
+      <div class="stat-card hover-lift" onclick="window.location.href='/web/registro-compra'">
+        <i class="fas fa-cart-plus"></i>
+        <h3>Nueva Compra</h3>
+        <p>Registro unificado de compras</p>
       </div>
       
       <div class="stat-card hover-lift" onclick="window.location.href='/web/gastos'">
@@ -56,17 +64,19 @@
         <p>Control de gastos operativos</p>
       </div>
       
+      <div class="stat-card hover-lift" onclick="window.location.href='/web/ventas'">
+        <i class="fas fa-cash-register"></i>
+        <h3>Ventas</h3>
+        <p>Registro de ventas y facturación</p>
+      </div>
+      
       <div class="stat-card hover-lift" onclick="window.location.href='/web/areas'">
         <i class="fas fa-map-marker-alt"></i>
         <h3>Áreas</h3>
         <p>Gestión de áreas de trabajo</p>
       </div>
       
-      <div class="stat-card hover-lift" onclick="window.location.href='/web/alertas-stock'">
-        <i class="fas fa-exclamation-triangle"></i>
-        <h3>Alertas Stock</h3>
-        <p>Alertas de inventario</p>
-      </div>
+
       
       <div class="stat-card hover-lift" onclick="window.location.href='/web/cajas'">
         <i class="fas fa-cash-register"></i>
@@ -132,6 +142,24 @@
         <i class="fas fa-calendar-check"></i>
         <h3>Turnos</h3>
         <p>Gestión de turnos</p>
+      </div>
+      
+      <div class="stat-card hover-lift" onclick="window.location.href='/web/cliente-principal'">
+        <i class="fas fa-users"></i>
+        <h3>Cliente Principal</h3>
+        <p>Panel avanzado de clientes</p>
+      </div>
+      
+      <div class="stat-card hover-lift" onclick="window.location.href='/web/calendario-turno'">
+        <i class="fas fa-calendar-alt"></i>
+        <h3>Calendario Turnos</h3>
+        <p>Vista calendario por colaborador</p>
+      </div>
+      
+      <div class="stat-card hover-lift" onclick="window.location.href='/web/reportes'">
+        <i class="fas fa-chart-bar"></i>
+        <h3>Reportes</h3>
+        <p>Reportes y estadísticas del negocio</p>
       </div>
 
     </div>

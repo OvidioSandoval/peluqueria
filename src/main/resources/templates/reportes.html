@@ -6,9 +6,10 @@
   <title>Reportes</title>
   <link rel="stylesheet" href="/modern-styles.css">
   <link rel="stylesheet" href="/unified-styles.css">
-  <link rel="stylesheet" href="">
+  <link rel="stylesheet" href="/compact-styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body class="page-reportes">
 <div id="navbar"></div>
@@ -17,25 +18,76 @@
 <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.js"></script>
 
-<div class="content" id="app">
-  <div class="table-container">
-    <h1>Reportes y Estadísticas</h1>
-    <div class="stats-container">
-      <div class="stat-card hover-lift" onclick="window.location.href='/web/ventas'">
-        <i class="fas fa-chart-line" style="font-size: 3rem; color: var(--primary-color); margin-bottom: var(--spacing-md);"></i>
-        <h3 style="font-size: 1.25rem; margin-bottom: var(--spacing-xs);">Reporte de Ventas</h3>
-        <p>Análisis de ventas y facturación</p>
-      </div>
-      <div class="stat-card hover-lift" onclick="window.location.href='/web/gastos'">
-        <i class="fas fa-chart-pie" style="font-size: 3rem; color: var(--primary-color); margin-bottom: var(--spacing-md);"></i>
-        <h3 style="font-size: 1.25rem; margin-bottom: var(--spacing-xs);">Reporte de Gastos</h3>
-        <p>Control y análisis de gastos</p>
-      </div>
-    </div>
-  </div>
-</div>
+<div class="content" id="app"></div>
 
 <script src="/script.js"></script>
+<script type="module" src="/reportes.js"></script>
+
+<style>
+.reportes-nav {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.reportes-nav .btn.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+.filtros-container {
+  display: flex;
+  gap: 15px;
+  margin: 20px 0;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-export {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-export:hover {
+  background: #c82333;
+}
+
+.reporte-content {
+  margin-top: 20px;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #666;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+tr:hover {
+  background-color: #f5f5f5;
+}
+</style>
 
 </body>
 </html>

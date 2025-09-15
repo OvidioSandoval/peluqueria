@@ -14,6 +14,8 @@ new Vue({
             stocksFiltrados: [],
             productos: [],
             filtroBusqueda: '',
+            filtroFecha: new Date().toISOString().split('T')[0],
+            filtroProveedor: '',
             paginaActual: 1,
             itemsPorPagina: 10,
             formularioVisible: false,
@@ -50,7 +52,7 @@ new Vue({
             try {
                 const response = await fetch(`${config.apiBaseUrl}/usuarios/usuario-sesion`);
                 if (!response.ok) {
-                    window.location.href = '/login';
+                    window.location.href = '/web/panel-control';
                 }
             } catch (error) {
                 console.error('Error verificando sesión:', error);
@@ -85,13 +87,29 @@ new Vue({
             }
         },
         filtrarStocks() {
+            let filtrados = [...this.stocks];
+            
             if (this.filtroBusqueda) {
-                this.stocksFiltrados = this.stocks.filter(stock =>
+                filtrados = filtrados.filter(stock =>
                     this.getProductoName(stock).toLowerCase().includes(this.filtroBusqueda.toLowerCase())
                 );
-            } else {
-                this.stocksFiltrados = this.stocks;
             }
+            
+            if (this.filtroFecha) {
+                filtrados = filtrados.filter(stock => {
+                    if (!stock.fechaRegistroInformacionStock) return false;
+                    const fechaStock = this.getFechaString(stock.fechaRegistroInformacionStock);
+                    return fechaStock.startsWith(this.filtroFecha);
+                });
+            }
+            
+            if (this.filtroProveedor) {
+                filtrados = filtrados.filter(stock =>
+                    this.getProveedorName(stock).toLowerCase().includes(this.filtroProveedor.toLowerCase())
+                );
+            }
+            
+            this.stocksFiltrados = filtrados;
         },
         async agregarStock() {
             if (!this.nuevoStock.productoId) {
@@ -237,6 +255,27 @@ new Vue({
                 return '-';
             }
         },
+        getFechaString(fecha) {
+            if (!fecha) return '';
+            try {
+                let date;
+                if (Array.isArray(fecha)) {
+                    date = new Date(fecha[0], fecha[1] - 1, fecha[2]);
+                } else {
+                    date = new Date(fecha);
+                }
+                if (isNaN(date.getTime())) return '';
+                return date.toISOString().split('T')[0];
+            } catch (error) {
+                return '';
+            }
+        },
+        limpiarFiltros() {
+            this.filtroBusqueda = '';
+            this.filtroFecha = new Date().toISOString().split('T')[0];
+            this.filtroProveedor = '';
+            this.filtrarStocks();
+        },
         startAutoRefresh() {
             this.intervalId = setInterval(() => {
                 this.fetchStocks();
@@ -264,9 +303,24 @@ new Vue({
                 <h1 style="text-align: center; margin-top: 60px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Información de Stock</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i></button>
                 <main style="padding: 20px;">
-                    <label>Buscar Stock:</label>
-                    <input type="text" v-model="filtroBusqueda" @input="filtrarStocks" placeholder="Buscar producto..." class="search-bar"/>
-                    <button @click="toggleFormulario()" class="btn">{{ formularioVisible ? 'Cancelar' : 'Nuevo Stock' }}</button>
+                    <div class="filters-container" style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
+                        <div class="filter-field" style="display: flex; flex-direction: column; min-width: 200px;">
+                            <label style="margin-bottom: 5px; font-weight: bold;">Buscar producto:</label>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarStocks" placeholder="Buscar producto..." class="search-bar"/>
+                        </div>
+                        <div class="filter-field" style="display: flex; flex-direction: column; min-width: 200px;">
+                            <label style="margin-bottom: 5px; font-weight: bold;">Filtrar por fecha:</label>
+                            <input type="date" v-model="filtroFecha" @change="filtrarStocks" class="search-bar"/>
+                        </div>
+                        <div class="filter-field" style="display: flex; flex-direction: column; min-width: 200px;">
+                            <label style="margin-bottom: 5px; font-weight: bold;">Filtrar por proveedor:</label>
+                            <input type="text" v-model="filtroProveedor" @input="filtrarStocks" placeholder="Descripción del proveedor..." class="search-bar"/>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                        <button @click="limpiarFiltros()" class="btn" style="background: #6c757d;">Limpiar Filtros</button>
+                        <button @click="toggleFormulario()" class="btn">{{ formularioVisible ? 'Cancelar' : 'Nuevo Stock' }}</button>
+                    </div>
                     
                     <div v-if="formularioVisible" class="form-container">
                         <h3>{{ nuevoStock.id ? 'Modificar Stock - ' + (nuevoStock.nombreProductoActualizado || 'Producto') : 'Agregar Stock' }}</h3>

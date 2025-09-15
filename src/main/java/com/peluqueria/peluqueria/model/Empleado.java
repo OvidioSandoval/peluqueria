@@ -42,6 +42,18 @@ public class Empleado {
     @Column(name = "fecha_ingreso")
     private LocalDate fechaIngreso;
 
+    @ColumnDefault("0")
+    @Column(name = "total_pagado")
+    private Integer totalPagado;
+
+    @ColumnDefault("0")
+    @Column(name = "sueldo_total")
+    private Integer sueldoTotal;
+
+    @ColumnDefault("0")
+    @Column(name = "diferencia")
+    private Integer diferencia;
+
     public Integer getId() {
         return id;
     }
@@ -112,6 +124,30 @@ public class Empleado {
 
     public void setFechaIngreso(LocalDate fechaIngreso) {
         this.fechaIngreso = fechaIngreso;
+    }
+
+    public Integer getTotalPagado() {
+        return totalPagado;
+    }
+
+    public void setTotalPagado(Integer totalPagado) {
+        this.totalPagado = totalPagado;
+    }
+
+    public Integer getSueldoTotal() {
+        return sueldoTotal;
+    }
+
+    public void setSueldoTotal(Integer sueldoTotal) {
+        this.sueldoTotal = sueldoTotal;
+    }
+
+    public Integer getDiferencia() {
+        return diferencia;
+    }
+
+    public void setDiferencia(Integer diferencia) {
+        this.diferencia = diferencia;
     }
 
 }

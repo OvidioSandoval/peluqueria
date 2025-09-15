@@ -3,16 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Usuarios</title>
+  <title>Página Principal</title>
   <link rel="stylesheet" href="/modern-styles.css">
   <link rel="stylesheet" href="/unified-styles.css">
-  <link rel="stylesheet" href="">
+  <link rel="stylesheet" href="/compact-styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.css">
 </head>
-<body class="page-usuarios">
-<div id="navbar"></div>
-<div id="sidebar"></div>
+<body class="page-principal">
+<div style="position: fixed; top: 0; left: 0; right: 0; height: 70px; background: rgba(255, 248, 220, 0.95); backdrop-filter: blur(15px); border-bottom: 2px solid rgba(139, 69, 19, 0.2); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+    <h2 style="margin: 0; font-size: 1.5rem; color: #5d4037; font-weight: 800; text-shadow: 0 2px 4px rgba(255,255,255,0.8), 0 1px 2px rgba(93,64,55,0.3);">Peluquería LUNA</h2>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.js"></script>
@@ -21,7 +22,7 @@
 </div>
 
 <script src="/script.js"></script>
-<script type="module" src="/app-empleados.js"></script>
+<script type="module" src="/pagina-principal.js"></script>
 
 </body>
 </html>

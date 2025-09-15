@@ -37,7 +37,7 @@ new Vue({
             try {
                 const response = await fetch(`${config.apiBaseUrl}/usuarios/usuario-sesion`);
                 if (!response.ok) {
-                    window.location.href = '/login';
+                    window.location.href = '/web/alertas-stock';
                 }
             } catch (error) {
                 console.error('Error verificando sesión:', error);

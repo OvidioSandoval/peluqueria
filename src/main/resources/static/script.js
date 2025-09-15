@@ -518,6 +518,11 @@ DOMUtils.ready(() => {
     ComponentLoader.loadComponent('navbar', '/navbar.html');
   }
   
+  // Cargar optimizador compacto
+  const script = document.createElement('script');
+  script.src = '/compact-optimizer.js';
+  document.head.appendChild(script);
+  
   // Inicializar tooltips si existen
   const tooltips = document.querySelectorAll('[data-tooltip]');
   tooltips.forEach(element => {

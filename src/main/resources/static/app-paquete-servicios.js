@@ -12,7 +12,7 @@ new Vue({
         return {
             paquetes: [],
             paquetesFiltrados: [],
-            filtroBusqueda: '',
+
             paginaActual: 1,
             itemsPorPagina: 10,
             formularioVisible: false,
@@ -45,7 +45,7 @@ new Vue({
             try {
                 const response = await fetch(`${config.apiBaseUrl}/usuarios/usuario-sesion`);
                 if (!response.ok) {
-                    window.location.href = '/login';
+                    window.location.href = '/web/panel-control';
                 }
             } catch (error) {
                 console.error('Error verificando sesión:', error);
@@ -64,13 +64,7 @@ new Vue({
             }
         },
         filtrarPaquetes() {
-            if (this.filtroBusqueda) {
-                this.paquetesFiltrados = this.paquetes.filter(paquete =>
-                    paquete.descripcion.toLowerCase().includes(this.filtroBusqueda.toLowerCase())
-                );
-            } else {
-                this.paquetesFiltrados = this.paquetes;
-            }
+            this.paquetesFiltrados = this.paquetes;
         },
         async agregarPaquete() {
             try {
@@ -171,11 +165,10 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 style="text-align: center; margin-top: 60px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Paquetes de Servicios</h1>
-                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i></button>
+                <h1 style="text-align: center; margin-top: 90px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Paquetes de Servicios</h1>
+                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
-                    <label>Buscar Paquete:</label>
-                    <input type="text" v-model="filtroBusqueda" @input="filtrarPaquetes" placeholder="Buscar paquete..." class="search-bar"/>
+
                     <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Paquete</button>
                     
                     <div v-if="formularioVisible" class="form-container">

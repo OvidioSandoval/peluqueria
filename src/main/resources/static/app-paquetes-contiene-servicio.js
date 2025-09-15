@@ -14,7 +14,7 @@ new Vue({
             relacionesFiltradas: [],
             paquetes: [],
             servicios: [],
-            filtroBusqueda: '',
+
             paginaActual: 1,
             itemsPorPagina: 10,
             formularioVisible: false,
@@ -49,7 +49,7 @@ new Vue({
             try {
                 const response = await fetch(`${config.apiBaseUrl}/usuarios/usuario-sesion`);
                 if (!response.ok) {
-                    window.location.href = '/login';
+                    window.location.href = '/web/panel-control';
                 }
             } catch (error) {
                 console.error('Error verificando sesión:', error);
@@ -84,15 +84,7 @@ new Vue({
             }
         },
         filtrarRelaciones() {
-            if (this.filtroBusqueda.trim() === '') {
-                this.relacionesFiltradas = this.relaciones;
-            } else {
-                const busqueda = this.filtroBusqueda.toLowerCase();
-                this.relacionesFiltradas = this.relaciones.filter(relacion =>
-                    relacion.paqueteDescripcion?.toLowerCase().includes(busqueda) ||
-                    relacion.servicioNombre?.toLowerCase().includes(busqueda)
-                );
-            }
+            this.relacionesFiltradas = this.relaciones;
         },
         async agregarRelacion() {
             if (!this.nuevaRelacion.paqueteId || !this.nuevaRelacion.servicioId) {
@@ -231,8 +223,7 @@ new Vue({
                 <h1 style="text-align: center; margin-top: 60px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Paquetes - Servicios</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i></button>
                 <main style="padding: 20px;">
-                    <label>Buscar Relación:</label>
-                    <input type="text" v-model="filtroBusqueda" @input="filtrarRelaciones" placeholder="Buscar por paquete o servicio..." class="search-bar"/>
+
                     <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Paquete</button>
                     
                     <div v-if="formularioVisible" class="form-container">

@@ -1,9 +1,11 @@
 package com.peluqueria.peluqueria.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "proveedor")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Proveedor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -61,4 +61,17 @@ public class ProductoController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @GetMapping("/bajo-stock")
+    public List<java.util.Map<String, Object>> obtenerProductosBajoStock() {
+        LOGGER.info("IN: Obteniendo productos con bajo stock");
+        try {
+            List<java.util.Map<String, Object>> productos = productoService.getProductosBajoStock();
+            LOGGER.info("OUT: [{}] productos con bajo stock encontrados", productos.size());
+            return productos;
+        } catch (Exception e) {
+            LOGGER.error("Error al obtener productos con bajo stock", e);
+            throw e;
+        }
+    }
 }

@@ -6,7 +6,7 @@
   <title>Empleados</title>
   <link rel="stylesheet" href="/modern-styles.css">
   <link rel="stylesheet" href="/unified-styles.css">
-  <link rel="stylesheet" href="">
+  <link rel="stylesheet" href="/compact-styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.css">
 </head>
@@ -16,6 +16,17 @@
 
 <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+  // Verificar que jsPDF esté disponible
+  window.addEventListener('load', function() {
+    if (typeof window.jspdf === 'undefined') {
+      console.error('jsPDF no está disponible');
+    } else {
+      console.log('jsPDF cargado correctamente');
+    }
+  });
+</script>
 
 <div class="content" id="app">
 </div>

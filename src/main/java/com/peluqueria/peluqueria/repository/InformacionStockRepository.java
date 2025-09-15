@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface InformacionStockRepository extends JpaRepository<InformacionStock, Integer> {
     
-    @Query("SELECT i FROM InformacionStock i WHERE i.stockActual <= i.producto.minimoStock")
+    @Query("SELECT i FROM InformacionStock i WHERE i.producto.cantidadStockInicial IS NOT NULL AND i.producto.minimoStock IS NOT NULL AND i.producto.cantidadStockInicial < i.producto.minimoStock")
     List<InformacionStock> findProductosConStockBajo();
     
     InformacionStock findTopByProductoIdOrderByFechaRegistroInformacionStockDesc(Integer productoId);

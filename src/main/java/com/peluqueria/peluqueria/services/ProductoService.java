@@ -10,8 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class ProductoService {
@@ -128,6 +127,31 @@ public class ProductoService {
         } catch (Exception e) {
             LOGGER.error("Error al guardar el producto", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    public List<Map<String, Object>> getProductosBajoStock() {
+        try {
+            List<Producto> productos = productoRepository.findAll();
+            return productos.stream()
+                .filter(producto -> {
+                    Integer stock = producto.getCantidadStockInicial() != null ? producto.getCantidadStockInicial() : 0;
+                    Integer stockMinimo = producto.getMinimoStock() != null ? producto.getMinimoStock() : 0;
+                    return stock < stockMinimo;
+                })
+                .map(producto -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", producto.getId());
+                    map.put("nombre", producto.getNombre());
+                    map.put("stock", producto.getCantidadStockInicial() != null ? producto.getCantidadStockInicial() : 0);
+                    map.put("stockMinimo", producto.getMinimoStock() != null ? producto.getMinimoStock() : 0);
+                    map.put("precio", producto.getPrecioVenta() != null ? producto.getPrecioVenta() : 0);
+                    return map;
+                })
+                .collect(java.util.stream.Collectors.toList());
+        } catch (Exception e) {
+            LOGGER.error("Error al obtener productos con bajo stock", e);
+            throw e;
         }
     }
 }

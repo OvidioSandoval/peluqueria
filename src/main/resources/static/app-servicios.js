@@ -52,7 +52,7 @@ new Vue({
             try {
                 const response = await fetch(`${config.apiBaseUrl}/usuarios/usuario-sesion`);
                 if (!response.ok) {
-                    window.location.href = '/login';
+                    window.location.href = '/web/panel-control';
                 }
             } catch (error) {
                 console.error('Error verificando sesión:', error);
@@ -88,6 +88,10 @@ new Vue({
                     (servicio.descripcion && servicio.descripcion.toLowerCase().includes(busqueda))
                 );
             }
+        },
+        limpiarFiltros() {
+            this.filtroBusqueda = '';
+            this.filtrarServicios();
         },
         async agregarServicio() {
             if (!this.nuevoServicio.nombre.trim()) {
@@ -254,11 +258,16 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 style="text-align: center; margin-top: 60px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Servicios</h1>
-                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i></button>
+                <h1 style="text-align: center; margin-top: 90px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Servicios</h1>
+                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
-                    <label>Buscar Servicio:</label>
-                    <input type="text" v-model="filtroBusqueda" @input="filtrarServicios" placeholder="Buscar servicio..." class="search-bar"/>
+                    <div class="filters-container">
+                        <div class="filter-group">
+                            <label>Buscar Servicio:</label>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarServicios" placeholder="Buscar servicio..." class="search-bar"/>
+                        </div>
+                        <button @click="limpiarFiltros" class="btn btn-secondary">Limpiar Filtros</button>
+                    </div>
                     <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Servicio</button>
                     
                     <div v-if="formularioVisible" class="form-container">

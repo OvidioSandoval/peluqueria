@@ -11,8 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -138,6 +137,25 @@ public class ServicioService {
             return serviciosDTO;
         } catch (Exception e) {
             LOGGER.error("Error al buscar servicios por descripción", e);
+            throw e;
+        }
+    }
+
+    public List<Map<String, Object>> getServiciosMasSolicitados() {
+        try {
+            List<Servicio> servicios = servicioRepository.findAll();
+            return servicios.stream()
+                .map(servicio -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", servicio.getId());
+                    map.put("nombre", servicio.getNombre());
+                    map.put("precio", servicio.getPrecioBase());
+                    map.put("cantidad", 0); // Real data would need join with turnos/ventas
+                    return map;
+                })
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            LOGGER.error("Error al obtener servicios más solicitados", e);
             throw e;
         }
     }

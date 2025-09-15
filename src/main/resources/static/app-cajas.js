@@ -12,9 +12,7 @@ new Vue({
         return {
             cajas: [],
             cajasFiltradas: [],
-            filtroBusqueda: '',
-            filtroFecha: new Date().toISOString().split('T')[0],
-            filtroEmpleado: '',
+
             paginaActual: 1,
             itemsPorPagina: 10,
             formularioVisible: false,
@@ -67,7 +65,7 @@ new Vue({
                 }
             } catch (error) {
                 console.error('Error verificando sesión:', error);
-                window.location.href = '/login ';
+                window.location.href = '/web/panel-control';
             }
         },
         async fetchCajas() {
@@ -95,20 +93,7 @@ new Vue({
             }
         },
         filtrarCajas() {
-            let filtradas = [...this.cajas];
-            if (this.filtroFecha) {
-                filtradas = filtradas.filter(caja => {
-                    if (!caja.fecha) return false;
-                    const fechaCaja = typeof caja.fecha === 'string' ? caja.fecha : new Date(caja.fecha).toISOString().split('T')[0];
-                    return fechaCaja.startsWith(this.filtroFecha);
-                });
-            }
-            if (this.filtroEmpleado) {
-                filtradas = filtradas.filter(caja =>
-                    caja.empleado && caja.empleado.id == this.filtroEmpleado
-                );
-            }
-            this.cajasFiltradas = filtradas;
+            this.cajasFiltradas = [...this.cajas];
         },
         async agregarCaja() {
             if (!this.nuevaCaja.nombre || !this.nuevaCaja.montoInicial) {
@@ -336,6 +321,42 @@ new Vue({
                 palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase()
             ).join(' ');
         },
+        
+
+        
+        exportarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(16);
+            doc.text('Reporte de Cajas', 20, 20);
+            doc.setFontSize(10);
+            doc.text('Fecha: ' + new Date().toLocaleDateString('es-ES'), 20, 30);
+            
+            const headers = [['ID', 'Nombre', 'Fecha', 'Empleado', 'Apertura', 'Cierre', 'M. Inicial', 'Estado']];
+            const data = this.cajasFiltradas.map(caja => [
+                caja.id,
+                caja.nombre || 'Sin nombre',
+                this.formatearFecha(caja.fecha),
+                this.getEmpleadoName(caja),
+                this.formatearHora(caja.horaApertura),
+                this.formatearHora(caja.horaCierre),
+                this.formatearNumero(caja.montoInicial || 0),
+                caja.estado
+            ]);
+            
+            doc.autoTable({
+                head: headers,
+                body: data,
+                startY: 40,
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [93, 64, 55] }
+            });
+            
+            const fecha = new Date().toISOString().split('T')[0];
+            doc.save('cajas_' + fecha + '.pdf');
+            NotificationSystem.success('Archivo PDF exportado exitosamente');
+        },
     },
     template: `
         <div class="glass-container">
@@ -349,25 +370,15 @@ new Vue({
                     .btn-secondary { background: #6c757d !important; color: white !important; }
                     .btn-secondary:hover { background: #5a6268 !important; }
                 </style>
-                <h1 style="text-align: center; margin-top: 60px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Cajas</h1>
-                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i></button>
+                <h1 style="text-align: center; margin-top: 90px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Cajas</h1>
+                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
-                    <div class="filters-container">
-                        <div class="filter-field">
-                            <label>Buscar por fecha:</label>
-                            <input type="date" v-model="filtroFecha" @change="filtrarCajas" class="search-bar"/>
-                        </div>
-                        <div class="filter-field">
-                            <label>Filtrar por empleado:</label>
-                            <select v-model="filtroEmpleado" @change="filtrarCajas" class="search-bar">
-                                <option value="">Todos los empleados</option>
-                                <option v-for="empleado in empleados" :key="empleado.id" :value="empleado.id">
-                                    {{ empleado.nombreCompleto }}
-                                </option>
-                            </select>
-                        </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                        <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nueva Caja</button>
+
+                        <button @click="exportarPDF()" class="btn" style="background: #dc3545;"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
                     </div>
-                    <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nueva Caja</button>
                     
                     <div v-if="formularioVisible" class="form-container">
                         <h3>{{ nuevaCaja.id ? 'Modificar Caja: ' + cajaSeleccionada : 'Agregar Nueva Caja' }}</h3>

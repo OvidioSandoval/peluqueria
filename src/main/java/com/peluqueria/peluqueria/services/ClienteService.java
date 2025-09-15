@@ -2,6 +2,8 @@ package com.peluqueria.peluqueria.services;
 
 import com.peluqueria.peluqueria.model.Cliente;
 import com.peluqueria.peluqueria.repository.ClienteRepository;
+import com.peluqueria.peluqueria.repository.TurnoRepository;
+import com.peluqueria.peluqueria.repository.VentaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class ClienteService {
@@ -19,6 +20,12 @@ public class ClienteService {
 
     @Autowired
     private ClienteRepository clienteRepository;
+    
+    @Autowired
+    private TurnoRepository turnoRepository;
+    
+    @Autowired
+    private VentaRepository ventaRepository;
 
     public List<Cliente> findAll() {
         try {
@@ -150,6 +157,40 @@ public class ClienteService {
             return clientes;
         } catch (Exception e) {
             LOGGER.error("Error al buscar clientes por nombre o teléfono", e);
+            throw e;
+        }
+    }
+
+    public List<Map<String, Object>> getClientesMasFrecuentes() {
+        try {
+            List<Cliente> clientes = clienteRepository.findAll();
+            return clientes.stream()
+                .map(cliente -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", cliente.getId());
+                    map.put("nombreCompleto", cliente.getNombreCompleto());
+                    map.put("telefono", cliente.getTelefono());
+                    map.put("correo", cliente.getCorreo());
+                    map.put("fechaNacimiento", cliente.getFechaNacimiento());
+                    
+                    // Contar turnos del cliente
+                    long visitas = turnoRepository.countByClienteId(cliente.getId());
+                    map.put("visitas", visitas);
+                    
+                    // Calcular total gastado en ventas
+                    Integer totalGastado = ventaRepository.findByClienteId(cliente.getId())
+                        .stream()
+                        .mapToInt(venta -> venta.getMontoTotal() != null ? venta.getMontoTotal() : 0)
+                        .sum();
+                    map.put("totalGastado", totalGastado);
+                    
+                    return map;
+                })
+                .filter(cliente -> (Long) cliente.get("visitas") > 0) // Solo clientes con visitas
+                .sorted((c1, c2) -> Long.compare((Long) c2.get("visitas"), (Long) c1.get("visitas"))) // Ordenar por visitas desc
+                .collect(java.util.stream.Collectors.toList());
+        } catch (Exception e) {
+            LOGGER.error("Error al obtener clientes más frecuentes", e);
             throw e;
         }
     }

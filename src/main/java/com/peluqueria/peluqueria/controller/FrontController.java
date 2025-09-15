@@ -14,13 +14,18 @@ public class FrontController {
     @GetMapping("/")
     public String mostrarIndex(Model model) {
         LOGGER.info("IN: [{}]");
-        return "index";
+        return "panel-control";
     }
 
     @GetMapping("/web/areas")
     public String mostrarAreas(Model model) {
         LOGGER.info("IN: mostrarAreas");
         return "areas";
+    }
+    @GetMapping("/web/pagina-principal")
+    public String mostrarPaginaPrincipal(Model model) {
+        LOGGER.info("IN: mostrarPaginaPrincipal");
+        return "pagina-principal";
     }
 
     @GetMapping("/web/cajas")
@@ -147,9 +152,33 @@ public class FrontController {
         return "usuarios";
     }
 
-    @GetMapping("/web/index")
+    @GetMapping("/web/panel-control")
     public String mostrarDashboard(Model model) {
         LOGGER.info("IN: mostrarDashboard");
-        return "index";
+        return "panel-control";
+    }
+
+    @GetMapping("/web/cliente-principal")
+    public String mostrarClientePrincipal(Model model) {
+        LOGGER.info("IN: mostrarClientePrincipal");
+        return "cliente-principal";
+    }
+
+    @GetMapping("/web/calendario-turno")
+    public String mostrarCalendarioTurno(Model model) {
+        LOGGER.info("IN: mostrarCalendarioTurno");
+        return "calendario-turno";
+    }
+
+    @GetMapping("/web/registro-venta")
+    public String mostrarRegistroVenta(Model model) {
+        LOGGER.info("IN: mostrarRegistroVenta");
+        return "registro-venta";
+    }
+
+    @GetMapping("/web/registro-compra")
+    public String mostrarRegistroCompra(Model model) {
+        LOGGER.info("IN: mostrarRegistroCompra");
+        return "registro-compra";
     }
 }

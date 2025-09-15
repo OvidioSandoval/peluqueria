@@ -52,7 +52,7 @@ new Vue({
             try {
                 const response = await fetch(`${config.apiBaseUrl}/usuarios/usuario-sesion`);
                 if (!response.ok) {
-                    window.location.href = '/login';
+                    window.location.href = '/web/panel-control';
                 }
             } catch (error) {
                 console.error('Error verificando sesión:', error);
@@ -97,6 +97,11 @@ new Vue({
             }
             this.gastosFiltrados = filtrados;
         },
+        limpiarFiltros() {
+            this.filtroBusqueda = '';
+            this.filtroFecha = '';
+            this.filtrarGastos();
+        },
         async agregarGasto() {
             try {
                 const gastoData = {
@@ -121,44 +126,7 @@ new Vue({
                 NotificationSystem.error(`Error al agregar gasto: ${error.message}`);
             }
         },
-        async modificarGasto() {
-            try {
-                const gastoData = {
-                    ...this.nuevoGasto,
-                    descripcion: this.capitalizarTexto(this.nuevoGasto.descripcion),
-                    categoriaGasto: this.capitalizarTexto(this.nuevoGasto.categoriaGasto)
-                };
-                const response = await fetch(`${config.apiBaseUrl}/gastos/actualizar_gasto/${this.nuevoGasto.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(gastoData)
-                });
-                if (response.ok) {
-                    this.toggleFormulario();
-                    await this.fetchGastos();
-                    NotificationSystem.success('Gasto actualizado exitosamente');
-                } else {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-            } catch (error) {
-                console.error('Error al modificar gasto:', error);
-                NotificationSystem.error(`Error al modificar gasto: ${error.message}`);
-            }
-        },
-        async eliminarGasto(gasto) {
-            NotificationSystem.confirm(`¿Eliminar gasto "${gasto.descripcion}"?`, async () => {
-                try {
-                    await fetch(`${config.apiBaseUrl}/gastos/eliminar_gasto/${gasto.id}`, {
-                        method: 'DELETE'
-                    });
-                    await this.fetchGastos();
-                    NotificationSystem.success('Gasto eliminado exitosamente');
-                } catch (error) {
-                    console.error('Error al eliminar gasto:', error);
-                    NotificationSystem.error('Error al eliminar gasto');
-                }
-            });
-        },
+
         async toggleFormulario() {
             this.formularioVisible = !this.formularioVisible;
             this.nuevoGasto = { 
@@ -173,15 +141,7 @@ new Vue({
                 await this.fetchGastos();
             }
         },
-        cargarGasto(gasto) {
-            this.nuevoGasto = {
-                ...gasto,
-                fechaGasto: gasto.fechaGasto ? (Array.isArray(gasto.fechaGasto) ? 
-                    new Date(gasto.fechaGasto[0], gasto.fechaGasto[1] - 1, gasto.fechaGasto[2]).toISOString().split('T')[0] : 
-                    gasto.fechaGasto) : new Date().toISOString().split('T')[0]
-            };
-            this.formularioVisible = true;
-        },
+
         cambiarPagina(pagina) {
             if (pagina >= 1 && pagina <= this.totalPaginas) {
                 this.paginaActual = pagina;
@@ -223,8 +183,8 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 style="text-align: center; margin-top: 60px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Gastos</h1>
-                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i></button>
+                <h1 style="text-align: center; margin-top: 90px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Gastos</h1>
+                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
                     <div class="filters-container">
                         <div class="filter-field">
@@ -235,6 +195,7 @@ new Vue({
                             <label>Filtrar por fecha:</label>
                             <input type="date" v-model="filtroFecha" @change="filtrarGastos" class="search-bar"/>
                         </div>
+                        <button @click="limpiarFiltros" class="btn btn-secondary">Limpiar Filtros</button>
                     </div>
                     <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Gasto</button>
                     
@@ -282,7 +243,7 @@ new Vue({
                                 <th>Fecha</th>
                                 <th>Categoría</th>
                                 <th>Empleado</th>
-                                <th>Acciones</th>
+
                             </tr>
                         </thead>
                         <tbody>
@@ -293,10 +254,7 @@ new Vue({
                                 <td>{{ formatearFecha(gasto.fechaGasto) }}</td>
                                 <td>{{ gasto.categoriaGasto }}</td>
                                 <td>{{ gasto.empleado ? gasto.empleado.nombreCompleto : 'N/A' }}</td>
-                                <td>
-                                    <button @click="cargarGasto(gasto)" class="btn-small">Editar</button>
-                                    <button @click="eliminarGasto(gasto)" class="btn-small btn-danger">Eliminar</button>
-                                </td>
+
                             </tr>
                         </tbody>
                     </table>

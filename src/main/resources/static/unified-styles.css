@@ -585,6 +585,237 @@ input, textarea, select {
   font-size: 14px;
 }
 
+/* ===== TEMA BEIGE Y DORADO UNIFICADO PARA TODAS LAS PÁGINAS ===== */
+
+/* Forzar estilos en todas las páginas */
+body.page-clientes,
+body.page-servicios,
+body.page-productos,
+body.page-empleados,
+body.page-ventas,
+body.page-gastos,
+body.page-areas,
+body.page-compras,
+body.page-proveedores,
+body.page-turnos,
+body.page-cajas,
+body {
+  background: linear-gradient(135deg, #f5f5dc 0%, #f0e68c 100%) !important;
+  color: #3e2723 !important;
+  min-height: 100vh !important;
+}
+
+/* Contenedores principales - Aplicar a todas las páginas */
+body .glass-container,
+body .content,
+body main,
+body #app .glass-container {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 2px solid rgba(139, 69, 19, 0.3) !important;
+  color: #3e2723 !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 8px 32px 0 rgba(139, 69, 19, 0.2) !important;
+}
+
+/* Formularios en todas las páginas */
+body .form-container,
+body .form-group {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 2px solid rgba(139, 69, 19, 0.3) !important;
+  color: #3e2723 !important;
+  border-radius: 15px !important;
+  padding: 20px !important;
+}
+
+/* Inputs y controles en todas las páginas */
+body input,
+body textarea,
+body select,
+body .form-control,
+body .search-bar,
+body input[type="text"],
+body input[type="email"],
+body input[type="number"],
+body input[type="date"],
+body input[type="time"] {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 2px solid rgba(139, 69, 19, 0.3) !important;
+  color: #3e2723 !important;
+  border-radius: 8px !important;
+  padding: 10px !important;
+}
+
+/* Botones en todas las páginas */
+body .btn,
+body button,
+body .btn-small,
+body .btn-primary,
+body .pagination button {
+  background: linear-gradient(135deg, #8b4513 0%, #daa520 100%) !important;
+  color: white !important;
+  border: 1px solid rgba(139, 69, 19, 0.5) !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  margin-bottom: 30px !important;
+}
+
+body .btn:hover,
+body button:hover {
+  background: linear-gradient(135deg, #654321 0%, #b8860b 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3) !important;
+}
+
+body .btn-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+}
+
+/* Tablas en todas las páginas */
+body table {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: 2px solid rgba(139, 69, 19, 0.2) !important;
+  border-radius: 15px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 16px 0 rgba(139, 69, 19, 0.15) !important;
+}
+
+body thead,
+body table thead {
+  background: linear-gradient(135deg, #8b4513 0%, #daa520 100%) !important;
+  color: white !important;
+}
+
+body thead th {
+  color: white !important;
+  font-weight: 700 !important;
+  padding: 15px !important;
+}
+
+body tbody td {
+  color: #3e2723 !important;
+  padding: 12px 15px !important;
+  border-bottom: 1px solid rgba(139, 69, 19, 0.1) !important;
+}
+
+body tbody tr:hover {
+  background: rgba(139, 69, 19, 0.05) !important;
+}
+
+/* Cards y tarjetas en todas las páginas */
+body .stat-card {
+  background: rgba(255, 248, 220, 0.95) !important;
+  border: 2px solid rgba(139, 69, 19, 0.2) !important;
+  color: #3e2723 !important;
+  border-radius: 20px !important;
+  padding: 25px !important;
+  box-shadow: 0 4px 16px 0 rgba(139, 69, 19, 0.1) !important;
+  transition: all 0.3s ease !important;
+}
+
+body .stat-card:hover {
+  transform: translateY(-8px) scale(1.02) !important;
+  box-shadow: 0 8px 25px 0 rgba(139, 69, 19, 0.2) !important;
+}
+
+/* Títulos en todas las páginas */
+body h1,
+body h2,
+body h3,
+body h4,
+body h5,
+body h6 {
+  color: #5d4037 !important;
+  font-weight: 700 !important;
+  text-shadow: 0 2px 4px rgba(255,255,255,0.8), 0 1px 2px rgba(93,64,55,0.3) !important;
+}
+
+/* Iconos en todas las páginas */
+body i,
+body .fas,
+body .far,
+body .fab {
+  color: #5d4037 !important;
+}
+
+body .stat-card i {
+  color: #8b4513 !important;
+  font-size: 2.5rem !important;
+  margin-bottom: 15px !important;
+}
+
+/* Labels y texto en todas las páginas */
+body label {
+  color: #5d4037 !important;
+  font-weight: bold !important;
+  margin-bottom: 8px !important;
+  display: block !important;
+}
+
+/* Paginación en todas las páginas */
+body .pagination {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 2px solid rgba(139, 69, 19, 0.2) !important;
+  border-radius: 15px !important;
+  padding: 15px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+/* Estados especiales */
+body .badge-abierto {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  color: white !important;
+  padding: 4px 12px !important;
+  border-radius: 20px !important;
+  font-weight: bold !important;
+}
+
+body .badge-cerrado {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+  color: white !important;
+  padding: 4px 12px !important;
+  border-radius: 20px !important;
+  font-weight: bold !important;
+}
+
+/* Filtros y controles */
+body .filters-container {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 2px solid rgba(139, 69, 19, 0.2) !important;
+  border-radius: 15px !important;
+  padding: 20px !important;
+  margin-bottom: 25px !important;
+}
+
+/* Navbar unificado */
+body .navbar {
+  background: rgba(255, 248, 220, 0.95) !important;
+  border-bottom: 2px solid rgba(139, 69, 19, 0.2) !important;
+  backdrop-filter: blur(15px) !important;
+}
+
+body .navbar-brand h2 {
+  color: #5d4037 !important;
+  font-weight: 800 !important;
+}
+
+body .navbar-menu a {
+  color: #3e2723 !important;
+  font-weight: 600 !important;
+}
+
+body .navbar-menu a:hover {
+  color: white !important;
+  background: linear-gradient(135deg, #8b4513 0%, #daa520 100%) !important;
+  border-radius: 8px !important;
+  transform: translateY(-2px) !important;
+}
+
 /* ===== RESPONSIVE ADICIONAL ===== */
 @media (max-width: 480px) {
   .notification-container {

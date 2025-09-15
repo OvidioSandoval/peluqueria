@@ -67,6 +67,10 @@ new Vue({
                 );
             }
         },
+        limpiarFiltros() {
+            this.filtroBusqueda = '';
+            this.filtrarClientes();
+        },
         async agregarCliente() {
             if (!this.validarEmail(this.nuevoCliente.correo)) {
                 NotificationSystem.error('Por favor ingrese un email válido');
@@ -210,23 +214,40 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 style="text-align: center; margin-top: 60px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Clientes</h1>
-                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i></button>
+                <h1 style="text-align: center; margin-top: 90px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Clientes</h1>
+                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
-                    <label>Buscar Cliente:</label>
-                    <input type="text" v-model="filtroBusqueda" @input="filtrarClientes" placeholder="Buscar por nombre, teléfono o email..." class="search-bar"/>
-                    <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Cliente</button>
+                    <div class="filters-container">
+                        <div class="filter-group">
+                            <label>Buscar Cliente:</label>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarClientes" placeholder="Nombre, teléfono o email..." class="search-bar"/>
+                        </div>
+                        <button @click="limpiarFiltros" class="btn btn-secondary">Limpiar</button>
+                        <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Cliente</button>
+                    </div>
                     
                     <div v-if="formularioVisible" class="form-container">
-                        <h3>{{ nuevoCliente.id ? 'Modificar Cliente: ' + clienteSeleccionado : 'Agregar Cliente' }}</h3>
-                        <label>Nombre Completo:</label>
-                        <input type="text" v-model="nuevoCliente.nombreCompleto" placeholder="Nombre Completo" required/>
-                        <label>Teléfono:</label>
-                        <input type="tel" v-model="nuevoCliente.telefono" placeholder="Teléfono" maxlength="10"/>
-                        <label>Correo Electrónico:</label>
-                        <input type="email" v-model="nuevoCliente.correo" placeholder="Correo Electrónico"/>
-                        <label>Fecha de Nacimiento:</label>
-                        <input type="date" v-model="nuevoCliente.fechaNacimiento" placeholder="Fecha de Nacimiento"/>
+                        <h3>{{ nuevoCliente.id ? 'Modificar: ' + clienteSeleccionado : 'Nuevo Cliente' }}</h3>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label>Nombre Completo:</label>
+                                <input type="text" v-model="nuevoCliente.nombreCompleto" placeholder="Nombre Completo" required/>
+                            </div>
+                            <div class="form-col">
+                                <label>Teléfono:</label>
+                                <input type="tel" v-model="nuevoCliente.telefono" placeholder="Teléfono" maxlength="10"/>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label>Correo Electrónico:</label>
+                                <input type="email" v-model="nuevoCliente.correo" placeholder="Correo"/>
+                            </div>
+                            <div class="form-col">
+                                <label>Fecha de Nacimiento:</label>
+                                <input type="date" v-model="nuevoCliente.fechaNacimiento"/>
+                            </div>
+                        </div>
                         <label>Redes Sociales:</label>
                         <textarea v-model="nuevoCliente.redesSociales" placeholder="Redes Sociales"></textarea>
                         <div class="form-buttons">

@@ -1,5 +1,6 @@
 package com.peluqueria.peluqueria.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "informacion_stock")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class InformacionStock {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

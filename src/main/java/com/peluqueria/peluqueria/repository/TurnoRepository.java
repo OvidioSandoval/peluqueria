@@ -19,4 +19,6 @@ public interface TurnoRepository extends JpaRepository<Turno, Integer> {
     List<Turno> findTurnosParaRecordatorio(
         @Param("fecha24h") LocalDate fecha24h, @Param("hora24h") LocalTime hora24h,
         @Param("fecha1h") LocalDate fecha1h, @Param("hora1h") LocalTime hora1h);
+    
+    long countByClienteId(Integer clienteId);
 }

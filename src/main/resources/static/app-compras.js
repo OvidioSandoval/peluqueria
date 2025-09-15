@@ -16,26 +16,14 @@ new Vue({
             filtroFecha: new Date().toISOString().split('T')[0],
             paginaActual: 1,
             itemsPorPagina: 10,
-            formularioVisible: false,
-            nuevaCompra: {
-                id: null,
-                producto: null,
-                proveedor: null,
-                cantidad: '',
-                total: '',
-                fechaCompra: new Date().toISOString().split('T')[0]
-            },
-            productos: [],
-            proveedores: [],
-            compraSeleccionada: '',
+
 
             mostrarSalir: false,
         };
     },
     mounted() {
         this.fetchCompras();
-        this.fetchProductos();
-        this.fetchProveedores();
+
     },
 
     computed: {
@@ -63,22 +51,7 @@ new Vue({
                 NotificationSystem.error(`Error al cargar las compras: ${error.message}`);
             }
         },
-        async fetchProductos() {
-            try {
-                const response = await fetch(`${config.apiBaseUrl}/productos`);
-                this.productos = await response.json();
-            } catch (error) {
-                console.error('Error al cargar productos:', error);
-            }
-        },
-        async fetchProveedores() {
-            try {
-                const response = await fetch(`${config.apiBaseUrl}/proveedores`);
-                this.proveedores = await response.json();
-            } catch (error) {
-                console.error('Error al cargar proveedores:', error);
-            }
-        },
+
         filtrarCompras() {
             let comprasFiltradas = this.compras;
             
@@ -99,104 +72,12 @@ new Vue({
             
             this.comprasFiltradas = comprasFiltradas;
         },
-        async agregarCompra() {
-            if (!this.nuevaCompra.producto || !this.nuevaCompra.proveedor || !this.nuevaCompra.cantidad || !this.nuevaCompra.total) {
-                NotificationSystem.error('Todos los campos son requeridos');
-                return;
-            }
-            try {
-                const compraData = {
-                    ...this.nuevaCompra,
-                    cantidad: parseInt(this.nuevaCompra.cantidad),
-                    total: parseInt(this.nuevaCompra.total)
-                };
-                const response = await fetch(`${config.apiBaseUrl}/compras/agregar_compra`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(compraData)
-                });
-                if (response.ok) {
-                    await this.fetchCompras();
-                    this.toggleFormulario();
-                    NotificationSystem.success('Compra agregada exitosamente');
-                } else {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-            } catch (error) {
-                console.error('Error al agregar compra:', error);
-                NotificationSystem.error(`Error al agregar compra: ${error.message}`);
-            }
+        limpiarFiltros() {
+            this.filtroBusqueda = '';
+            this.filtroFecha = '';
+            this.filtrarCompras();
         },
-        async modificarCompra() {
-            if (!this.nuevaCompra.producto || !this.nuevaCompra.proveedor || !this.nuevaCompra.cantidad || !this.nuevaCompra.total) {
-                NotificationSystem.error('Todos los campos son requeridos');
-                return;
-            }
-            try {
-                const compraData = {
-                    ...this.nuevaCompra,
-                    cantidad: parseInt(this.nuevaCompra.cantidad),
-                    total: parseInt(this.nuevaCompra.total)
-                };
-                const response = await fetch(`${config.apiBaseUrl}/compras/actualizar_compra/${this.nuevaCompra.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(compraData)
-                });
-                if (response.ok) {
-                    await this.fetchCompras();
-                    this.toggleFormulario();
-                    NotificationSystem.success('Compra actualizada exitosamente');
-                } else {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-            } catch (error) {
-                console.error('Error al modificar compra:', error);
-                NotificationSystem.error(`Error al modificar compra: ${error.message}`);
-            }
-        },
-        async eliminarCompra(compra) {
-            NotificationSystem.confirm(`¿Eliminar compra de "${compra.producto ? this.capitalizarTexto(compra.producto.nombre) : 'producto'}"?`, async () => {
-                try {
-                    const response = await fetch(`${config.apiBaseUrl}/compras/eliminar_compra/${compra.id}`, {
-                        method: 'DELETE'
-                    });
-                    if (response.ok) {
-                        await this.fetchCompras();
-                        NotificationSystem.success('Compra eliminada exitosamente');
-                    } else {
-                        throw new Error(`Error ${response.status}: ${response.statusText}`);
-                    }
-                } catch (error) {
-                    console.error('Error al eliminar compra:', error);
-                    NotificationSystem.error(`Error al eliminar compra: ${error.message}`);
-                }
-            });
-        },
-        toggleFormulario() {
-            this.formularioVisible = !this.formularioVisible;
-            this.nuevaCompra = {
-                id: null,
-                producto: null,
-                proveedor: null,
-                cantidad: '',
-                total: '',
-                fechaCompra: new Date().toISOString().split('T')[0]
-            };
-            this.compraSeleccionada = '';
-        },
-        cargarCompra(compra) {
-            this.nuevaCompra = {
-                id: compra.id,
-                producto: compra.producto,
-                proveedor: compra.proveedor,
-                cantidad: compra.cantidad || '',
-                total: compra.total || '',
-                fechaCompra: this.formatearFechaParaInput(compra.fechaCompra)
-            };
-            this.formularioVisible = true;
-            this.compraSeleccionada = compra.producto ? this.capitalizarTexto(compra.producto.nombre) : 'Compra';
-        },
+
         
         formatearFecha(fecha) {
             if (!fecha) return '';
@@ -255,8 +136,8 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 style="text-align: center; margin-top: 60px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Compras</h1>
-                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i></button>
+                <h1 style="text-align: center; margin-top: 90px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Compras</h1>
+                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
                     <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: end;">
                         <div style="flex: 1;">
@@ -267,39 +148,9 @@ new Vue({
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Filtrar por Fecha:</label>
                             <input type="date" v-model="filtroFecha" @change="filtrarCompras" class="search-bar"/>
                         </div>
+                        <button @click="limpiarFiltros" class="btn btn-secondary">Limpiar Filtros</button>
                     </div>
-                    <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nueva Compra</button>
-                    
-                    <div v-if="formularioVisible" class="form-container">
-                        <h3>{{ nuevaCompra.id ? 'Modificar Compra: ' + compraSeleccionada : 'Agregar Compra' }}</h3>
-                        <label>Producto:</label>
-                        <select v-model="nuevaCompra.producto" required>
-                            <option value="">Seleccionar Producto</option>
-                            <option v-for="producto in productos" :key="producto.id" :value="producto">
-                                {{ capitalizarTexto(producto.nombre) }}
-                            </option>
-                        </select>
-                        <label>Proveedor:</label>
-                        <select v-model="nuevaCompra.proveedor" required>
-                            <option value="">Seleccionar Proveedor</option>
-                            <option v-for="proveedor in proveedores" :key="proveedor.id" :value="proveedor">
-                                {{ capitalizarTexto(proveedor.descripcion) }}
-                            </option>
-                        </select>
-                        <br>
-                        <label>Cantidad:</label>
-                        <input type="number" v-model="nuevaCompra.cantidad" placeholder="Cantidad" min="1" required/>
-                        <label>Total:</label>
-                        <input type="number" v-model="nuevaCompra.total" placeholder="Total" min="0" required/>
-                        <label>Fecha de Compra:</label>
-                        <input type="date" v-model="nuevaCompra.fechaCompra" required/>
-                        <div class="form-buttons">
-                            <button @click="nuevaCompra.id ? modificarCompra() : agregarCompra()" class="btn">
-                                {{ nuevaCompra.id ? 'Modificar' : 'Agregar' }}
-                            </button>
-                            <button @click="toggleFormulario()" class="btn" style="background: #6c757d !important;">Cancelar</button>
-                        </div>
-                    </div>
+
                     
                     <table>
                         <thead>
@@ -310,7 +161,7 @@ new Vue({
                                 <th>Cantidad</th>
                                 <th>Total</th>
                                 <th>Fecha Compra</th>
-                                <th>Acciones</th>
+
                             </tr>
                         </thead>
                         <tbody>
@@ -321,10 +172,7 @@ new Vue({
                                 <td>{{ formatearNumero(compra.cantidad) }}</td>
                                 <td>{{ formatearNumero(compra.total) }}</td>
                                 <td>{{ formatearFecha(compra.fechaCompra) }}</td>
-                                <td>
-                                    <button @click="cargarCompra(compra)" class="btn-small">Editar</button>
-                                    <button @click="eliminarCompra(compra)" class="btn-small btn-danger">Eliminar</button>
-                                </td>
+
                             </tr>
                         </tbody>
                     </table>
