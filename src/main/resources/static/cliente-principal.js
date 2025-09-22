@@ -184,6 +184,16 @@ new Vue({
             return edad + ' años';
         },
         
+        getColorMetodoPago(metodoPago) {
+            const colores = {
+                'Efectivo': 'green',
+                'Tarjeta': 'blue',
+                'Transferencia': 'purple',
+                'N/A': 'grey'
+            };
+            return colores[metodoPago] || 'grey';
+        },
+        
         exportarPDF() {
             NotificationSystem.success('Función PDF disponible');
         }
@@ -216,10 +226,11 @@ new Vue({
                                         <v-list-item v-for="item in clientesFrecuentes" :key="item.cliente.id">
                                             <v-list-item-content>
                                                 <v-list-item-title>{{ item.cliente.nombreCompleto }}</v-list-item-title>
-                                                <v-list-item-subtitle>
-                                                    Visitas: {{ item.cantidadVisitas }} | Total: {{ formatearNumero(item.montoTotal) }}
-                                                </v-list-item-subtitle>
+                                                <v-list-item-subtitle>{{ item.cantidadVisitas }} visitas - {{ formatearNumero(item.montoTotal) }}</v-list-item-subtitle>
                                             </v-list-item-content>
+                                            <v-list-item-action>
+                                                <v-btn small @click="seleccionarCliente(item.cliente)">Ver Historial</v-btn>
+                                            </v-list-item-action>
                                         </v-list-item>
                                     </v-list>
                                 </v-card-text>
@@ -236,21 +247,29 @@ new Vue({
                                         :headers="[
                                             { text: 'Nombre', value: 'nombreCompleto' },
                                             { text: 'Teléfono', value: 'telefono' },
-                                            { text: 'Email', value: 'email' },
-                                            { text: 'Edad', value: 'fechaNacimiento' },
-                                            { text: 'Acciones', value: 'actions', sortable: false }
+                                            { text: 'RUC', value: 'ruc' },
+                                            { text: 'Email', value: 'correo' },
+                                            { text: 'Edad', value: 'edad' },
+                                            { text: 'Acciones', value: 'acciones', sortable: false }
                                         ]"
                                         :items="clientesPaginados"
                                         :items-per-page="itemsPorPagina"
                                         hide-default-footer
                                     >
-                                        <template v-slot:item.fechaNacimiento="{ item }">
+                                        <template v-slot:item.telefono="{ item }">
+                                            {{ item.telefono || 'N/A' }}
+                                        </template>
+                                        <template v-slot:item.ruc="{ item }">
+                                            {{ item.ruc || 'N/A' }}
+                                        </template>
+                                        <template v-slot:item.correo="{ item }">
+                                            {{ item.correo || 'N/A' }}
+                                        </template>
+                                        <template v-slot:item.edad="{ item }">
                                             {{ calcularEdad(item.fechaNacimiento) }}
                                         </template>
-                                        <template v-slot:item.actions="{ item }">
-                                            <v-btn small @click="seleccionarCliente(item)" color="primary">
-                                                Ver Historial
-                                            </v-btn>
+                                        <template v-slot:item.acciones="{ item }">
+                                            <v-btn small color="primary" @click="seleccionarCliente(item)">Ver Historial</v-btn>
                                         </template>
                                     </v-data-table>
                                     
@@ -258,45 +277,120 @@ new Vue({
                                         v-model="paginaActual"
                                         :length="totalPaginas"
                                         @input="cambiarPagina"
+                                        class="mt-4"
                                     ></v-pagination>
                                 </v-card-text>
                             </v-card>
                         </v-col>
                     </v-row>
                     
-                    <v-dialog v-model="mostrarHistorial" max-width="800px">
-                        <v-card v-if="clienteSeleccionado">
+                    <v-dialog v-model="mostrarHistorial" max-width="1200px">
+                        <v-card>
                             <v-card-title>
-                                Historial de {{ clienteSeleccionado.nombreCompleto }}
+                                <span class="headline">Información del Cliente</span>
                                 <v-spacer></v-spacer>
                                 <v-btn icon @click="cerrarHistorial">
                                     <v-icon>mdi-close</v-icon>
                                 </v-btn>
                             </v-card-title>
-                            <v-card-text>
-                                <v-progress-circular v-if="cargandoHistorial" indeterminate></v-progress-circular>
-                                <div v-else>
-                                    <v-btn @click="exportarPDF" color="success" class="mb-3">
-                                        Exportar PDF
-                                    </v-btn>
-                                    <v-data-table
-                                        :headers="[
-                                            { text: 'Fecha', value: 'fecha' },
-                                            { text: 'Servicio', value: 'tipoServicio' },
-                                            { text: 'Precio', value: 'precioCobrado' },
-                                            { text: 'Colaborador', value: 'colaborador' }
-                                        ]"
-                                        :items="historialServicios"
-                                        :items-per-page="10"
-                                    >
-                                        <template v-slot:item.fecha="{ item }">
-                                            {{ formatearFecha(item.fecha) }}
-                                        </template>
-                                        <template v-slot:item.precioCobrado="{ item }">
-                                            {{ formatearNumero(item.precioCobrado) }}
-                                        </template>
-                                    </v-data-table>
-                                </div>
+                            
+                            <v-card-text v-if="clienteSeleccionado">
+                                <v-row>
+                                    <v-col cols="12" md="6">
+                                        <v-card outlined>
+                                            <v-card-title class="subtitle-1">Datos Personales</v-card-title>
+                                            <v-card-text>
+                                                <v-list dense>
+                                                    <v-list-item>
+                                                        <v-list-item-content>
+                                                            <v-list-item-title>Nombre Completo</v-list-item-title>
+                                                            <v-list-item-subtitle>{{ clienteSeleccionado.nombreCompleto }}</v-list-item-subtitle>
+                                                        </v-list-item-content>
+                                                    </v-list-item>
+                                                    <v-list-item>
+                                                        <v-list-item-content>
+                                                            <v-list-item-title>Teléfono</v-list-item-title>
+                                                            <v-list-item-subtitle>{{ clienteSeleccionado.telefono || 'No registrado' }}</v-list-item-subtitle>
+                                                        </v-list-item-content>
+                                                    </v-list-item>
+                                                    <v-list-item>
+                                                        <v-list-item-content>
+                                                            <v-list-item-title>RUC</v-list-item-title>
+                                                            <v-list-item-subtitle>{{ clienteSeleccionado.ruc || 'No registrado' }}</v-list-item-subtitle>
+                                                        </v-list-item-content>
+                                                    </v-list-item>
+                                                    <v-list-item>
+                                                        <v-list-item-content>
+                                                            <v-list-item-title>Email</v-list-item-title>
+                                                            <v-list-item-subtitle>{{ clienteSeleccionado.correo || 'No registrado' }}</v-list-item-subtitle>
+                                                        </v-list-item-content>
+                                                    </v-list-item>
+                                                    <v-list-item>
+                                                        <v-list-item-content>
+                                                            <v-list-item-title>Redes Sociales</v-list-item-title>
+                                                            <v-list-item-subtitle>{{ clienteSeleccionado.redesSociales || 'No registrado' }}</v-list-item-subtitle>
+                                                        </v-list-item-content>
+                                                    </v-list-item>
+                                                    <v-list-item>
+                                                        <v-list-item-content>
+                                                            <v-list-item-title>Fecha de Nacimiento</v-list-item-title>
+                                                            <v-list-item-subtitle>{{ formatearFecha(clienteSeleccionado.fechaNacimiento) || 'No registrado' }}</v-list-item-subtitle>
+                                                        </v-list-item-content>
+                                                    </v-list-item>
+                                                    <v-list-item>
+                                                        <v-list-item-content>
+                                                            <v-list-item-title>Edad</v-list-item-title>
+                                                            <v-list-item-subtitle>{{ calcularEdad(clienteSeleccionado.fechaNacimiento) }}</v-list-item-subtitle>
+                                                        </v-list-item-content>
+                                                    </v-list-item>
+                                                    <v-list-item>
+                                                        <v-list-item-content>
+                                                            <v-list-item-title>Cliente desde</v-list-item-title>
+                                                            <v-list-item-subtitle>{{ formatearFecha(clienteSeleccionado.fechaCreacion) }}</v-list-item-subtitle>
+                                                        </v-list-item-content>
+                                                    </v-list-item>
+                                                </v-list>
+                                            </v-card-text>
+                                        </v-card>
+                                    </v-col>
+                                    
+                                    <v-col cols="12" md="6">
+                                        <v-card outlined>
+                                            <v-card-title class="subtitle-1">Historial de Servicios</v-card-title>
+                                            <v-card-text>
+                                                <v-progress-circular v-if="cargandoHistorial" indeterminate></v-progress-circular>
+                                                <div v-else-if="historialServicios.length === 0" class="text-center">
+                                                    <p>No hay servicios registrados para este cliente</p>
+                                                </div>
+                                                <v-data-table
+                                                    v-else
+                                                    :headers="[
+                                                        { text: 'Fecha', value: 'fecha' },
+                                                        { text: 'Servicio', value: 'tipoServicio' },
+                                                        { text: 'Precio', value: 'precioCobrado' },
+                                                        { text: 'Método Pago', value: 'metodoPago' },
+                                                        { text: 'Colaborador', value: 'colaborador' }
+                                                    ]"
+                                                    :items="historialServicios"
+                                                    :items-per-page="5"
+                                                    class="elevation-1"
+                                                >
+                                                    <template v-slot:item.fecha="{ item }">
+                                                        {{ formatearFecha(item.fecha) }}
+                                                    </template>
+                                                    <template v-slot:item.precioCobrado="{ item }">
+                                                        {{ formatearNumero(item.precioCobrado) }}
+                                                    </template>
+                                                    <template v-slot:item.metodoPago="{ item }">
+                                                        <v-chip small :color="getColorMetodoPago(item.metodoPago)" text-color="white">
+                                                            {{ item.metodoPago }}
+                                                        </v-chip>
+                                                    </template>
+                                                </v-data-table>
+                                            </v-card-text>
+                                        </v-card>
+                                    </v-col>
+                                </v-row>
                             </v-card-text>
                         </v-card>
                     </v-dialog>
