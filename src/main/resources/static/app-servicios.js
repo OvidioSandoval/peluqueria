@@ -254,6 +254,113 @@ new Vue({
             const categoria = this.categorias.find(c => c.id == this.nuevoServicio.categoriaId);
             return categoria ? categoria.descripcion : '';
         },
+        
+        exportarPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Título
+                doc.setTextColor(218, 165, 32);
+                doc.setFontSize(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Peluquería LUNA', 20, 20);
+                
+                doc.setTextColor(139, 69, 19);
+                doc.setFontSize(16);
+                doc.text('Catálogo de Servicios', 20, 35);
+                
+                // Fecha y total
+                doc.setFontSize(10);
+                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
+                doc.text(`Total de servicios: ${this.serviciosFiltrados.length}`, 150, 25);
+                
+                // Línea decorativa
+                doc.setDrawColor(218, 165, 32);
+                doc.setLineWidth(1);
+                doc.line(20, 45, 190, 45);
+                
+                let y = 60;
+                
+                // Agrupar por categoría
+                const serviciosPorCategoria = {};
+                this.serviciosFiltrados.forEach(servicio => {
+                    const categoria = this.getCategoriaDescripcion(servicio);
+                    if (!serviciosPorCategoria[categoria]) {
+                        serviciosPorCategoria[categoria] = [];
+                    }
+                    serviciosPorCategoria[categoria].push(servicio);
+                });
+                
+                // Mostrar servicios por categoría
+                Object.keys(serviciosPorCategoria).forEach(categoria => {
+                    if (y > 250) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    
+                    // Título de categoría
+                    doc.setTextColor(139, 69, 19);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(14);
+                    doc.text(categoria.toUpperCase(), 20, y);
+                    y += 15;
+                    
+                    // Servicios de la categoría
+                    serviciosPorCategoria[categoria].forEach((servicio, index) => {
+                        if (y > 250) {
+                            doc.addPage();
+                            y = 20;
+                        }
+                        
+                        doc.setTextColor(218, 165, 32);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(12);
+                        doc.text(`• ${servicio.nombre}`, 25, y);
+                        y += 8;
+                        
+                        doc.setTextColor(0, 0, 0);
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(10);
+                        
+                        if (servicio.descripcion) {
+                            const descripcion = servicio.descripcion.length > 80 ? 
+                                servicio.descripcion.substring(0, 80) + '...' : servicio.descripcion;
+                            doc.text(`   Descripción: ${descripcion}`, 30, y);
+                            y += 6;
+                        }
+                        
+                        doc.text(`   Precio: $${this.formatearNumero(servicio.precioBase)}`, 30, y);
+                        y += 6;
+                        
+                        doc.text(`   Estado: ${servicio.activo ? 'Activo' : 'Inactivo'}`, 30, y);
+                        y += 10;
+                    });
+                    
+                    y += 5;
+                });
+                
+                // Footer
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setDrawColor(218, 165, 32);
+                    doc.line(20, 280, 190, 280);
+                    doc.setTextColor(139, 69, 19);
+                    doc.setFontSize(8);
+                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
+                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                }
+                
+                const fecha = new Date().toISOString().split('T')[0];
+                doc.save(`catalogo-servicios-${fecha}.pdf`);
+                NotificationSystem.success('Catálogo de servicios exportado exitosamente');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                NotificationSystem.error('Error al generar el PDF: ' + error.message);
+            }
+        }
     },
     template: `
         <div class="glass-container">
@@ -269,6 +376,9 @@ new Vue({
                         <button @click="limpiarFiltros" class="btn btn-secondary">Limpiar Filtros</button>
                     </div>
                     <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Servicio</button>
+                    <button @click="exportarPDF" class="btn" style="background: #28a745; margin-left: 10px;" v-if="!formularioVisible">
+                        <i class="fas fa-file-pdf"></i> Exportar PDF
+                    </button>
                     
                     <div v-if="formularioVisible" class="form-container">
                         <h3>{{ nuevoServicio.id ? 'Modificar Servicio: ' + servicioSeleccionado : 'Agregar Servicio' }}</h3>

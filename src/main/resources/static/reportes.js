@@ -217,6 +217,9 @@ new Vue({
                 <button @click="reporteActivo = 'descuentos'" :class="{'active': reporteActivo === 'descuentos'}" class="btn">
                     Historial Descuentos
                 </button>
+                <button @click="window.location.href = '/web/empleado-principal'" class="btn" style="background: #28a745;">
+                    <i class="fas fa-users"></i> Panel Empleados
+                </button>
             </div>
 
             <div class="filtros-container">

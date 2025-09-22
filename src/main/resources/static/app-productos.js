@@ -292,6 +292,147 @@ new Vue({
             this.filtroStock = 'todos';
             this.filtrarProductos();
         },
+        
+        exportarPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Título
+                doc.setTextColor(218, 165, 32);
+                doc.setFontSize(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Peluquería LUNA', 20, 20);
+                
+                doc.setTextColor(139, 69, 19);
+                doc.setFontSize(16);
+                doc.text('Inventario de Productos', 20, 35);
+                
+                // Fecha y estadísticas
+                doc.setFontSize(10);
+                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
+                doc.text(`Total productos: ${this.productosFiltrados.length}`, 150, 25);
+                
+                const stockBajo = this.productosFiltrados.filter(p => this.getStockStatus(p) === 'bajo').length;
+                if (stockBajo > 0) {
+                    doc.setTextColor(220, 53, 69);
+                    doc.text(`Productos con stock bajo: ${stockBajo}`, 150, 35);
+                }
+                
+                // Línea decorativa
+                doc.setDrawColor(218, 165, 32);
+                doc.setLineWidth(1);
+                doc.line(20, 45, 190, 45);
+                
+                let y = 60;
+                
+                // Alertas de stock si existen
+                if (this.alertasStock.length > 0) {
+                    doc.setTextColor(139, 69, 19);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(14);
+                    doc.text('ALERTAS DE STOCK BAJO', 20, y);
+                    y += 15;
+                    
+                    this.alertasStock.forEach((producto, index) => {
+                        if (y > 250) {
+                            doc.addPage();
+                            y = 20;
+                        }
+                        
+                        doc.setTextColor(220, 53, 69);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text(`⚠ ${producto.nombre}`, 25, y);
+                        y += 8;
+                        
+                        doc.setTextColor(0, 0, 0);
+                        doc.setFont('helvetica', 'normal');
+                        doc.text(`   Stock actual: ${producto.cantidadStockInicial} - Mínimo: ${producto.minimoStock}`, 30, y);
+                        y += 10;
+                    });
+                    y += 10;
+                }
+                
+                // Inventario completo
+                doc.setTextColor(139, 69, 19);
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(14);
+                doc.text('INVENTARIO COMPLETO', 20, y);
+                y += 15;
+                
+                this.productosFiltrados.forEach((producto, index) => {
+                    if (y > 250) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    
+                    // Color según estado de stock
+                    const status = this.getStockStatus(producto);
+                    if (status === 'bajo') {
+                        doc.setTextColor(220, 53, 69);
+                    } else if (status === 'advertencia') {
+                        doc.setTextColor(255, 193, 7);
+                    } else {
+                        doc.setTextColor(218, 165, 32);
+                    }
+                    
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`${index + 1}. ${producto.nombre}`, 20, y);
+                    y += 8;
+                    
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFont('helvetica', 'normal');
+                    
+                    if (producto.descripcion) {
+                        const desc = producto.descripcion.length > 60 ? 
+                            producto.descripcion.substring(0, 60) + '...' : producto.descripcion;
+                        doc.text(`   Descripción: ${desc}`, 25, y);
+                        y += 6;
+                    }
+                    
+                    doc.text(`   Precio Compra: $${this.formatearNumero(producto.precioCompra)}`, 25, y);
+                    y += 6;
+                    doc.text(`   Precio Venta: $${this.formatearNumero(producto.precioVenta)}`, 25, y);
+                    y += 6;
+                    
+                    const stockText = `Stock: ${this.formatearNumero(producto.cantidadStockInicial)}`;
+                    const minimoText = producto.minimoStock ? ` (Mín: ${producto.minimoStock})` : '';
+                    const optimoText = producto.cantidadOptimaStock ? ` (Ópt: ${producto.cantidadOptimaStock})` : '';
+                    doc.text(`   ${stockText}${minimoText}${optimoText}`, 25, y);
+                    y += 6;
+                    
+                    if (producto.enPromocion && producto.precioPromocion) {
+                        doc.setTextColor(40, 167, 69);
+                        doc.text(`   EN PROMOCIÓN: $${this.formatearNumero(producto.precioPromocion)}`, 25, y);
+                        doc.setTextColor(0, 0, 0);
+                        y += 6;
+                    }
+                    
+                    doc.text(`   Estado: ${producto.activo ? 'Activo' : 'Inactivo'}`, 25, y);
+                    y += 12;
+                });
+                
+                // Footer
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setDrawColor(218, 165, 32);
+                    doc.line(20, 280, 190, 280);
+                    doc.setTextColor(139, 69, 19);
+                    doc.setFontSize(8);
+                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
+                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                }
+                
+                const fecha = new Date().toISOString().split('T')[0];
+                doc.save(`inventario-productos-${fecha}.pdf`);
+                NotificationSystem.success('Inventario exportado exitosamente');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                NotificationSystem.error('Error al generar el PDF: ' + error.message);
+            }
+        }
     },
     template: `
         <div class="glass-container">
@@ -316,6 +457,9 @@ new Vue({
                         <button @click="limpiarFiltros" class="btn btn-secondary">Limpiar Filtros</button>
                     </div>
                     <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Producto</button>
+                    <button @click="exportarPDF" class="btn" style="background: #28a745; margin-left: 10px;" v-if="!formularioVisible">
+                        <i class="fas fa-file-pdf"></i> Exportar PDF
+                    </button>
                     
                     <div v-if="formularioVisible" class="form-container">
                         <h3>{{ nuevoProducto.id ? 'Modificar Producto: ' + productoSeleccionado : 'Agregar Producto' }}</h3>

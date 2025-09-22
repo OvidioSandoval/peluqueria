@@ -243,6 +243,95 @@ new Vue({
             this.mostrarSalir = false;
             window.location.href = '/home';
         },
+        
+        exportarPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Título
+                doc.setTextColor(218, 165, 32);
+                doc.setFontSize(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Peluquería LUNA', 20, 20);
+                
+                doc.setTextColor(139, 69, 19);
+                doc.setFontSize(16);
+                doc.text('Lista de Clientes', 20, 35);
+                
+                // Fecha y total
+                doc.setFontSize(10);
+                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
+                doc.text(`Total de clientes: ${this.clientesFiltrados.length}`, 150, 25);
+                
+                // Línea decorativa
+                doc.setDrawColor(218, 165, 32);
+                doc.setLineWidth(1);
+                doc.line(20, 45, 190, 45);
+                
+                let y = 60;
+                
+                // Lista de clientes
+                this.clientesFiltrados.forEach((cliente, index) => {
+                    if (y > 250) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    
+                    doc.setTextColor(218, 165, 32);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`${index + 1}. ${cliente.nombreCompleto}`, 20, y);
+                    y += 8;
+                    
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFont('helvetica', 'normal');
+                    
+                    if (cliente.telefono) {
+                        doc.text(`   Teléfono: ${cliente.telefono}`, 25, y);
+                        y += 6;
+                    }
+                    if (cliente.ruc) {
+                        doc.text(`   RUC: ${cliente.ruc}`, 25, y);
+                        y += 6;
+                    }
+                    if (cliente.correo) {
+                        doc.text(`   Email: ${cliente.correo}`, 25, y);
+                        y += 6;
+                    }
+                    if (cliente.fechaNacimiento) {
+                        doc.text(`   Fecha Nacimiento: ${this.formatearFecha(cliente.fechaNacimiento)}`, 25, y);
+                        y += 6;
+                    }
+                    if (cliente.redesSociales) {
+                        const redes = cliente.redesSociales.length > 50 ? 
+                            cliente.redesSociales.substring(0, 50) + '...' : cliente.redesSociales;
+                        doc.text(`   Redes Sociales: ${redes}`, 25, y);
+                        y += 6;
+                    }
+                    y += 8;
+                });
+                
+                // Footer
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setDrawColor(218, 165, 32);
+                    doc.line(20, 280, 190, 280);
+                    doc.setTextColor(139, 69, 19);
+                    doc.setFontSize(8);
+                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
+                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                }
+                
+                const fecha = new Date().toISOString().split('T')[0];
+                doc.save(`lista-clientes-${fecha}.pdf`);
+                NotificationSystem.success('Lista de clientes exportada exitosamente');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                NotificationSystem.error('Error al generar el PDF: ' + error.message);
+            }
+        }
     },
     template: `
         <div class="glass-container">
@@ -269,6 +358,9 @@ new Vue({
                         </div>
                         <button @click="limpiarFiltros" class="btn btn-secondary">Limpiar Filtros</button>
                         <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Cliente</button>
+                        <button @click="exportarPDF" class="btn" style="background: #28a745;">
+                            <i class="fas fa-file-pdf"></i> Exportar PDF
+                        </button>
                     </div>
                     
                     <div v-if="formularioVisible" class="form-container">

@@ -36,6 +36,7 @@ new Vue({
                 id: null,
                 nombreCompleto: '',
                 telefono: '',
+                ruc: '',
                 correo: '',
                 redesSociales: '',
                 fechaNacimiento: null
@@ -310,6 +311,7 @@ new Vue({
                 id: null,
                 nombreCompleto: '',
                 telefono: '',
+                ruc: '',
                 correo: '',
                 redesSociales: '',
                 fechaNacimiento: null
@@ -352,6 +354,12 @@ new Vue({
             if (!email) return true;
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return emailRegex.test(email);
+        },
+        capitalizarTexto(texto) {
+            if (!texto) return '';
+            return texto.split(' ').map(palabra => 
+                palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase()
+            ).join(' ');
         },
     },
     template: `
@@ -457,9 +465,15 @@ new Vue({
                         </div>
                         <div class="form-row">
                             <div class="form-col">
+                                <label>RUC:</label>
+                                <input type="text" v-model="nuevoCliente.ruc" placeholder="RUC" maxlength="20"/>
+                            </div>
+                            <div class="form-col">
                                 <label>Correo Electrónico:</label>
                                 <input type="email" v-model="nuevoCliente.correo" placeholder="Correo"/>
                             </div>
+                        </div>
+                        <div class="form-row">
                             <div class="form-col">
                                 <label>Fecha de Nacimiento:</label>
                                 <input type="date" v-model="nuevoCliente.fechaNacimiento"/>

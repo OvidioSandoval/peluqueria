@@ -22,6 +22,12 @@ new Vue({
             cargandoHistorial: false,
             cargandoFrecuentes: false,
             generandoPDF: false,
+            filtros: {
+                nombre: '',
+                ruc: '',
+                telefono: '',
+                email: ''
+            }
         };
     },
     mounted() {
@@ -130,8 +136,48 @@ new Vue({
         },
         
         filtrarClientes() {
-            this.clientesFiltrados = this.clientes;
+            let clientesFiltrados = this.clientes;
+            
+            if (this.filtros.nombre.trim() !== '') {
+                const nombre = this.filtros.nombre.toLowerCase();
+                clientesFiltrados = clientesFiltrados.filter(cliente =>
+                    cliente.nombreCompleto && cliente.nombreCompleto.toLowerCase().includes(nombre)
+                );
+            }
+            
+            if (this.filtros.ruc.trim() !== '') {
+                const ruc = this.filtros.ruc.toLowerCase();
+                clientesFiltrados = clientesFiltrados.filter(cliente =>
+                    cliente.ruc && cliente.ruc.toLowerCase().includes(ruc)
+                );
+            }
+            
+            if (this.filtros.telefono.trim() !== '') {
+                const telefono = this.filtros.telefono.toLowerCase();
+                clientesFiltrados = clientesFiltrados.filter(cliente =>
+                    cliente.telefono && cliente.telefono.toLowerCase().includes(telefono)
+                );
+            }
+            
+            if (this.filtros.email.trim() !== '') {
+                const email = this.filtros.email.toLowerCase();
+                clientesFiltrados = clientesFiltrados.filter(cliente =>
+                    cliente.correo && cliente.correo.toLowerCase().includes(email)
+                );
+            }
+            
+            this.clientesFiltrados = clientesFiltrados;
             this.paginaActual = 1;
+        },
+        
+        limpiarFiltros() {
+            this.filtros = {
+                nombre: '',
+                ruc: '',
+                telefono: '',
+                email: ''
+            };
+            this.filtrarClientes();
         },
         
         seleccionarCliente(cliente) {
@@ -195,7 +241,116 @@ new Vue({
         },
         
         exportarPDF() {
-            NotificationSystem.success('Función PDF disponible');
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Título
+                doc.setTextColor(218, 165, 32);
+                doc.setFontSize(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Peluquería LUNA', 20, 20);
+                
+                doc.setTextColor(139, 69, 19);
+                doc.setFontSize(16);
+                doc.text('Reporte de Clientes', 20, 35);
+                
+                // Fecha
+                doc.setFontSize(10);
+                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
+                doc.text(`Total de clientes: ${this.clientesFiltrados.length}`, 150, 25);
+                
+                // Línea decorativa
+                doc.setDrawColor(218, 165, 32);
+                doc.setLineWidth(1);
+                doc.line(20, 45, 190, 45);
+                
+                let y = 60;
+                
+                // Clientes frecuentes si están disponibles
+                if (this.clientesFrecuentes.length > 0) {
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(14);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('CLIENTES FRECUENTES (TOP 10)', 20, y);
+                    y += 15;
+                    
+                    this.clientesFrecuentes.slice(0, 10).forEach((item, index) => {
+                        if (y > 250) {
+                            doc.addPage();
+                            y = 20;
+                        }
+                        
+                        doc.setTextColor(218, 165, 32);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text(`${index + 1}. ${item.cliente.nombreCompleto}`, 20, y);
+                        y += 8;
+                        
+                        doc.setTextColor(0, 0, 0);
+                        doc.setFont('helvetica', 'normal');
+                        doc.text(`   Visitas: ${item.cantidadVisitas} - Total gastado: $${this.formatearNumero(item.montoTotal)}`, 25, y);
+                        y += 10;
+                    });
+                    y += 10;
+                }
+                
+                // Lista completa de clientes
+                doc.setFont('helvetica', 'bold');
+                doc.text('LISTA COMPLETA DE CLIENTES', 20, y);
+                y += 15;
+                
+                this.clientesFiltrados.forEach((cliente, index) => {
+                    if (y > 250) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    
+                    doc.setTextColor(218, 165, 32);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`${index + 1}. ${cliente.nombreCompleto}`, 20, y);
+                    y += 8;
+                    
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFont('helvetica', 'normal');
+                    if (cliente.telefono) {
+                        doc.text(`   Teléfono: ${cliente.telefono}`, 25, y);
+                        y += 6;
+                    }
+                    if (cliente.ruc) {
+                        doc.text(`   RUC: ${cliente.ruc}`, 25, y);
+                        y += 6;
+                    }
+                    if (cliente.correo) {
+                        doc.text(`   Email: ${cliente.correo}`, 25, y);
+                        y += 6;
+                    }
+                    if (cliente.fechaNacimiento) {
+                        doc.text(`   Edad: ${this.calcularEdad(cliente.fechaNacimiento)}`, 25, y);
+                        y += 6;
+                    }
+                    y += 8;
+                });
+                
+                // Footer
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setDrawColor(218, 165, 32);
+                    doc.line(20, 280, 190, 280);
+                    doc.setTextColor(139, 69, 19);
+                    doc.setFontSize(8);
+                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
+                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                }
+                
+                const fecha = new Date().toISOString().split('T')[0];
+                doc.save(`reporte-clientes-${fecha}.pdf`);
+                NotificationSystem.success('Reporte PDF generado exitosamente');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                NotificationSystem.error('Error al generar el PDF: ' + error.message);
+            }
         }
     },
     template: `
@@ -210,9 +365,85 @@ new Vue({
                     
                     <v-row>
                         <v-col cols="12">
-                            <v-btn @click="toggleFrecuentes" color="primary">
+                            <v-btn @click="toggleFrecuentes" color="primary" class="mr-3">
                                 {{ mostrarFrecuentes ? 'Ocultar' : 'Mostrar' }} Clientes Frecuentes
                             </v-btn>
+                            <v-btn @click="exportarPDF" color="success" class="mr-3">
+                                <v-icon left>mdi-file-pdf</v-icon>
+                                Exportar PDF
+                            </v-btn>
+                            <v-btn @click="window.history.back()" color="secondary">
+                                <v-icon left>mdi-arrow-left</v-icon>
+                                Volver
+                            </v-btn>
+                        </v-col>
+                    </v-row>
+                    
+                    <!-- Filtros de Búsqueda -->
+                    <v-row>
+                        <v-col cols="12">
+                            <v-card>
+                                <v-card-title>
+                                    <v-icon left>mdi-filter</v-icon>
+                                    Filtros de Búsqueda
+                                </v-card-title>
+                                <v-card-text>
+                                    <v-row>
+                                        <v-col cols="12" md="3">
+                                            <v-text-field
+                                                v-model="filtros.nombre"
+                                                @input="filtrarClientes"
+                                                label="Buscar por nombre"
+                                                prepend-icon="mdi-account"
+                                                clearable
+                                                outlined
+                                                dense
+                                            ></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="3">
+                                            <v-text-field
+                                                v-model="filtros.ruc"
+                                                @input="filtrarClientes"
+                                                label="Buscar por RUC"
+                                                prepend-icon="mdi-card-account-details"
+                                                clearable
+                                                outlined
+                                                dense
+                                            ></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="3">
+                                            <v-text-field
+                                                v-model="filtros.telefono"
+                                                @input="filtrarClientes"
+                                                label="Buscar por teléfono"
+                                                prepend-icon="mdi-phone"
+                                                clearable
+                                                outlined
+                                                dense
+                                            ></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="3">
+                                            <v-text-field
+                                                v-model="filtros.email"
+                                                @input="filtrarClientes"
+                                                label="Buscar por email"
+                                                prepend-icon="mdi-email"
+                                                clearable
+                                                outlined
+                                                dense
+                                            ></v-text-field>
+                                        </v-col>
+                                    </v-row>
+                                    <v-row>
+                                        <v-col cols="12" class="text-center">
+                                            <v-btn @click="limpiarFiltros" color="warning" outlined>
+                                                <v-icon left>mdi-filter-remove</v-icon>
+                                                Limpiar Filtros
+                                            </v-btn>
+                                        </v-col>
+                                    </v-row>
+                                </v-card-text>
+                            </v-card>
                         </v-col>
                     </v-row>
                     

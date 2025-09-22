@@ -33,14 +33,6 @@ new Vue({
             },
             intervalId: null,
             mostrarSalir: false,
-            mostrarReporte: false,
-            empleadoReporte: null,
-            fechaInicio: new Date().toISOString().split('T')[0],
-            fechaFin: new Date().toISOString().split('T')[0],
-            reporteData: null,
-            cargandoReporte: false,
-            mostrarPagos: false,
-            pagosData: null,
         };
     },
     mounted() {
@@ -267,163 +259,7 @@ new Vue({
             ).join(' ');
         },
         
-        async generarReporte(empleado) {
-            console.log('Generando reporte para:', empleado.nombreCompleto);
-            this.empleadoReporte = empleado;
-            this.mostrarReporte = true;
-            this.reporteData = null;
-            await this.cargarReporteEmpleado();
-        },
-        
-        async cargarReporteEmpleado() {
-            if (!this.empleadoReporte) {
-                console.error('No hay empleado seleccionado para el reporte');
-                return;
-            }
-            
-            try {
-                this.cargandoReporte = true;
-                console.log('Cargando reporte para empleado:', this.empleadoReporte.nombreCompleto);
-                console.log('Periodo:', this.fechaInicio, 'al', this.fechaFin);
-                
-                const ventasResponse = await fetch(config.apiBaseUrl + '/ventas');
-                const detalleVentasResponse = await fetch(config.apiBaseUrl + '/detalle-ventas');
-                
-                if (!ventasResponse.ok || !detalleVentasResponse.ok) {
-                    throw new Error('Error al cargar datos: ' + ventasResponse.status + '/' + detalleVentasResponse.status);
-                }
-                
-                const ventas = await ventasResponse.json();
-                const detalleVentas = await detalleVentasResponse.json();
-                
-                console.log('Ventas totales:', ventas.length);
-                console.log('Detalles totales:', detalleVentas.length);
-                
-                const ventasFiltradas = ventas.filter(venta => 
-                    venta.empleado && venta.empleado.id === this.empleadoReporte.id &&
-                    venta.fechaVenta >= this.fechaInicio && venta.fechaVenta <= this.fechaFin
-                );
-                
-                console.log('Ventas filtradas:', ventasFiltradas.length);
-                
-                let serviciosRealizados = [];
-                let ingresosGenerados = 0;
-                let comisionTotal = 0;
-                
-                for (const venta of ventasFiltradas) {
-                    const detalles = detalleVentas.filter(detalle => detalle.venta && detalle.venta.id === venta.id);
-                    
-                    for (const detalle of detalles) {
-                        if (detalle.servicio) {
-                            serviciosRealizados.push({
-                                nombre: detalle.servicio.nombre,
-                                precio: detalle.precioUnitarioNeto,
-                                cantidad: detalle.cantidad,
-                                total: detalle.precioUnitarioNeto * detalle.cantidad,
-                                fecha: venta.fechaVenta
-                            });
-                        }
-                    }
-                    
-                    const ingresoVenta = detalles.reduce((sum, detalle) => sum + (detalle.precioUnitarioNeto * detalle.cantidad), 0);
-                    ingresosGenerados += ingresoVenta;
-                    comisionTotal += ingresoVenta * (this.empleadoReporte.comisionPorcentaje / 100);
-                }
-                
-                this.reporteData = {
-                    serviciosRealizados,
-                    totalServicios: serviciosRealizados.length,
-                    ingresosGenerados,
-                    comisionTotal,
-                    salarioTotal: this.empleadoReporte.sueldoBase + comisionTotal,
-                    pagado: this.empleadoReporte.totalPagado || 0,
-                    diferencia: (this.empleadoReporte.sueldoBase + comisionTotal) - (this.empleadoReporte.totalPagado || 0),
-                    ventasFiltradas
-                };
-                
-                console.log('Reporte generado:', this.reporteData);
-                
-            } catch (error) {
-                console.error('Error generando reporte:', error);
-                NotificationSystem.error('Error al generar el reporte: ' + error.message);
-            } finally {
-                this.cargandoReporte = false;
-            }
-        },
-        
-        cerrarReporte() {
-            this.mostrarReporte = false;
-            this.empleadoReporte = null;
-            this.reporteData = null;
-        },
-        
-        exportarPDF() {
-            if (!this.reporteData || !this.empleadoReporte) {
-                NotificationSystem.error('No hay datos para exportar');
-                return;
-            }
-            
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                
-                doc.setFontSize(16);
-                doc.text('Reporte de Empleado', 20, 20);
-                doc.setFontSize(12);
-                doc.text('Empleado: ' + this.empleadoReporte.nombreCompleto, 20, 35);
-                doc.text('Periodo: ' + this.fechaInicio + ' al ' + this.fechaFin, 20, 45);
-                
-                doc.text('Servicios Realizados: ' + this.reporteData.totalServicios, 20, 60);
-                doc.text('Ingresos Generados: $' + this.formatearNumero(this.reporteData.ingresosGenerados), 20, 70);
-                doc.text('Comision (' + this.empleadoReporte.comisionPorcentaje + '%): $' + this.formatearNumero(this.reporteData.comisionTotal), 20, 80);
-                doc.text('Sueldo Base: $' + this.formatearNumero(this.empleadoReporte.sueldoBase), 20, 90);
-                doc.text('Total a Cobrar: $' + this.formatearNumero(this.reporteData.salarioTotal), 20, 100);
-                doc.text('Ya Pagado: $' + this.formatearNumero(this.reporteData.pagado || 0), 20, 110);
-                doc.text('Diferencia a Pagar: $' + this.formatearNumero(this.reporteData.diferencia || 0), 20, 120);
-                
-                const fecha = new Date().toISOString().split('T')[0];
-                const nombreArchivo = 'reporte_' + this.empleadoReporte.nombreCompleto.replace(/\s+/g, '_') + '_' + fecha + '.pdf';
-                doc.save(nombreArchivo);
-                NotificationSystem.success('Reporte PDF exportado exitosamente');
-            } catch (error) {
-                console.error('Error al exportar PDF:', error);
-                NotificationSystem.error('Error al exportar PDF: ' + error.message);
-            }
-        },
-        
-        async mostrarPagosEmpleados() {
-            this.mostrarPagos = true;
-            await this.cargarPagosEmpleados();
-        },
-        
-        async cargarPagosEmpleados() {
-            try {
-                const empleadosConPagos = [];
-                for (const empleado of this.empleados) {
-                    empleadosConPagos.push({
-                        ...empleado,
-                        sueldoTotal: this.calcularSueldoTotal(empleado),
-                        pagado: empleado.totalPagado || 0,
-                        diferencia: this.calcularDiferencia(empleado)
-                    });
-                }
-                
-                this.pagosData = {
-                    empleados: empleadosConPagos,
-                    totalAPagar: empleadosConPagos.reduce((sum, emp) => sum + emp.sueldoTotal, 0),
-                    totalPagado: empleadosConPagos.reduce((sum, emp) => sum + emp.pagado, 0),
-                    totalDiferencia: empleadosConPagos.reduce((sum, emp) => sum + emp.diferencia, 0)
-                };
-            } catch (error) {
-                console.error('Error cargando pagos:', error);
-                NotificationSystem.error('Error al cargar datos de pagos');
-            }
-        },
-        
-        cerrarPagos() {
-            this.mostrarPagos = false;
-            this.pagosData = null;
-        }
+
     },
     template: `
         <div class="glass-container">
@@ -439,7 +275,6 @@ new Vue({
                         <button @click="limpiarFiltros" class="btn btn-secondary">Limpiar Filtros</button>
                     </div>
                     <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Empleado</button>
-                    <button @click="mostrarPagosEmpleados()" class="btn" style="background: #28a745; margin-left: 10px;">Resumen de Pagos</button>
                     
                     <div v-if="formularioVisible" class="form-container">
                         <h3>{{ nuevoEmpleado.id ? "Modificar Empleado: " + nuevoEmpleado.nombreCompleto : "Agregar Empleado" }}</h3>
@@ -527,7 +362,6 @@ new Vue({
                                 <td><span :class="empleado.activo ? 'status-active' : 'status-inactive'">{{ empleado.activo ? "Activo" : "Inactivo" }}</span></td>
                                 <td>
                                     <button @click="cargarEmpleado(empleado)" class="btn-small">Editar</button>
-                                    <button @click="generarReporte(empleado)" class="btn-small" style="background: #17a2b8;">Reporte</button>
                                     <button @click="eliminarEmpleado(empleado)" class="btn-small btn-danger">Eliminar</button>
                                 </td>
                             </tr>
@@ -541,152 +375,7 @@ new Vue({
                     </div>
                 </main>
             </div>
-            
-            <!-- Modal de Reporte -->
-            <div v-if="mostrarReporte" class="modal-overlay" @click.self="cerrarReporte()">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Reporte de {{ empleadoReporte ? empleadoReporte.nombreCompleto : "" }}</h3>
-                        <button @click="cerrarReporte()" class="btn-close">×</button>
-                    </div>
-                    
-                    <div class="filtros-reporte">
-                        <div class="fecha-input">
-                            <label>Fecha Inicio:</label>
-                            <input type="date" v-model="fechaInicio">
-                        </div>
-                        <div class="fecha-input">
-                            <label>Fecha Fin:</label>
-                            <input type="date" v-model="fechaFin">
-                        </div>
-                        <button @click="cargarReporteEmpleado()" class="btn btn-filtrar">Filtrar</button>
-                        <button @click="exportarPDF()" class="btn btn-pdf" :disabled="!reporteData">Exportar PDF</button>
-                    </div>
-                    
-                    <div v-if="cargandoReporte" class="loading">
-                        <div class="spinner"></div>
-                        <p>Cargando reporte...</p>
-                    </div>
-                    
-                    <div v-else-if="reporteData" class="reporte-contenido">
-                        <div class="resumen-empleado">
-                            <div class="stat-card">
-                                <div class="stat-number">{{ reporteData.totalServicios }}</div>
-                                <div class="stat-label">Servicios</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-number">{{ formatearNumero(reporteData.ingresosGenerados) }}</div>
-                                <div class="stat-label">Ingresos</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-number">{{ formatearNumero(reporteData.comisionTotal) }}</div>
-                                <div class="stat-label">Comision</div>
-                            </div>
-                            <div class="stat-card total">
-                                <div class="stat-number">{{ formatearNumero(reporteData.salarioTotal) }}</div>
-                                <div class="stat-label">Total a Cobrar</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-number">{{ formatearNumero(reporteData.pagado || 0) }}</div>
-                                <div class="stat-label">Ya Pagado</div>
-                            </div>
-                            <div class="stat-card diferencia">
-                                <div class="stat-number">{{ formatearNumero(reporteData.diferencia || 0) }}</div>
-                                <div class="stat-label">Diferencia a Pagar</div>
-                            </div>
-                        </div>
-                        
-                        <div class="detalle-empleado">
-                            <h4>Informacion del Empleado</h4>
-                            <div class="info-grid">
-                                <div><strong>Sueldo Base:</strong> {{ formatearNumero(empleadoReporte.sueldoBase) }}</div>
-                                <div><strong>Comision:</strong> {{ empleadoReporte.comisionPorcentaje }}%</div>
-                                <div><strong>Area:</strong> {{ empleadoReporte.area ? empleadoReporte.area.nombre : "N/A" }}</div>
-                            </div>
-                        </div>
-                        
-                        <div v-if="reporteData.serviciosRealizados.length > 0" class="servicios-detalle">
-                            <h4>Servicios Realizados</h4>
-                            <table class="servicios-tabla">
-                                <thead>
-                                    <tr>
-                                        <th>Servicio</th>
-                                        <th>Precio</th>
-                                        <th>Cantidad</th>
-                                        <th>Total</th>
-                                        <th>Fecha</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="(servicio, index) in reporteData.serviciosRealizados" :key="index">
-                                        <td>{{ servicio.nombre }}</td>
-                                        <td>{{ formatearNumero(servicio.precio) }}</td>
-                                        <td>{{ servicio.cantidad }}</td>
-                                        <td style="font-weight: bold;">{{ formatearNumero(servicio.total) }}</td>
-                                        <td>{{ servicio.fecha }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <div v-else class="no-data">
-                        <p>No hay datos para mostrar en el periodo seleccionado.</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Modal de Resumen de Pagos -->
-            <div v-if="mostrarPagos" class="modal-overlay" @click.self="cerrarPagos()">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Resumen de Pagos del Mes</h3>
-                        <button @click="cerrarPagos()" class="btn-close">×</button>
-                    </div>
-                    
-                    <div v-if="pagosData" class="pagos-contenido">
-                        <div class="resumen-general">
-                            <div class="stat-card">
-                                <div class="stat-number">{{ formatearNumero(pagosData.totalAPagar) }}</div>
-                                <div class="stat-label">Total a Pagar</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-number">{{ formatearNumero(pagosData.totalPagado) }}</div>
-                                <div class="stat-label">Total Pagado</div>
-                            </div>
-                            <div class="stat-card diferencia">
-                                <div class="stat-number">{{ formatearNumero(pagosData.totalDiferencia) }}</div>
-                                <div class="stat-label">Total Diferencia</div>
-                            </div>
-                        </div>
-                        
-                        <div class="tabla-pagos">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Empleado</th>
-                                        <th>Sueldo Base</th>
-                                        <th>Comisión</th>
-                                        <th>Total a Cobrar</th>
-                                        <th>Ya Pagado</th>
-                                        <th>Diferencia</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="empleado in pagosData.empleados" :key="empleado.id">
-                                        <td>{{ empleado.nombreCompleto }}</td>
-                                        <td>{{ formatearNumero(empleado.sueldoBase) }}</td>
-                                        <td>{{ formatearNumero(empleado.sueldoTotal - empleado.sueldoBase) }}</td>
-                                        <td style="font-weight: bold;">{{ formatearNumero(empleado.sueldoTotal) }}</td>
-                                        <td style="color: #007bff;">{{ formatearNumero(empleado.pagado) }}</td>
-                                        <td style="font-weight: bold;" :style="{ color: empleado.diferencia > 0 ? '#dc3545' : '#28a745' }">{{ formatearNumero(empleado.diferencia) }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
         </div>
     `
 });

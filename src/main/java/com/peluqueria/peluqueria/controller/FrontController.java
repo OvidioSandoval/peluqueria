@@ -181,4 +181,9 @@ public class FrontController {
         LOGGER.info("IN: mostrarRegistroCompra");
         return "registro-compra";
     }
+    @GetMapping("/web/empleado-principal")
+    public String mostrarEmpleado(Model model) {
+        LOGGER.info("IN: mostrarCalendarioTurno");
+        return "empleado-principal";
+    }
 }
