@@ -78,12 +78,6 @@ public class FrontController {
         return "gastos";
     }
 
-    @GetMapping("/web/informacion-stock")
-    public String mostrarInformacionStock(Model model) {
-        LOGGER.info("IN: mostrarInformacionStock");
-        return "informacion-stock";
-    }
-
     @GetMapping("/web/movimientos")
     public String mostrarMovimientos(Model model) {
         LOGGER.info("IN: mostrarMovimientos");

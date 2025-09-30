@@ -1,4 +1,4 @@
-﻿import config from './config.js';
+import config from './config.js';
 import NotificationSystem from './notification-system.js';
 
 new Vue({
@@ -255,50 +255,186 @@ new Vue({
         getNombreEmpleado(empleadoId) {
             const empleado = this.empleados.find(e => e.id === empleadoId);
             return empleado ? empleado.nombreCompleto : '';
+        },
+        
+        exportarPDF() {
+            if (!this.venta.clienteId || !this.venta.empleadoId) {
+                NotificationSystem.error('Complete la información de cliente y empleado');
+                return;
+            }
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Peluquería LUNA', 20, 20);
+                
+                doc.setFontSize(16);
+                doc.text('Registro de Venta', 20, 35);
+                
+                doc.setFontSize(10);
+                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
+                
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(1);
+                doc.line(20, 45, 190, 45);
+                
+                let y = 60;
+                
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(14);
+                doc.text('INFORMACIÓN DE LA VENTA', 20, y);
+                y += 15;
+                
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+                
+                if (this.venta.clienteId) {
+                    doc.text(`Cliente: ${this.getNombreCliente(this.venta.clienteId)}`, 25, y);
+                    y += 8;
+                }
+                
+                if (this.venta.empleadoId) {
+                    doc.text(`Empleado: ${this.getNombreEmpleado(this.venta.empleadoId)}`, 25, y);
+                    y += 8;
+                }
+                
+                doc.text(`Método de Pago: ${this.venta.metodoPago}`, 25, y);
+                y += 8;
+                
+                if (this.venta.descuentoAplicado > 0) {
+                    doc.text(`Descuento General: ${this.formatearNumero(this.venta.descuentoAplicado)}`, 25, y);
+                    y += 8;
+                }
+                
+                if (this.venta.observaciones) {
+                    doc.text(`Observaciones: ${this.venta.observaciones}`, 25, y);
+                    y += 8;
+                }
+                
+                y += 10;
+                
+                if (this.detalles.length > 0) {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(14);
+                    doc.text('DETALLES DE LA VENTA', 20, y);
+                    y += 15;
+                    
+                    this.detalles.forEach((detalle, index) => {
+                        if (y > 250) {
+                            doc.addPage();
+                            y = 20;
+                        }
+                        
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(12);
+                        doc.text(`${index + 1}. ${detalle.item.nombre} (${detalle.tipo})`, 25, y);
+                        y += 8;
+                        
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(10);
+                        
+                        doc.text(`   Cantidad: ${detalle.cantidad}`, 30, y);
+                        y += 6;
+                        doc.text(`   Precio Unitario: ${this.formatearNumero(detalle.precio)}`, 30, y);
+                        y += 6;
+                        
+                        if (detalle.descuento > 0) {
+                            doc.text(`   Descuento: ${this.formatearNumero(detalle.descuento)}`, 30, y);
+                            y += 6;
+                        }
+                        
+                        doc.text(`   Subtotal: ${this.formatearNumero(detalle.cantidad * detalle.precio)}`, 30, y);
+                        y += 10;
+                    });
+                    
+                    y += 5;
+                }
+                
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(14);
+                doc.text('RESUMEN', 20, y);
+                y += 15;
+                
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(12);
+                
+                doc.text(`Total Artículos: ${this.cantidadArticulos}`, 25, y);
+                y += 8;
+                doc.text(`Subtotal: ${this.formatearNumero(this.subtotal)}`, 25, y);
+                y += 8;
+                doc.text(`Total Descuentos: ${this.formatearNumero(this.totalDescuentos)}`, 25, y);
+                y += 8;
+                
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(16);
+                doc.text(`TOTAL: ${this.formatearNumero(this.total)}`, 25, y);
+                
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setDrawColor(0, 0, 0);
+                    doc.line(20, 280, 190, 280);
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(8);
+                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
+                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                }
+                
+                const fecha = new Date().toISOString().split('T')[0];
+                doc.save(`registro-venta-${fecha}.pdf`);
+                NotificationSystem.success('Registro de venta exportado exitosamente');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                NotificationSystem.error('Error al generar el PDF: ' + error.message);
+            }
         }
     },
-    template: '<div class="glass-container">' +
+    template: '<div class="page-container">' +
         '<div><h1 class="page-title">Registro de Venta</h1>' +
         '<button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>' +
-        '<main style="padding: 20px;">' +
-        '<div class="venta-form" class="btn">' +
-        '<h3 style="color: #5d4037; margin-bottom: 15px;"><i class="fas fa-user"></i> Información de la Venta</h3>' +
-        '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">' +
-        '<div>' +
-        '<label>Cliente *</label><select v-model="venta.clienteId" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">' +
+        '<main class="main-content">' +
+        '<div class="form-container">' +
+        '<h3 style="color: #5d4037; margin-bottom: 10px;"><i class="fas fa-user"></i> Información de la Venta</h3>' +
+        '<div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: end; width: 100%;">' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 200px;">' +
+        '<label>Cliente *</label><select v-model="venta.clienteId" required class="search-bar">' +
         '<option value="" disabled>Seleccionar Cliente</option>' +
         '<option v-for="cliente in clientes" :key="cliente.id" :value="cliente.id">{{ cliente.nombreCompleto }}</option></select></div>' +
-        '<div><label>Empleado *</label>' +
-        '<select v-model="venta.empleadoId" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 200px;"><label>Empleado *</label>' +
+        '<select v-model="venta.empleadoId" required class="search-bar">' +
         '<option value="" disabled>Seleccionar Empleado</option>' +
         '<option v-for="empleado in empleados" :key="empleado.id" :value="empleado.id">{{ empleado.nombreCompleto }}</option></select></div>' +
-        '<div><label>Método de Pago</label><select v-model="venta.metodoPago" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 120px;"><label>Método de Pago</label><select v-model="venta.metodoPago" class="filter-select">' +
         '<option value="EFECTIVO">Efectivo</option><option value="TARJETA">Tarjeta</option><option value="TRANSFERENCIA">Transferencia</option></select></div>' +
-        '<div><label>Descuento General</label><input type="number" v-model="venta.descuentoAplicado" min="0" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;"></div></div>' +
-        '<div style="margin-top: 200px;"><label>Observaciones</label><textarea v-model="venta.observaciones" placeholder="Observaciones adicionales..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; resize: vertical; min-height: 60px;"></textarea></div></div>' +
-        '<div class="detalles-section" class="btn">' +
-        '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><h3 style="color: #5d4037; margin: 0;">' +
-        '<i class="fas fa-list">' +
-        '</i> Servicios y Productos</h3><button @click="mostrarFormDetalle = !mostrarFormDetalle" class="btn" class="btn"><i class="fas fa-plus">' +
-        '</i> Agregar Item</button></div><div v-if="mostrarFormDetalle" class="form-detalle" class="btn">' +
-        '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; align-items: end;"><div>' +
-        '<label>Tipo</label><select v-model="nuevoDetalle.tipo" @change="onTipoChange" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 100px;"><label>Descuento General</label><input type="number" v-model="venta.descuentoAplicado" min="0" class="search-bar"></div>' +
+        '<button @click="exportarPDF" class="btn btn-secondary" style="flex: 0 0 auto;"><i class="fas fa-file-pdf"></i> PDF</button></div>' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 300px; margin-top: 10px;"><label>Observaciones</label><textarea v-model="venta.observaciones" placeholder="Observaciones adicionales..." class="search-bar" style="resize: vertical; min-height: 40px; height: 40px;"></textarea></div></div>' +
+        '<div class="form-container">' +
+        '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;"><h3 style="color: #5d4037; margin: 0;">' +
+        '<i class="fas fa-list"></i> Servicios y Productos</h3><button @click="mostrarFormDetalle = !mostrarFormDetalle" class="btn btn-secondary"><i class="fas fa-plus"></i> Agregar Item</button></div>' +
+        '<div v-if="mostrarFormDetalle" class="form-container" style="background: #f8f9fa; margin-top: 10px; padding: 15px;">' +
+        '<div style="display: flex; gap: 6px; align-items: end; flex-wrap: wrap; width: 100%;"><div class="filter-group" style="flex: 0 0 auto; width: 80px;">' +
+        '<label>Tipo</label><select v-model="nuevoDetalle.tipo" @change="onTipoChange" class="filter-select">' +
         '<option value="servicio">Servicio</option><option value="producto">Producto</option></select></div>' +
-        '<div v-if="nuevoDetalle.tipo === \'servicio\'"><label>Servicio</label><select v-model="nuevoDetalle.servicioId" @change="onItemChange" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">' +
+        '<div v-if="nuevoDetalle.tipo === \'servicio\'" class="filter-group" style="flex: 0 0 auto; width: 200px;"><label>Servicio</label><select v-model="nuevoDetalle.servicioId" @change="onItemChange" class="search-bar">' +
         '<option value="" disabled>Seleccionar Servicio</option><option v-for="servicio in servicios" :key="servicio.id" :value="servicio.id">{{ servicio.nombre }}</option></select></div>' +
-        '<div v-if="nuevoDetalle.tipo === \'producto\'"><label>Producto</label><select v-model="nuevoDetalle.productoId" @change="onItemChange" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">' +
+        '<div v-if="nuevoDetalle.tipo === \'producto\'" class="filter-group" style="flex: 0 0 auto; width: 200px;"><label>Producto</label><select v-model="nuevoDetalle.productoId" @change="onItemChange" class="search-bar">' +
         '<option value="" disabled>Seleccionar Producto</option>' +
         '<option v-for="producto in productos" :key="producto.id" :value="producto.id">{{ producto.nombre }}</option></select></div>' +
-        '<div><label>Cantidad</label><input type="number" v-model="nuevoDetalle.cantidad" min="1" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px;"></div>' +
-        '<div><label>Precio</label><input type="number" v-model="nuevoDetalle.precio" min="0" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px;"></div>' +
-        '<div><label>Descuento</label><input type="number" v-model="nuevoDetalle.descuento" min="0" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px;"></div>' +
-        '<div><button @click="agregarDetalle" class="btn" class="btn">Agregar</button></div></div></div>' +
-        '<div v-if="detalles.length > 0"><table style="width: 100%; border-collapse: collapse; margin-top: 200px;"><thead><tr class="btn"><th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Tipo</th><th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Item</th><th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Cantidad</th><th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Precio</th><th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Descuento</th><th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Subtotal</th><th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Acciones</th></tr></thead><tbody><tr v-for="(detalle, index) in detalles" :key="index"><td style="padding: 10px; border: 1px solid #ddd; text-transform: capitalize;">{{ detalle.tipo }}</td><td style="padding: 10px; border: 1px solid #ddd;">{{ detalle.item.nombre }}</td><td style="padding: 10px; text-align: center; border: 1px solid #ddd;">{{ detalle.cantidad }}</td><td style="padding: 10px; text-align: right; border: 1px solid #ddd;">${{ formatearNumero(detalle.precio) }}</td><td style="padding: 10px; text-align: right; border: 1px solid #ddd;">${{ formatearNumero(detalle.descuento) }}</td><td style="padding: 10px; text-align: right; border: 1px solid #ddd;">${{ formatearNumero(detalle.cantidad * detalle.precio) }}</td><td style="padding: 10px; text-align: center; border: 1px solid #ddd;"><button @click="eliminarDetalle(index)" class="btn-small btn-danger">Eliminar</button></td></tr></tbody></table></div><div v-else style="text-align: center; padding: 40px; color: #666;"><i class="fas fa-shopping-cart"></i><p>No hay items agregados</p></div></div><div class="resumen-section" class="btn"><h3 style="color: #5d4037; margin-bottom: 15px;"><i class="fas fa-calculator"></i> Resumen de la Venta</h3><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;"><div class="btn"><div style="font-size: 24px; font-weight: bold; color: #007bff;">{{ cantidadArticulos }}</div><div style="color: #666;">Artículos</div></div><div class="btn"><div style="font-size: 24px; font-weight: bold; color: #28a745;">${{ formatearNumero(subtotal) }}</div><div style="color: #666;">Subtotal</div></div><div class="btn"><div style="font-size: 24px; font-weight: bold; color: #dc3545;">${{ formatearNumero(totalDescuentos) }}</div><div style="color: #666;">Descuentos</div></div><div class="btn"><div style="font-size: 28px; font-weight: bold;">${{ formatearNumero(total) }}</div><div>TOTAL</div></div></div></div><div class="acciones-section" style="text-align: center; margin-top: 200px;"><button @click="guardarVenta" :disabled="cargando || detalles.length === 0" class="btn" class="btn"><i class="fas fa-save"></i> {{ cargando ? "Guardando..." : "Guardar Venta" }}</button><button @click="limpiarFormulario" class="btn" class="btn">' +
-        '<i class="fas fa-trash"></i> Limpiar</button></div></main></div></div>'
+        '<div class="filter-group" style="flex: 0 0 auto; width: 60px;"><label>Cant.</label><input type="number" v-model="nuevoDetalle.cantidad" min="1" class="filter-select"></div>' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 80px;"><label>Precio</label><input type="number" v-model="nuevoDetalle.precio" min="0" class="search-bar"></div>' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 80px;"><label>Descuento</label><input type="number" v-model="nuevoDetalle.descuento" min="0" class="search-bar"></div>' +
+        '<div style="flex: 0 0 auto;"><button @click="agregarDetalle" class="btn btn-secondary">Agregar</button></div></div></div>' +
+        '<div v-if="detalles.length > 0" style="margin-top: 10px;"><table class="data-table"><thead><tr><th>Tipo</th><th>Item</th><th>Cant.</th><th>Precio</th><th>Desc.</th><th>Subtotal</th><th>Acciones</th></tr></thead><tbody><tr v-for="(detalle, index) in detalles" :key="index"><td style="text-transform: capitalize;">{{ detalle.tipo }}</td><td>{{ detalle.item.nombre }}</td><td style="text-align: center;">{{ detalle.cantidad }}</td><td style="text-align: right;">{{ formatearNumero(detalle.precio) }}</td><td style="text-align: right;">${{ formatearNumero(detalle.descuento) }}</td><td style="text-align: right;">{{ formatearNumero(detalle.cantidad * detalle.precio) }}</td><td style="text-align: center;"><button @click="eliminarDetalle(index)" class="btn btn-danger btn-small">×</button></td></tr></tbody></table></div><div v-else style="text-align: center; padding: 30px; color: #666;"><i class="fas fa-shopping-cart" style="font-size: 36px; margin-bottom: 8px;"></i><p>No hay items agregados</p></div></div>' +
+        '<div class="form-container"><h3 style="color: #5d4037; margin-bottom: 10px;"><i class="fas fa-calculator"></i> Resumen de la Venta</h3><div style="display: flex; gap: 10px; flex-wrap: wrap; width: 100%;"><div class="summary-card" style="flex: 1; min-width: 100px;"><div class="summary-value" style="color: #007bff;">{{ cantidadArticulos }}</div><div class="summary-label">Artículos</div></div><div class="summary-card" style="flex: 1; min-width: 100px;"><div class="summary-value" style="color: #28a745;">{{ formatearNumero(subtotal) }}</div><div class="summary-label">Subtotal</div></div><div class="summary-card" style="flex: 1; min-width: 100px;"><div class="summary-value" style="color: #dc3545;">{{ formatearNumero(totalDescuentos) }}</div><div class="summary-label">Descuentos</div></div><div class="summary-card" style="flex: 1; min-width: 120px;"><div class="summary-value" style="color: #66bb6a; font-size: 22px;">{{ formatearNumero(total) }}</div><div class="summary-label" style="font-size: 13px;">TOTAL</div></div></div></div>' +
+        '<div style="text-align: center; margin-top: 15px; display: flex; gap: 10px; justify-content: center;"><button @click="guardarVenta" :disabled="cargando || detalles.length === 0" class="btn"><i class="fas fa-save"></i> {{ cargando ? "Guardando..." : "Guardar Venta" }}</button><button @click="limpiarFormulario" class="btn btn-secondary">' +
+        '<i class="fas fa-broom"></i> Limpiar</button></div></main></div></div>'
 });
 
 const style = document.createElement('style');
-style.textContent = '.btn:disabled { opacity: 0.6; cursor: not-allowed; } .btn-small { padding: 5px 10px; font-size: 12px; } .btn-danger { background: #dc3545 !important; } label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }';
+style.textContent = '.btn:disabled { opacity: 0.6; cursor: not-allowed; } .btn-small { padding: 4px 8px; font-size: 11px; min-width: 30px; } .btn-danger { background: #add8e6 !important; color: #dc3545 !important; border: 1px solid #87ceeb; } label { display: block; margin-bottom: 3px; font-weight: bold; color: #333; font-size: 13px; } .summary-card { background: white; padding: 12px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); } .summary-value { font-size: 18px; font-weight: bold; margin-bottom: 3px; } .summary-label { font-size: 11px; color: #666; } .form-container { margin-bottom: 15px; }';
 document.head.appendChild(style);
-
-

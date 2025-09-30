@@ -177,15 +177,15 @@ new Vue({
 
                     <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nueva Área</button>
                     
-                    <div v-if="formularioVisible" class="form-container">
-                        <h3>{{ nuevaArea.id ? 'Modificar Área: ' + areaSeleccionada : 'Agregar Área' }}</h3>
-                        <label>Nombre:</label>
-                        <input type="text" v-model="nuevaArea.nombre" placeholder="Nombre" required/>
-                        <div class="form-buttons">
+                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 500px;">
+                        <h3>{{ nuevaArea.id ? 'Modificar Área - ' + areaSeleccionada : 'Nueva Área' }}</h3>
+                        <label>Nombre: *</label>
+                        <input type="text" v-model="nuevaArea.nombre" placeholder="Ingrese el nombre del área" required/>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
                             <button @click="nuevaArea.id ? modificarArea() : agregarArea()" class="btn">
                                 {{ nuevaArea.id ? 'Modificar' : 'Agregar' }}
                             </button>
-                            <button @click="toggleFormulario()" class="btn" class="btn">Cancelar</button>
+                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
                         </div>
                     </div>
                     

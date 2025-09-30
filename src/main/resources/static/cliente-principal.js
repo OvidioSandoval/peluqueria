@@ -224,67 +224,51 @@ new Vue({
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
-                // Título
                 doc.setTextColor(0, 0, 0);
                 doc.setFontSize(20);
                 doc.setFont('helvetica', 'bold');
                 doc.text('Peluquería LUNA', 20, 20);
                 
-                doc.setTextColor(0, 0, 0);
                 doc.setFontSize(16);
+                doc.setTextColor(0, 0, 0);
                 doc.text('Clientes Frecuentes', 20, 35);
                 
-                // Fecha
                 doc.setFontSize(10);
+                doc.setTextColor(0, 0, 0);
                 doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
                 doc.text(`Total: ${this.clientesFrecuentes.length} clientes`, 150, 25);
                 
-                // Línea decorativa
-                doc.setDrawColor(0, 0, 0);
-                doc.setLineWidth(1);
-                doc.line(20, 45, 190, 45);
+                const headers = [['Cliente', 'Visitas', 'Total Gastado', 'Teléfono', 'Email']];
+                const data = this.clientesFrecuentes.map(item => [
+                    item.cliente.nombreCompleto,
+                    item.cantidadVisitas,
+                    '$' + this.formatearNumero(item.montoTotal),
+                    item.cliente.telefono || 'N/A',
+                    item.cliente.correo || 'N/A'
+                ]);
                 
-                let y = 60;
-                
-                this.clientesFrecuentes.forEach((item, index) => {
-                    if (y > 250) {
-                        doc.addPage();
-                        y = 20;
+                doc.autoTable({
+                    head: headers,
+                    body: data,
+                    startY: 45,
+                    styles: { 
+                        fontSize: 8,
+                        textColor: [0, 0, 0],
+                        fillColor: [255, 255, 255]
+                    },
+                    headStyles: { 
+                        fillColor: [255, 255, 255],
+                        textColor: [0, 0, 0],
+                        fontStyle: 'bold'
+                    },
+                    bodyStyles: {
+                        textColor: [0, 0, 0],
+                        fillColor: [255, 255, 255]
+                    },
+                    alternateRowStyles: {
+                        fillColor: [255, 255, 255]
                     }
-                    
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(`${index + 1}. ${item.cliente.nombreCompleto}`, 20, y);
-                    y += 8;
-                    
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFont('helvetica', 'normal');
-                    doc.text(`   Visitas: ${item.cantidadVisitas}`, 25, y);
-                    y += 6;
-                    doc.text(`   Total gastado: $${this.formatearNumero(item.montoTotal)}`, 25, y);
-                    y += 6;
-                    if (item.cliente.telefono) {
-                        doc.text(`   Teléfono: ${item.cliente.telefono}`, 25, y);
-                        y += 6;
-                    }
-                    if (item.cliente.correo) {
-                        doc.text(`   Email: ${item.cliente.correo}`, 25, y);
-                        y += 6;
-                    }
-                    y += 8;
                 });
-                
-                // Footer
-                const pageCount = doc.internal.getNumberOfPages();
-                for (let i = 1; i <= pageCount; i++) {
-                    doc.setPage(i);
-                    doc.setDrawColor(0, 0, 0);
-                    doc.line(20, 280, 190, 280);
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFontSize(8);
-                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
-                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
-                }
                 
                 const fecha = new Date().toISOString().split('T')[0];
                 doc.save(`clientes-frecuentes-${fecha}.pdf`);
@@ -301,71 +285,52 @@ new Vue({
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
-                // Título
                 doc.setTextColor(0, 0, 0);
                 doc.setFontSize(20);
                 doc.setFont('helvetica', 'bold');
                 doc.text('Peluquería LUNA', 20, 20);
                 
-                doc.setTextColor(0, 0, 0);
                 doc.setFontSize(16);
+                doc.setTextColor(0, 0, 0);
                 doc.text('Lista de Clientes', 20, 35);
                 
-                // Fecha
                 doc.setFontSize(10);
+                doc.setTextColor(0, 0, 0);
                 doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
                 doc.text(`Total: ${this.clientesFiltrados.length} clientes`, 150, 25);
                 
-                // Línea decorativa
-                doc.setDrawColor(0, 0, 0);
-                doc.setLineWidth(1);
-                doc.line(20, 45, 190, 45);
+                const headers = [['#', 'Nombre', 'Teléfono', 'RUC', 'Email', 'Edad']];
+                const data = this.clientesFiltrados.map((cliente, index) => [
+                    index + 1,
+                    cliente.nombreCompleto,
+                    cliente.telefono || 'N/A',
+                    cliente.ruc || 'N/A',
+                    cliente.correo || 'N/A',
+                    this.calcularEdad(cliente.fechaNacimiento)
+                ]);
                 
-                let y = 60;
-                
-                this.clientesFiltrados.forEach((cliente, index) => {
-                    if (y > 250) {
-                        doc.addPage();
-                        y = 20;
+                doc.autoTable({
+                    head: headers,
+                    body: data,
+                    startY: 45,
+                    styles: { 
+                        fontSize: 8,
+                        textColor: [0, 0, 0],
+                        fillColor: [255, 255, 255]
+                    },
+                    headStyles: { 
+                        fillColor: [255, 255, 255],
+                        textColor: [0, 0, 0],
+                        fontStyle: 'bold'
+                    },
+                    bodyStyles: {
+                        textColor: [0, 0, 0],
+                        fillColor: [255, 255, 255]
+                    },
+                    alternateRowStyles: {
+                        fillColor: [255, 255, 255]
                     }
-                    
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(`${index + 1}. ${cliente.nombreCompleto}`, 20, y);
-                    y += 8;
-                    
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFont('helvetica', 'normal');
-                    if (cliente.telefono) {
-                        doc.text(`   Teléfono: ${cliente.telefono}`, 25, y);
-                        y += 6;
-                    }
-                    if (cliente.ruc) {
-                        doc.text(`   RUC: ${cliente.ruc}`, 25, y);
-                        y += 6;
-                    }
-                    if (cliente.correo) {
-                        doc.text(`   Email: ${cliente.correo}`, 25, y);
-                        y += 6;
-                    }
-                    if (cliente.fechaNacimiento) {
-                        doc.text(`   Edad: ${this.calcularEdad(cliente.fechaNacimiento)}`, 25, y);
-                        y += 6;
-                    }
-                    y += 8;
                 });
-                
-                // Footer
-                const pageCount = doc.internal.getNumberOfPages();
-                for (let i = 1; i <= pageCount; i++) {
-                    doc.setPage(i);
-                    doc.setDrawColor(0, 0, 0);
-                    doc.line(20, 280, 190, 280);
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFontSize(8);
-                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
-                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
-                }
                 
                 const fecha = new Date().toISOString().split('T')[0];
                 doc.save(`lista-clientes-${fecha}.pdf`);
@@ -387,94 +352,68 @@ new Vue({
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
-                // Título
                 doc.setTextColor(0, 0, 0);
                 doc.setFontSize(20);
                 doc.setFont('helvetica', 'bold');
                 doc.text('Peluquería LUNA', 20, 20);
                 
-                doc.setTextColor(0, 0, 0);
                 doc.setFontSize(16);
+                doc.setTextColor(0, 0, 0);
                 doc.text('Historial del Cliente', 20, 35);
                 
-                // Información del cliente
                 doc.setFontSize(14);
                 doc.setFont('helvetica', 'bold');
+                doc.setTextColor(0, 0, 0);
                 doc.text(this.clienteSeleccionado.nombreCompleto, 20, 50);
                 
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
-                let y = 60;
-                if (this.clienteSeleccionado.telefono) {
-                    doc.text(`Teléfono: ${this.clienteSeleccionado.telefono}`, 20, y);
-                    y += 6;
-                }
-                if (this.clienteSeleccionado.correo) {
-                    doc.text(`Email: ${this.clienteSeleccionado.correo}`, 20, y);
-                    y += 6;
-                }
+                doc.setTextColor(0, 0, 0);
+                doc.text(`Teléfono: ${this.clienteSeleccionado.telefono || 'N/A'}`, 20, 60);
+                doc.text(`Email: ${this.clienteSeleccionado.correo || 'N/A'}`, 20, 66);
                 
-                // Fecha de generación
                 doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
                 doc.text(`Total servicios: ${this.historialServicios.length}`, 150, 25);
                 
-                // Línea decorativa
-                doc.setDrawColor(0, 0, 0);
-                doc.setLineWidth(1);
-                doc.line(20, y + 5, 190, y + 5);
+                const headers = [['Fecha', 'Servicio', 'Precio', 'Método Pago', 'Colaborador']];
+                const data = this.historialServicios.map(servicio => [
+                    this.formatearFecha(servicio.fecha),
+                    servicio.tipoServicio,
+                    '$' + this.formatearNumero(servicio.precioCobrado),
+                    servicio.metodoPago,
+                    servicio.colaborador
+                ]);
                 
-                y += 20;
+                const totalGastado = this.historialServicios.reduce((sum, servicio) => sum + servicio.precioCobrado, 0);
                 
-                // Encabezados de tabla
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'bold');
-                doc.text('Fecha', 20, y);
-                doc.text('Servicio', 50, y);
-                doc.text('Precio', 110, y);
-                doc.text('Método Pago', 140, y);
-                doc.text('Colaborador', 170, y);
-                
-                y += 8;
-                doc.setLineWidth(0.5);
-                doc.line(20, y, 190, y);
-                y += 5;
-                
-                // Datos del historial
-                doc.setFont('helvetica', 'normal');
-                let totalGastado = 0;
-                
-                this.historialServicios.forEach((servicio, index) => {
-                    if (y > 250) {
-                        doc.addPage();
-                        y = 20;
+                doc.autoTable({
+                    head: headers,
+                    body: data,
+                    startY: 75,
+                    styles: { 
+                        fontSize: 8,
+                        textColor: [0, 0, 0],
+                        fillColor: [255, 255, 255]
+                    },
+                    headStyles: { 
+                        fillColor: [255, 255, 255],
+                        textColor: [0, 0, 0],
+                        fontStyle: 'bold'
+                    },
+                    bodyStyles: {
+                        textColor: [0, 0, 0],
+                        fillColor: [255, 255, 255]
+                    },
+                    alternateRowStyles: {
+                        fillColor: [255, 255, 255]
+                    },
+                    foot: [['', '', '', 'TOTAL:', '$' + this.formatearNumero(totalGastado)]],
+                    footStyles: { 
+                        fillColor: [255, 255, 255],
+                        textColor: [0, 0, 0],
+                        fontStyle: 'bold'
                     }
-                    
-                    doc.text(this.formatearFecha(servicio.fecha), 20, y);
-                    doc.text(servicio.tipoServicio.substring(0, 15), 50, y);
-                    doc.text(`$${this.formatearNumero(servicio.precioCobrado)}`, 110, y);
-                    doc.text(servicio.metodoPago, 140, y);
-                    doc.text(servicio.colaborador.substring(0, 15), 170, y);
-                    
-                    totalGastado += servicio.precioCobrado;
-                    y += 8;
                 });
-                
-                // Total gastado
-                y += 10;
-                doc.setFont('helvetica', 'bold');
-                doc.text(`Total gastado: $${this.formatearNumero(totalGastado)}`, 20, y);
-                
-                // Footer
-                const pageCount = doc.internal.getNumberOfPages();
-                for (let i = 1; i <= pageCount; i++) {
-                    doc.setPage(i);
-                    doc.setDrawColor(0, 0, 0);
-                    doc.line(20, 280, 190, 280);
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFontSize(8);
-                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
-                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
-                }
                 
                 const fecha = new Date().toISOString().split('T')[0];
                 const nombreArchivo = `historial-${this.clienteSeleccionado.nombreCompleto.replace(/\s+/g, '-')}-${fecha}.pdf`;

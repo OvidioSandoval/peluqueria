@@ -1,4 +1,4 @@
-﻿import config from './config.js';
+import config from './config.js';
 import NotificationSystem from './notification-system.js';
 
 new Vue({
@@ -192,19 +192,156 @@ new Vue({
         getNombreProveedor(proveedorId) {
             const proveedor = this.proveedores.find(p => p.id === proveedorId);
             return proveedor ? proveedor.nombre : '';
+        },
+        
+        exportarPDF() {
+            if (!this.compra.proveedorId) {
+                NotificationSystem.error('Complete la información del proveedor');
+                return;
+            }
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Peluquería LUNA', 20, 20);
+                
+                doc.setFontSize(16);
+                doc.text('Registro de Compra', 20, 35);
+                
+                doc.setFontSize(10);
+                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
+                
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(1);
+                doc.line(20, 45, 190, 45);
+                
+                let y = 60;
+                
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(14);
+                doc.text('INFORMACIÓN DE LA COMPRA', 20, y);
+                y += 15;
+                
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+                
+                if (this.compra.proveedorId) {
+                    const proveedor = this.proveedores.find(p => p.id === this.compra.proveedorId);
+                    doc.text(`Proveedor: ${proveedor ? proveedor.descripcion : ''}`, 25, y);
+                    y += 8;
+                }
+                
+                doc.text(`Fecha de Compra: ${this.compra.fechaCompra}`, 25, y);
+                y += 8;
+                
+                if (this.compra.observaciones) {
+                    doc.text(`Observaciones: ${this.compra.observaciones}`, 25, y);
+                    y += 8;
+                }
+                
+                y += 10;
+                
+                if (this.detalles.length > 0) {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(14);
+                    doc.text('PRODUCTOS COMPRADOS', 20, y);
+                    y += 15;
+                    
+                    this.detalles.forEach((detalle, index) => {
+                        if (y > 250) {
+                            doc.addPage();
+                            y = 20;
+                        }
+                        
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(12);
+                        doc.text(`${index + 1}. ${detalle.producto.nombre}`, 25, y);
+                        y += 8;
+                        
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(10);
+                        
+                        doc.text(`   Cantidad: ${detalle.cantidad}`, 30, y);
+                        y += 6;
+                        doc.text(`   Precio Unitario: ${this.formatearNumero(detalle.precioUnitario)}`, 30, y);
+                        y += 6;
+                        doc.text(`   Total: ${this.formatearNumero(detalle.precioTotal)}`, 30, y);
+                        y += 10;
+                    });
+                    
+                    y += 5;
+                }
+                
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(14);
+                doc.text('RESUMEN', 20, y);
+                y += 15;
+                
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(12);
+                
+                doc.text(`Total Productos: ${this.cantidadTotal}`, 25, y);
+                y += 8;
+                
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(16);
+                doc.text(`TOTAL: ${this.formatearNumero(this.totalCompra)}`, 25, y);
+                
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setDrawColor(0, 0, 0);
+                    doc.line(20, 280, 190, 280);
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(8);
+                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
+                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                }
+                
+                const fecha = new Date().toISOString().split('T')[0];
+                doc.save(`registro-compra-${fecha}.pdf`);
+                NotificationSystem.success('Registro de compra exportado exitosamente');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                NotificationSystem.error('Error al generar el PDF: ' + error.message);
+            }
         }
     },
-    template: '<div class="glass-container">' +
+    template: '<div class="page-container">' +
         '<div><h1 class="page-title">Registro de Compra</h1>' +
         '<button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>' +
-        '<main style="padding: 20px;"><div class="compra-form" class="btn">' +
-        '<h3 style="color: #5d4037; margin-bottom: 15px;"><i class="fas fa-truck"></i> Información de la Compra</h3>' +
-        '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;"><div><label>Proveedor *</label><select v-model="compra.proveedorId" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;"><option value="" disabled>Seleccionar Proveedor</option><option v-for="proveedor in proveedores" :key="proveedor.id" :value="proveedor.id">{{ proveedor.descripcion }}</option></select></div>' +
-        '<div><label>Fecha de Compra *</label><input type="date" v-model="compra.fechaCompra" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;"></div></div><div style="margin-top: 200px;"><label>Observaciones</label><textarea v-model="compra.observaciones" placeholder="Observaciones adicionales..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; resize: vertical; min-height: 60px;"></textarea></div></div><div class="detalles-section" class="btn"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><h3 style="color: #5d4037; margin: 0;"><i class="fas fa-boxes"></i> Productos a Comprar</h3><button @click="mostrarFormDetalle = !mostrarFormDetalle" class="btn" class="btn"><i class="fas fa-plus"></i> Agregar Producto</button></div><div v-if="mostrarFormDetalle" class="form-detalle" class="btn"><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; align-items: end;"><div><label>Producto</label><select v-model="nuevoDetalle.productoId" @change="onProductoChange" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px;"><option value="" disabled>Seleccionar Producto</option><option v-for="producto in productos" :key="producto.id" :value="producto.id">{{ producto.nombre }}</option></select></div><div><label>Cantidad</label><input type="number" v-model="nuevoDetalle.cantidad" min="1" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px;"></div><div><label>Precio Unitario</label><input type="number" v-model="nuevoDetalle.precioUnitario" min="0" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px;"></div><div><label>Total</label><input type="text" :value="formatearNumero(nuevoDetalle.cantidad * nuevoDetalle.precioUnitario)" readonly class="btn"></div><div><button @click="agregarDetalle" class="btn" class="btn">Agregar</button></div></div></div><div v-if="detalles.length > 0"><table style="width: 100%; border-collapse: collapse; margin-top: 200px;"><thead><tr class="btn"><th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Producto</th><th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Cantidad</th><th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Precio Unit.</th><th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Total</th><th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Acciones</th></tr></thead><tbody><tr v-for="(detalle, index) in detalles" :key="index"><td style="padding: 10px; border: 1px solid #ddd;">{{ detalle.producto.nombre }}</td><td style="padding: 10px; text-align: center; border: 1px solid #ddd;">{{ detalle.cantidad }}</td><td style="padding: 10px; text-align: right; border: 1px solid #ddd;">${{ formatearNumero(detalle.precioUnitario) }}</td><td style="padding: 10px; text-align: right; border: 1px solid #ddd;">${{ formatearNumero(detalle.precioTotal) }}</td><td style="padding: 10px; text-align: center; border: 1px solid #ddd;"><button @click="eliminarDetalle(index)" class="btn-small btn-danger">Eliminar</button></td></tr></tbody></table></div><div v-else style="text-align: center; padding: 40px; color: #666;"><i class="fas fa-boxes"></i><p>No hay productos agregados</p></div></div><div class="resumen-section" class="btn"><h3 style="color: #5d4037; margin-bottom: 15px;"><i class="fas fa-calculator"></i> Resumen de la Compra</h3><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;"><div class="btn"><div style="font-size: 24px; font-weight: bold; color: #007bff;">{{ cantidadTotal }}</div><div style="color: #666;">Productos</div></div><div class="btn"><div style="font-size: 28px; font-weight: bold;">${{ formatearNumero(totalCompra) }}</div><div>TOTAL</div></div></div></div><div class="acciones-section" style="text-align: center; margin-top: 200px;"><button @click="guardarCompra" :disabled="cargando || detalles.length === 0" class="btn" class="btn"><i class="fas fa-save"></i> {{ cargando ? "Guardando..." : "Guardar Compra" }}</button><button @click="limpiarFormulario" class="btn" class="btn"><i class="fas fa-trash"></i> Limpiar</button></div></main></div></div>'
+        '<main class="main-content">' +
+        '<div class="form-container">' +
+        '<h3 style="color: #5d4037; margin-bottom: 10px;"><i class="fas fa-truck"></i> Información de la Compra</h3>' +
+        '<div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: end; width: 100%;">' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 200px;">' +
+        '<label>Proveedor *</label><select v-model="compra.proveedorId" required class="search-bar">' +
+        '<option value="" disabled>Seleccionar Proveedor</option>' +
+        '<option v-for="proveedor in proveedores" :key="proveedor.id" :value="proveedor.id">{{ proveedor.descripcion }}</option></select></div>' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 150px;"><label>Fecha de Compra *</label><input type="date" v-model="compra.fechaCompra" required class="search-bar"></div>' +
+        '<button @click="exportarPDF" class="btn btn-secondary" style="flex: 0 0 auto;"><i class="fas fa-file-pdf"></i> PDF</button></div>' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 300px; margin-top: 10px;"><label>Observaciones</label><textarea v-model="compra.observaciones" placeholder="Observaciones adicionales..." class="search-bar" style="resize: vertical; min-height: 40px; height: 40px;"></textarea></div></div>' +
+        '<div class="form-container">' +
+        '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;"><h3 style="color: #5d4037; margin: 0;">' +
+        '<i class="fas fa-boxes"></i> Productos a Comprar</h3><button @click="mostrarFormDetalle = !mostrarFormDetalle" class="btn btn-secondary"><i class="fas fa-plus"></i> Agregar Producto</button></div>' +
+        '<div v-if="mostrarFormDetalle" class="form-container" style="background: #f8f9fa; margin-top: 10px; padding: 15px;">' +
+        '<div style="display: flex; gap: 6px; align-items: end; flex-wrap: wrap; width: 100%;">' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 200px;"><label>Producto</label><select v-model="nuevoDetalle.productoId" @change="onProductoChange" class="search-bar">' +
+        '<option value="" disabled>Seleccionar Producto</option><option v-for="producto in productos" :key="producto.id" :value="producto.id">{{ producto.nombre }}</option></select></div>' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 60px;"><label>Cant.</label><input type="number" v-model="nuevoDetalle.cantidad" min="1" class="filter-select"></div>' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 80px;"><label>Precio Unit.</label><input type="number" v-model="nuevoDetalle.precioUnitario" min="0" class="search-bar"></div>' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 80px;"><label>Total</label><input type="text" :value="formatearNumero(nuevoDetalle.cantidad * nuevoDetalle.precioUnitario)" readonly class="search-bar"></div>' +
+        '<div style="flex: 0 0 auto;"><button @click="agregarDetalle" class="btn btn-secondary">Agregar</button></div></div></div>' +
+        '<div v-if="detalles.length > 0" style="margin-top: 10px;"><table class="data-table"><thead><tr><th>Producto</th><th>Cant.</th><th>Precio Unit.</th><th>Total</th><th>Acciones</th></tr></thead><tbody><tr v-for="(detalle, index) in detalles" :key="index"><td>{{ detalle.producto.nombre }}</td><td style="text-align: center;">{{ detalle.cantidad }}</td><td style="text-align: right;">{{ formatearNumero(detalle.precioUnitario) }}</td><td style="text-align: right;">{{ formatearNumero(detalle.precioTotal) }}</td><td style="text-align: center;"><button @click="eliminarDetalle(index)" class="btn btn-danger btn-small">×</button></td></tr></tbody></table></div><div v-else style="text-align: center; padding: 30px; color: #666;"><i class="fas fa-boxes" style="font-size: 36px; margin-bottom: 8px;"></i><p>No hay productos agregados</p></div></div>' +
+        '<div class="form-container"><h3 style="color: #5d4037; margin-bottom: 10px;"><i class="fas fa-calculator"></i> Resumen de la Compra</h3><div style="display: flex; gap: 10px; flex-wrap: wrap; width: 100%;"><div class="summary-card" style="flex: 1; min-width: 100px;"><div class="summary-value" style="color: #007bff;">{{ cantidadTotal }}</div><div class="summary-label">Productos</div></div><div class="summary-card" style="flex: 1; min-width: 120px;"><div class="summary-value" style="color: #66bb6a; font-size: 22px;">{{ formatearNumero(totalCompra) }}</div><div class="summary-label" style="font-size: 13px;">TOTAL</div></div></div></div>' +
+        '<div style="text-align: center; margin-top: 15px; display: flex; gap: 10px; justify-content: center;"><button @click="guardarCompra" :disabled="cargando || detalles.length === 0" class="btn"><i class="fas fa-save"></i> {{ cargando ? "Guardando..." : "Guardar Compra" }}</button><button @click="limpiarFormulario" class="btn btn-secondary">' +
+        '<i class="fas fa-broom"></i> Limpiar</button></div></main></div></div>'
 });
 
 const style = document.createElement('style');
-style.textContent = '.btn:disabled { opacity: 0.6; cursor: not-allowed; } .btn-small { padding: 5px 10px; font-size: 12px; } .btn-danger { background: #dc3545 !important; } label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }';
+style.textContent = '.btn:disabled { opacity: 0.6; cursor: not-allowed; } .btn-small { padding: 4px 8px; font-size: 11px; min-width: 30px; } .btn-danger { background: #add8e6 !important; color: #dc3545 !important; border: 1px solid #87ceeb; } label { display: block; margin-bottom: 3px; font-weight: bold; color: #333; font-size: 13px; } .summary-card { background: white; padding: 12px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); } .summary-value { font-size: 18px; font-weight: bold; margin-bottom: 3px; } .summary-label { font-size: 11px; color: #666; } .form-container { margin-bottom: 15px; }';
 document.head.appendChild(style);
-
-

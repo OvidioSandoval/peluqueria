@@ -103,6 +103,79 @@ new Vue({
         getProductoNombre(producto) {
             return producto ? producto.nombre : '-';
         },
+        
+        limpiarFiltros() {
+            this.filtroBusqueda = '';
+            this.filtrarDetalles();
+        },
+        
+        exportarPDF() {
+            try {
+                const doc = new window.jspdf.jsPDF();
+                
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Peluquería LUNA', 20, 20);
+                
+                doc.setFontSize(16);
+                doc.setTextColor(0, 0, 0);
+                doc.text('Detalle de Compras', 20, 35);
+                
+                doc.setFontSize(10);
+                doc.setTextColor(0, 0, 0);
+                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
+                doc.text(`Total registros: ${this.detallesFiltrados.length}`, 150, 25);
+                
+                const headers = [['Compra', 'Producto', 'Cantidad', 'Precio Unit.', 'Precio Total']];
+                const data = this.detallesFiltrados.map(detalle => [
+                    this.getCompraInfo(detalle.compra),
+                    this.getProductoNombre(detalle.producto),
+                    this.formatearNumero(detalle.cantidadComprada),
+                    '$' + this.formatearNumero(detalle.precioUnitario),
+                    '$' + this.formatearNumero(detalle.precioTotal)
+                ]);
+                
+                const totalGeneral = this.detallesFiltrados.reduce((sum, detalle) => sum + (detalle.precioTotal || 0), 0);
+                
+                doc.autoTable({
+                    head: headers,
+                    body: data,
+                    startY: 45,
+                    styles: { 
+                        fontSize: 8,
+                        textColor: [0, 0, 0],
+                        fillColor: [255, 255, 255]
+                    },
+                    headStyles: { 
+                        fillColor: [255, 255, 255],
+                        textColor: [0, 0, 0],
+                        fontStyle: 'bold'
+                    },
+                    bodyStyles: {
+                        textColor: [0, 0, 0],
+                        fillColor: [255, 255, 255]
+                    },
+                    alternateRowStyles: {
+                        fillColor: [255, 255, 255]
+                    },
+                    foot: [['', '', '', 'TOTAL:', '$' + this.formatearNumero(totalGeneral)]],
+                    footStyles: { 
+                        fillColor: [255, 255, 255],
+                        textColor: [0, 0, 0],
+                        fontStyle: 'bold'
+                    }
+                });
+                
+                const fecha = new Date().toISOString().split('T')[0];
+                doc.save(`detalle-compras-${fecha}.pdf`);
+                NotificationSystem.success('Detalle de compras exportado exitosamente');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                NotificationSystem.error('Error al generar el PDF: ' + error.message);
+            }
+        }
 
     },
     template: `
@@ -111,8 +184,16 @@ new Vue({
                 <h1 class="page-title">Gestión de Detalle de Compras</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i></button>
                 <main style="padding: 20px;">
-                    <label>Buscar Detalle:</label>
-                    <input type="text" v-model="filtroBusqueda" @input="filtrarDetalles" placeholder="Buscar por producto o compra..." class="search-bar"/>
+                    <div class="filters-container" style="display: flex; gap: 20px; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; width: fit-content;">
+                        <div class="filter-group" style="min-width: 320px;">
+                            <label>Buscar Detalle:</label>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarDetalles" placeholder="Buscar por producto o compra..." class="search-bar" style="width: 320px;"/>
+                        </div>
+                        <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
+                        <button @click="exportarPDF" class="btn btn-small">
+                            <i class="fas fa-file-pdf"></i> Exportar PDF
+                        </button>
+                    </div>
 
                     
                     <table>

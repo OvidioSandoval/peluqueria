@@ -12,6 +12,7 @@ new Vue({
         return {
             movimientos: [],
             movimientosFiltrados: [],
+            filtroBusqueda: '',
 
             paginaActual: 1,
             itemsPorPagina: 10,
@@ -50,6 +51,19 @@ new Vue({
             return this.movimientosFiltrados
                 .filter(m => m.tipo && m.tipo.toLowerCase().includes('egreso'))
                 .reduce((sum, m) => sum + (m.monto || 0), 0);
+        },
+        totalVentas() {
+            return this.movimientosFiltrados
+                .filter(m => m.tipo && m.tipo.toLowerCase().includes('venta'))
+                .reduce((sum, m) => sum + (m.monto || 0), 0);
+        },
+        totalCompras() {
+            return this.movimientosFiltrados
+                .filter(m => m.tipo && m.tipo.toLowerCase().includes('compra'))
+                .reduce((sum, m) => sum + (m.monto || 0), 0);
+        },
+        cajasAbiertas() {
+            return this.cajas.filter(caja => caja.estado && caja.estado.toLowerCase() === 'abierto');
         }
     },
     methods: {
@@ -84,7 +98,22 @@ new Vue({
             }
         },
         filtrarMovimientos() {
-            this.movimientosFiltrados = [...this.movimientos];
+            if (this.filtroBusqueda.trim() === '') {
+                this.movimientosFiltrados = [...this.movimientos];
+            } else {
+                const busqueda = this.filtroBusqueda.toLowerCase();
+                this.movimientosFiltrados = this.movimientos.filter(movimiento =>
+                    (movimiento.monto && movimiento.monto.toString().includes(busqueda)) ||
+                    (movimiento.caja && movimiento.caja.nombre && movimiento.caja.nombre.toLowerCase().includes(busqueda)) ||
+                    (movimiento.idAsociado && movimiento.idAsociado.toString().includes(busqueda)) ||
+                    (movimiento.tipo && movimiento.tipo.toLowerCase().includes(busqueda))
+                );
+            }
+        },
+        
+        limpiarFiltros() {
+            this.filtroBusqueda = '';
+            this.filtrarMovimientos();
         },
         async agregarMovimiento() {
             if (!this.nuevoMovimiento.monto || !this.nuevoMovimiento.cajaId || !this.nuevoMovimiento.tipo) {
@@ -219,6 +248,74 @@ new Vue({
             this.mostrarSalir = false;
             window.location.href = '/home';
         },
+        
+        exportarPDF() {
+            try {
+                const doc = new window.jspdf.jsPDF();
+                
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Peluquería LUNA', 20, 20);
+                
+                doc.setFontSize(16);
+                doc.setTextColor(0, 0, 0);
+                doc.text('Reporte de Movimientos', 20, 35);
+                
+                doc.setFontSize(10);
+                doc.setTextColor(0, 0, 0);
+                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
+                doc.text(`Total movimientos: ${this.movimientosFiltrados.length}`, 150, 25);
+                
+                const headers = [['Monto', 'Caja', 'ID Asociado', 'Tipo']];
+                const data = this.movimientosFiltrados.map(movimiento => [
+                    '$' + this.formatearNumero(movimiento.monto),
+                    movimiento.caja ? movimiento.caja.nombre || 'Caja ' + movimiento.caja.id : '-',
+                    movimiento.idAsociado || '-',
+                    movimiento.tipo
+                ]);
+                
+                doc.autoTable({
+                    head: headers,
+                    body: data,
+                    startY: 45,
+                    styles: { 
+                        fontSize: 8,
+                        textColor: [0, 0, 0],
+                        fillColor: [255, 255, 255]
+                    },
+                    headStyles: { 
+                        fillColor: [255, 255, 255],
+                        textColor: [0, 0, 0],
+                        fontStyle: 'bold'
+                    },
+                    bodyStyles: {
+                        textColor: [0, 0, 0],
+                        fillColor: [255, 255, 255]
+                    },
+                    alternateRowStyles: {
+                        fillColor: [255, 255, 255]
+                    },
+                    foot: [
+                        ['Ingresos: $' + this.formatearNumero(this.totalIngresos), 'Egresos: $' + this.formatearNumero(this.totalEgresos), '', ''],
+                        ['Ventas: $' + this.formatearNumero(this.totalVentas), 'Compras: $' + this.formatearNumero(this.totalCompras), '', '']
+                    ],
+                    footStyles: { 
+                        fillColor: [255, 255, 255],
+                        textColor: [0, 0, 0],
+                        fontStyle: 'bold'
+                    }
+                });
+                
+                const fecha = new Date().toISOString().split('T')[0];
+                doc.save(`movimientos-${fecha}.pdf`);
+                NotificationSystem.success('Reporte de movimientos exportado exitosamente');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                NotificationSystem.error('Error al generar el PDF: ' + error.message);
+            }
+        },
     },
     template: `
         <div class="glass-container">
@@ -227,62 +324,74 @@ new Vue({
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
 
-                    <button @click="toggleFormulario()" class="btn">Nuevo Movimiento</button>
+                    <div class="filters-container" style="display: flex; gap: 20px; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; width: fit-content;">
+                        <div class="filter-group">
+                            <label>Buscar Movimiento:</label>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarMovimientos" placeholder="Buscar por monto, caja, ID asociado o tipo..." class="search-bar" style="width: 350px;"/>
+                        </div>
+                        <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
+                        <button @click="toggleFormulario()" class="btn btn-small">Nuevo Movimiento</button>
+                        <button @click="exportarPDF" class="btn btn-small">
+                            <i class="fas fa-file-pdf"></i> Exportar PDF
+                        </button>
+                    </div>
                     
-                    <div v-if="formularioVisible" class="form-container">
-                        <h3>{{ nuevoMovimiento.id ? 'Modificar Movimiento - ' + (cajas.find(c => c.id == nuevoMovimiento.cajaId)?.nombre || 'Caja') : 'Agregar Movimiento' }}</h3>
-                        <label>Monto:</label>
-                        <input type="number" v-model="nuevoMovimiento.monto" placeholder="Monto" required/>
-                        <label>Caja:</label>
-                        <select v-model="nuevoMovimiento.cajaId" required>
-                            <option value="" disabled>Seleccionar Caja</option>
-                            <option v-for="caja in cajas" :key="caja.id" :value="caja.id">
-                                Caja {{ caja.id }} - {{ caja.nombre }} 
-                            </option>
-                        </select>
-                        <br>
-                        <label>ID Asociado:</label>
-                        <input type="number" v-model="nuevoMovimiento.idAsociado" placeholder="ID Asociado (opcional)"/>
-                        <label>Tipo:</label>
-                        <select v-model="nuevoMovimiento.tipo" required>
-                            <option value="" disabled>Seleccionar Tipo</option>
-                            <option value="INGRESO">Ingreso</option>
-                            <option value="EGRESO">Egreso</option>
-                            <option value="VENTA">Venta</option>
-                            <option value="COMPRA">Compra</option>
-                        </select>
-                        <div class="form-buttons">
+                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 800px;">
+                        <h3>{{ nuevoMovimiento.id ? 'Modificar Movimiento - ' + (cajas.find(c => c.id == nuevoMovimiento.cajaId)?.nombre || 'Caja') : 'Nuevo Movimiento' }}</h3>
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <label>Monto: *</label>
+                                <input type="number" v-model="nuevoMovimiento.monto" placeholder="Ingrese el monto" required/>
+                            </div>
+                            <div style="flex: 1; min-width: 200px;">
+                                <label>Caja: *</label>
+                                <select v-model="nuevoMovimiento.cajaId" required>
+                                    <option value="" disabled>Seleccionar Caja</option>
+                                    <option v-for="caja in cajasAbiertas" :key="caja.id" :value="caja.id">
+                                        Caja {{ caja.id }} - {{ caja.nombre }} 
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <label>ID Asociado:</label>
+                                <input type="number" v-model="nuevoMovimiento.idAsociado" placeholder="ID Asociado (opcional)"/>
+                            </div>
+                            <div style="flex: 1; min-width: 200px;">
+                                <label>Tipo: *</label>
+                                <select v-model="nuevoMovimiento.tipo" required>
+                                    <option value="" disabled>Seleccionar Tipo</option>
+                                    <option value="INGRESO">Ingreso</option>
+                                    <option value="EGRESO">Egreso</option>
+                                    <option value="VENTA">Venta</option>
+                                    <option value="COMPRA">Compra</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
                             <button @click="nuevoMovimiento.id ? modificarMovimiento() : agregarMovimiento()" class="btn">
                                 {{ nuevoMovimiento.id ? 'Modificar' : 'Agregar' }}
                             </button>
-                            <button @click="toggleFormulario()" class="btn" class="btn">
-                                Cancelar
-                            </button>
+                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
                         </div>
                     </div>
                     
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Monto</th>
                                 <th>Caja</th>
                                 <th>ID Asociado</th>
                                 <th>Tipo</th>
-                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="movimiento in movimientosPaginados" :key="movimiento.id">
-                                <td>{{ movimiento.id }}</td>
                                 <td>{{ formatearNumero(movimiento.monto) }}</td>
                                 <td>{{ movimiento.caja ? movimiento.caja.nombre || 'Caja ' + movimiento.caja.id : '-' }}</td>
                                 <td>{{ movimiento.idAsociado || '-' }}</td>
                                 <td>{{ movimiento.tipo }}</td>
-                                <td>
-                                    <button @click="cargarMovimiento(movimiento)" class="btn-small">Editar</button>
-                                    <button @click="eliminarMovimiento(movimiento)" class="btn-small btn-danger">Eliminar</button>
-                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -293,8 +402,8 @@ new Vue({
                         <button @click="cambiarPagina(paginaActual + 1)" :disabled="paginaActual === totalPaginas">Siguiente</button>
                     </div>
                     
-                    <div class="total">
-                        <strong>Ingresos: {{ formatearNumero(totalIngresos) }} | Egresos: {{ formatearNumero(totalEgresos) }}</strong>
+                    <div class="total" style="margin-top: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); border-radius: 10px; text-align: center;">
+                        <strong>Ingresos: {{ formatearNumero(totalIngresos) }} | Egresos: {{ formatearNumero(totalEgresos) }} | Ventas: {{ formatearNumero(totalVentas) }} | Compras: {{ formatearNumero(totalCompras) }}</strong>
                     </div>
                 </main>
             </div>

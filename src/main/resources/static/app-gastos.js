@@ -83,9 +83,12 @@ new Vue({
         filtrarGastos() {
             let filtrados = [...this.gastos];
             if (this.filtroBusqueda) {
+                const busqueda = this.filtroBusqueda.toLowerCase();
                 filtrados = filtrados.filter(gasto =>
-                    gasto.descripcion.toLowerCase().includes(this.filtroBusqueda.toLowerCase()) ||
-                    gasto.categoriaGasto.toLowerCase().includes(this.filtroBusqueda.toLowerCase())
+                    gasto.descripcion.toLowerCase().includes(busqueda) ||
+                    gasto.categoriaGasto.toLowerCase().includes(busqueda) ||
+                    gasto.monto.toString().includes(busqueda) ||
+                    (gasto.empleado && gasto.empleado.nombreCompleto.toLowerCase().includes(busqueda))
                 );
             }
             if (this.filtroFecha) {
@@ -101,6 +104,78 @@ new Vue({
             this.filtroBusqueda = '';
             this.filtroFecha = '';
             this.filtrarGastos();
+        },
+        exportarPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Peluquería LUNA', 20, 20);
+                
+                doc.setFontSize(16);
+                doc.text('Reporte de Gastos', 20, 35);
+                
+                doc.setFontSize(10);
+                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
+                doc.text(`Total de gastos: ${this.gastosFiltrados.length}`, 150, 25);
+                
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(1);
+                doc.line(20, 45, 190, 45);
+                
+                let y = 60;
+                
+                this.gastosFiltrados.forEach((gasto, index) => {
+                    if (y > 250) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(12);
+                    doc.text(`${index + 1}. ${gasto.descripcion}`, 20, y);
+                    y += 8;
+                    
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(10);
+                    
+                    doc.text(`   Monto: $${this.formatearNumero(gasto.monto)}`, 25, y);
+                    y += 6;
+                    doc.text(`   Fecha: ${this.formatearFecha(gasto.fechaGasto)}`, 25, y);
+                    y += 6;
+                    doc.text(`   Categoría: ${gasto.categoriaGasto}`, 25, y);
+                    y += 6;
+                    doc.text(`   Empleado: ${gasto.empleado ? gasto.empleado.nombreCompleto : 'N/A'}`, 25, y);
+                    y += 10;
+                });
+                
+                y += 10;
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(14);
+                doc.text(`TOTAL: $${this.formatearNumero(this.totalGastos)}`, 20, y);
+                
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setDrawColor(0, 0, 0);
+                    doc.line(20, 280, 190, 280);
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(8);
+                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
+                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                }
+                
+                const fecha = new Date().toISOString().split('T')[0];
+                doc.save(`reporte-gastos-${fecha}.pdf`);
+                NotificationSystem.success('Reporte de gastos exportado exitosamente');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                NotificationSystem.error('Error al generar el PDF: ' + error.message);
+            }
         },
         async agregarGasto() {
             try {
@@ -186,51 +261,42 @@ new Vue({
                 <h1 class="page-title">Gestión de Gastos</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
-                    <div class="filters-container">
-                        <div class="filter-field">
-                            <label>Buscar:</label>
-                            <input type="text" v-model="filtroBusqueda" @input="filtrarGastos" placeholder="Buscar gasto..." class="search-bar"/>
+                    <div class="filters-container" style="display: flex; gap: 25px; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; width: fit-content;">
+                        <div class="filter-group" style="min-width: 350px;">
+                            <label>Buscar Gasto:</label>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarGastos" placeholder="Buscar por descripción, categoría, monto o empleado..." class="search-bar" style="width: 350px;"/>
                         </div>
-                        <div class="filter-field">
+                        <div class="filter-group" style="min-width: 150px;">
                             <label>Filtrar por fecha:</label>
-                            <input type="date" v-model="filtroFecha" @change="filtrarGastos" class="search-bar"/>
+                            <input type="date" v-model="filtroFecha" @change="filtrarGastos" class="search-bar" style="width: 150px;"/>
                         </div>
-                        <button @click="limpiarFiltros" class="btn btn-secondary">Limpiar Filtros</button>
+                        <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
+                        <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nuevo Gasto</button>
+                        <button @click="exportarPDF" class="btn btn-small" v-if="!formularioVisible">
+                            <i class="fas fa-file-pdf"></i> Exportar PDF
+                        </button>
                     </div>
-                    <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Gasto</button>
                     
-                    <div v-if="formularioVisible" class="form-container">
-                        <h3>{{ nuevoGasto.id ? 'Modificar Gasto: ' + nuevoGasto.descripcion : 'Agregar Gasto' }}</h3>
-                        <div class="form-grid">
-                            <div class="form-field">
-                                <label>Descripción *</label>
-                                <input type="text" v-model="nuevoGasto.descripcion" :readonly="nuevoGasto.id" required/>
-                            </div>
-                            <div class="form-field">
-                                <label>Monto *</label>
-                                <input type="number" v-model="nuevoGasto.monto" :readonly="nuevoGasto.id" min="0" required/>
-                            </div>
-                            <div class="form-field">
-                                <label>Fecha del Gasto *</label>
-                                <input type="date" v-model="nuevoGasto.fechaGasto" :readonly="nuevoGasto.id" required/>
-                            </div>
-                            <div class="form-field">
-                                <label>Categoría</label>
-                                <input type="text" v-model="nuevoGasto.categoriaGasto" :readonly="nuevoGasto.id"/>
-                            </div>
-                            <div class="form-field">
-                                <label>Empleado</label>
-                                <select v-model="nuevoGasto.empleado" :disabled="nuevoGasto.id">
-                                    <option value="" disabled>Seleccionar Empleado</option>
-                                    <option v-for="empleado in empleados" :key="empleado.id" :value="empleado">{{ empleado.nombreCompleto }}</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 10px; margin-top: 200px;">
+                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 500px;">
+                        <h3>{{ nuevoGasto.id ? 'Modificar Gasto: ' + nuevoGasto.descripcion : 'Nuevo Gasto' }}</h3>
+                        <label>Descripción: *</label>
+                        <input type="text" v-model="nuevoGasto.descripcion" placeholder="Ingrese la descripción del gasto" required/>
+                        <label>Monto: *</label>
+                        <input type="number" v-model="nuevoGasto.monto" placeholder="Ingrese el monto" min="0" required/>
+                        <label>Fecha del Gasto: *</label>
+                        <input type="date" v-model="nuevoGasto.fechaGasto" required/>
+                        <label>Categoría:</label>
+                        <input type="text" v-model="nuevoGasto.categoriaGasto" placeholder="Categoría del gasto"/>
+                        <label>Empleado:</label>
+                        <select v-model="nuevoGasto.empleado">
+                            <option value="" disabled>Seleccionar Empleado</option>
+                            <option v-for="empleado in empleados" :key="empleado.id" :value="empleado">{{ empleado.nombreCompleto }}</option>
+                        </select>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
                             <button @click="agregarGasto()" class="btn" v-if="!nuevoGasto.id">
                                 Agregar
                             </button>
-                            <button @click="toggleFormulario()" class="btn" class="btn">Cancelar</button>
+                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
                         </div>
                     </div>
                     
@@ -274,72 +340,7 @@ new Vue({
     `
 });
 
-// Estilos adicionales para el formulario
-const style = document.createElement('style');
-style.textContent = `
-    .form-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 15px;
-        margin-bottom: 15px;
-    }
-    .form-field {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-    }
-    .form-field label {
-        font-weight: bold;
-        color: #333;
-        font-size: 14px;
-    }
-    .form-field input, .form-field select {
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 14px;
-    }
-`;
-document.head.appendChild(style);
 
-// Estilos para filtros
-const filterStyle = document.createElement('style');
-filterStyle.textContent = `
-    .filters-container {
-        display: flex !important;
-        gap: 20px;
-        margin-bottom: 15px;
-        align-items: end;
-    }
-    .filter-field {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 5px;
-    }
-    .filter-field label {
-        font-weight: bold !important;
-        color: #333 !important;
-        font-size: 14px !important;
-        margin-bottom: 5px !important;
-    }
-`;
-document.head.appendChild(filterStyle);
-// Estilos para info section
-const infoStyle = document.createElement('style');
-infoStyle.textContent = `
-    .info-section {
-        background: #f8f9fa;
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-        border-left: 4px solid #007bff;
-    }
-    .info-section p {
-        margin: 5px 0;
-        color: #333;
-    }
-`;
-document.head.appendChild(infoStyle);
 
 
 

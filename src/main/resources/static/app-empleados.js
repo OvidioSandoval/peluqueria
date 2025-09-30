@@ -298,7 +298,7 @@ new Vue({
                 
                 let y = 60;
                 
-                // Agrupar por área
+                // Agrupar por área (usando empleados filtrados)
                 const empleadosPorArea = {};
                 this.empleadosFiltrados.forEach(empleado => {
                     const area = empleado.area ? empleado.area.nombre : 'Sin área';
@@ -397,12 +397,12 @@ new Vue({
                 <h1 class="page-title">Gestión de Empleados</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
-                    <div class="filters-container" style="display: flex; gap: 15px; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; width: fit-content;">
-                        <div class="filter-group">
+                    <div class="filters-container" style="display: flex; gap: 30px; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; width: fit-content;">
+                        <div class="filter-group" style="margin-right: 25px;">
                             <label>Buscar Empleado:</label>
                             <input type="text" v-model="filtroBusqueda" @input="filtrarEmpleados" placeholder="Buscar empleado..." class="search-bar" style="width: 300px;"/>
                         </div>
-                        <div class="filter-group">
+                        <div class="filter-group" style="margin-right: 25px;">
                             <label>Filtrar por Área:</label>
                             <input type="text" v-model="filtroArea" @input="filtrarEmpleados" placeholder="Buscar por área..." class="search-bar" style="width: 200px;"/>
                         </div>
@@ -413,61 +413,35 @@ new Vue({
                         </button>
                     </div>
                     
-                    <div v-if="formularioVisible" class="form-container">
-                        <h3>{{ nuevoEmpleado.id ? "Modificar Empleado: " + nuevoEmpleado.nombreCompleto : "Agregar Empleado" }}</h3>
-                        <div class="form-grid">
-                            <div class="form-field">
-                                <label>Nombre Completo *</label>
-                                <input type="text" v-model="nuevoEmpleado.nombreCompleto" required/>
-                            </div>
-                            <div class="form-field">
-                                <label>Correo Electronico</label>
-                                <input type="email" v-model="nuevoEmpleado.correo"/>
-                            </div>
-                            <div class="form-field">
-                                <label>Telefono</label>
-                                <input type="tel" v-model="nuevoEmpleado.telefono"/>
-                            </div>
-                            <div class="form-field">
-                                <label>Area *</label>
-                                <select v-model="nuevoEmpleado.area" required>
-                                    <option value="" disabled>Seleccionar Area</option>
-                                    <option v-for="area in areas" :key="area.id" :value="area">{{ area.nombre }}</option>
-                                </select>
-                            </div>
-                            <div class="form-field">
-                                <label>Sueldo Base</label>
-                                <input type="number" v-model="nuevoEmpleado.sueldoBase" min="0"/>
-                            </div>
-                            <div class="form-field">
-                                <label>Comision %</label>
-                                <input type="number" v-model="nuevoEmpleado.comisionPorcentaje" min="0" max="100"/>
-                            </div>
-                            <div class="form-field">
-                                <label>Total Pagado</label>
-                                <input type="number" v-model="nuevoEmpleado.totalPagado" min="0"/>
-                            </div>
-                            <div class="form-field">
-                                <label>Sueldo Total (Calculado)</label>
-                                <input type="number" :value="calcularSueldoTotal(nuevoEmpleado)" readonly class="btn"/>
-                            </div>
-                            <div class="form-field">
-                                <label>Diferencia (Calculada)</label>
-                                <input type="number" :value="calcularDiferencia(nuevoEmpleado)" readonly class="btn"/>
-                            </div>
-                            <div class="form-field">
-                                <label>Fecha de Ingreso</label>
-                                <input type="date" v-model="nuevoEmpleado.fechaIngreso"/>
-                            </div>
-                            <div class="form-field">
-                                <label style="display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;">Activo:
-                                    <input type="checkbox" v-model="nuevoEmpleado.activo" style="margin: 0; padding: 0; margin-left: 1px;"/>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="form-buttons" style="margin-top: 200px;">
-                            <button @click="nuevoEmpleado.id ? modificarEmpleado() : agregarEmpleado()" class="btn">{{ nuevoEmpleado.id ? "Confirmar" : "Agregar" }}</button>
-                            <button @click="toggleFormulario()" class="btn" class="btn">Cancelar</button>
+                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 600px;">
+                        <h3>{{ nuevoEmpleado.id ? 'Modificar Empleado - ' + nuevoEmpleado.nombreCompleto : 'Nuevo Empleado' }}</h3>
+                        <label>Nombre Completo: *</label>
+                        <input type="text" v-model="nuevoEmpleado.nombreCompleto" placeholder="Ingrese el nombre completo" required/>
+                        <label>Correo Electrónico:</label>
+                        <input type="email" v-model="nuevoEmpleado.correo" placeholder="Ingrese el correo electrónico"/>
+                        <label>Teléfono:</label>
+                        <input type="tel" v-model="nuevoEmpleado.telefono" placeholder="Ingrese el teléfono"/>
+                        <label>Área: *</label>
+                        <select v-model="nuevoEmpleado.area" required>
+                            <option value="" disabled>Seleccionar Área</option>
+                            <option v-for="area in areas" :key="area.id" :value="area">{{ area.nombre }}</option>
+                        </select>
+                        <label>Sueldo Base:</label>
+                        <input type="number" v-model="nuevoEmpleado.sueldoBase" placeholder="Ingrese el sueldo base" min="0"/>
+                        <label>Comisión %:</label>
+                        <input type="number" v-model="nuevoEmpleado.comisionPorcentaje" placeholder="Ingrese el porcentaje de comisión" min="0" max="100"/>
+                        <label>Total Pagado:</label>
+                        <input type="number" v-model="nuevoEmpleado.totalPagado" placeholder="Ingrese el total pagado" min="0"/>
+                        <label>Fecha de Ingreso:</label>
+                        <input type="date" v-model="nuevoEmpleado.fechaIngreso"/>
+                        <label style="display: inline-flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;">
+                            Activo:<input type="checkbox" v-model="nuevoEmpleado.activo" style="margin: 0; padding: 0; margin-left: 1px;"/>
+                        </label>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button @click="nuevoEmpleado.id ? modificarEmpleado() : agregarEmpleado()" class="btn">
+                                {{ nuevoEmpleado.id ? 'Modificar' : 'Agregar' }}
+                            </button>
+                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
                         </div>
                     </div>
                     
@@ -476,6 +450,7 @@ new Vue({
                             <tr>
                                 <th>ID</th>
                                 <th>Nombre</th>
+                                <th>Correo</th>
                                 <th>Area</th>
                                 <th>Sueldo Base</th>
                                 <th>Comision %</th>
@@ -490,6 +465,7 @@ new Vue({
                             <tr v-for="empleado in empleadosPaginados" :key="empleado.id">
                                 <td>{{ empleado.id }}</td>
                                 <td>{{ empleado.nombreCompleto }}</td>
+                                <td>{{ empleado.correo || '-' }}</td>
                                 <td>{{ empleado.area ? empleado.area.nombre : "N/A" }}</td>
                                 <td>{{ formatearNumero(empleado.sueldoBase) }}</td>
                                 <td>{{ empleado.comisionPorcentaje }}%</td>
