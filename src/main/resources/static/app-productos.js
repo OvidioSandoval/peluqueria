@@ -325,122 +325,120 @@ new Vue({
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
-                // Título
-                doc.setTextColor(0, 0, 0);
-                doc.setFontSize(20);
-                doc.setFont('helvetica', 'bold');
-                doc.text('Peluquería LUNA', 20, 20);
+                const productosParaExportar = this.productosFiltrados;
+                const itemsPorPagina = 15;
+                const totalPaginas = Math.ceil(productosParaExportar.length / itemsPorPagina);
                 
-                doc.setTextColor(0, 0, 0);
-                doc.setFontSize(16);
-                doc.text('Inventario de Productos', 20, 35);
-                
-                // Fecha y estadísticas
-                doc.setFontSize(10);
-                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
-                doc.text(`Total productos: ${this.productosFiltrados.length}`, 150, 25);
-                
-                const stockBajo = this.productosFiltrados.filter(p => this.getStockStatus(p) === 'bajo').length;
-                if (stockBajo > 0) {
+                for (let pagina = 0; pagina < totalPaginas; pagina++) {
+                    if (pagina > 0) doc.addPage();
+                    
+                    // Header profesional
+                    doc.setLineWidth(2);
+                    doc.line(20, 25, 190, 25);
+                    
                     doc.setTextColor(0, 0, 0);
-                    doc.text(`Productos con stock bajo: ${stockBajo}`, 150, 35);
-                }
-                
-                // Línea decorativa
-                doc.setDrawColor(0, 0, 0);
-                doc.setLineWidth(1);
-                doc.line(20, 45, 190, 45);
-                
-                let y = 60;
-                
-                // Alertas de stock si existen
-                if (this.alertasStock.length > 0) {
-                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(24);
                     doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(14);
-                    doc.text('ALERTAS DE STOCK BAJO', 20, y);
-                    y += 15;
+                    doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
                     
-                    this.alertasStock.forEach((producto, index) => {
-                        if (y > 250) {
-                            doc.addPage();
-                            y = 20;
-                        }
-                        
-                        doc.setTextColor(0, 0, 0);
-                        doc.setFont('helvetica', 'bold');
-                        doc.text(`⚠ ${producto.nombre}`, 25, y);
-                        y += 8;
-                        
-                        doc.setTextColor(0, 0, 0);
-                        doc.setFont('helvetica', 'normal');
-                        doc.text(`   Stock actual: ${producto.cantidadStockInicial} - Mínimo: ${producto.minimoStock}`, 30, y);
-                        y += 10;
-                    });
-                    y += 10;
-                }
-                
-                // Inventario completo
-                doc.setTextColor(0, 0, 0);
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(14);
-                doc.text('INVENTARIO COMPLETO', 20, y);
-                y += 15;
-                
-                this.productosFiltrados.forEach((producto, index) => {
-                    if (y > 250) {
-                        doc.addPage();
-                        y = 20;
-                    }
+                    doc.setLineWidth(0.5);
+                    doc.line(20, 28, 190, 28);
                     
-                    doc.setTextColor(0, 0, 0);
-                    
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(`${index + 1}. ${producto.nombre}`, 20, y);
-                    y += 8;
-                    
-                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(16);
                     doc.setFont('helvetica', 'normal');
+                    doc.text('INVENTARIO DE PRODUCTOS', 105, 40, { align: 'center' });
                     
-                    if (producto.descripcion) {
-                        const desc = producto.descripcion.length > 60 ? 
-                            producto.descripcion.substring(0, 60) + '...' : producto.descripcion;
-                        doc.text(`   Descripción: ${desc}`, 25, y);
-                        y += 6;
+                    // Información del reporte
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                    doc.text(`Total de productos: ${productosParaExportar.length}`, 20, 62);
+                    
+                    const stockBajo = productosParaExportar.filter(p => this.getStockStatus(p) === 'bajo').length;
+                    if (stockBajo > 0) {
+                        doc.text(`Productos con stock bajo: ${stockBajo}`, 20, 69);
                     }
                     
-                    doc.text(`   Precio Compra: $${this.formatearNumero(producto.precioCompra)}`, 25, y);
-                    y += 6;
-                    doc.text(`   Precio Venta: $${this.formatearNumero(producto.precioVenta)}`, 25, y);
-                    y += 6;
+                    const inicio = pagina * itemsPorPagina;
+                    const fin = Math.min(inicio + itemsPorPagina, productosParaExportar.length);
+                    const productosPagina = productosParaExportar.slice(inicio, fin);
                     
-                    const stockText = `Stock: ${this.formatearNumero(producto.cantidadStockInicial)}`;
-                    const minimoText = producto.minimoStock ? ` (Mín: ${producto.minimoStock})` : '';
-                    const optimoText = producto.cantidadOptimaStock ? ` (Ópt: ${producto.cantidadOptimaStock})` : '';
-                    doc.text(`   ${stockText}${minimoText}${optimoText}`, 25, y);
-                    y += 6;
+                    const headers = [['PRODUCTO', 'DESCRIPCIÓN', 'P. COMPRA', 'P. VENTA', 'STOCK ACT.', 'STOCK MÍN.', 'STOCK ÓPT.', 'ESTADO STOCK', 'PROMOCIÓN', 'P. PROMOCIÓN']];
+                    const data = productosPagina.map((producto) => [
+                        producto.nombre || '',
+                        producto.descripcion || 'Sin descripción',
+                        this.formatearNumero(producto.precioCompra),
+                        this.formatearNumero(producto.precioVenta),
+                        this.formatearNumero(producto.cantidadStockInicial),
+                        producto.minimoStock ? this.formatearNumero(producto.minimoStock) : '-',
+                        producto.cantidadOptimaStock ? this.formatearNumero(producto.cantidadOptimaStock) : '-',
+                        this.getStockStatus(producto) === 'bajo' ? 'BAJO' : this.getStockStatus(producto) === 'advertencia' ? 'ADVERTENCIA' : 'NORMAL',
+                        producto.enPromocion ? 'Sí' : 'No',
+                        producto.precioPromocion ? this.formatearNumero(producto.precioPromocion) : '-'
+                    ]);
                     
-                    if (producto.enPromocion && producto.precioPromocion) {
-                        doc.setTextColor(40, 167, 69);
-                        doc.text(`   EN PROMOCIÓN: $${this.formatearNumero(producto.precioPromocion)}`, 25, y);
-                        doc.setTextColor(0, 0, 0);
-                        y += 6;
-                    }
+                    doc.autoTable({
+                        head: headers,
+                        body: data,
+                        startY: stockBajo > 0 ? 75 : 68,
+                        styles: { 
+                            fontSize: 7,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            cellPadding: 2,
+                            lineColor: [0, 0, 0],
+                            lineWidth: 0.1,
+                            overflow: 'linebreak'
+                        },
+                        headStyles: { 
+                            fontSize: 7,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'center',
+                            cellPadding: 3
+                        },
+                        bodyStyles: {
+                            fontSize: 8,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            overflow: 'linebreak'
+                        },
+                        alternateRowStyles: {
+                            fillColor: [255, 255, 255]
+                        },
+                        columnStyles: {
+                            0: { cellWidth: 25, overflow: 'linebreak' },
+                            1: { cellWidth: 30, overflow: 'linebreak' },
+                            2: { cellWidth: 18, halign: 'right' },
+                            3: { cellWidth: 18, halign: 'right' },
+                            4: { cellWidth: 15, halign: 'center' },
+                            5: { cellWidth: 15, halign: 'center' },
+                            6: { cellWidth: 15, halign: 'center' },
+                            7: { cellWidth: 20, halign: 'center' },
+                            8: { cellWidth: 15, halign: 'center' },
+                            9: { cellWidth: 19, halign: 'right' }
+                        },
+                        margin: { bottom: 40 }
+                    });
                     
-                    doc.text(`   Estado: ${producto.activo ? 'Activo' : 'Inactivo'}`, 25, y);
-                    y += 12;
-                });
-                
-                // Footer
-                const pageCount = doc.internal.getNumberOfPages();
-                for (let i = 1; i <= pageCount; i++) {
-                    doc.setPage(i);
-                    doc.setDrawColor(0, 0, 0);
-                    doc.line(20, 280, 190, 280);
-                    doc.setTextColor(0, 0, 0);
+                    // Footer profesional
+                    const pageHeight = doc.internal.pageSize.height;
+                    doc.setLineWidth(0.5);
+                    doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                    
                     doc.setFontSize(8);
-                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
-                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`Página ${pagina + 1} de ${totalPaginas}`, 20, pageHeight - 15);
+                    doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
                 }
                 
                 const fecha = new Date().toISOString().split('T')[0];
@@ -465,67 +463,92 @@ new Vue({
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
-                // Título
+                // Header profesional
+                doc.setLineWidth(2);
+                doc.line(20, 25, 190, 25);
+                
                 doc.setTextColor(0, 0, 0);
-                doc.setFontSize(20);
+                doc.setFontSize(24);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Peluquería LUNA', 20, 20);
+                doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
                 
-                doc.setTextColor(0, 0, 0);
+                doc.setLineWidth(0.5);
+                doc.line(20, 28, 190, 28);
+                
                 doc.setFontSize(16);
-                doc.text('Productos con Stock Bajo', 20, 35);
+                doc.setFont('helvetica', 'normal');
+                doc.text('PRODUCTOS CON STOCK BAJO', 105, 40, { align: 'center' });
                 
-                // Fecha y total
+                // Información del reporte
                 doc.setFontSize(10);
-                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
-                doc.text(`Total productos: ${productosStockBajo.length}`, 150, 25);
+                doc.setFont('helvetica', 'normal');
+                const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                doc.text(`Total de productos: ${productosStockBajo.length}`, 20, 62);
                 
-                // Línea decorativa
-                doc.setDrawColor(0, 0, 0);
-                doc.setLineWidth(1);
-                doc.line(20, 45, 190, 45);
+                const headers = [['PRODUCTO', 'STOCK ACTUAL', 'STOCK MÍNIMO', 'PRECIO VENTA', 'DESCRIPCIÓN']];
+                const data = productosStockBajo.map((producto) => [
+                    producto.nombre || '',
+                    this.formatearNumero(producto.cantidadStockInicial),
+                    this.formatearNumero(producto.minimoStock),
+                    this.formatearNumero(producto.precioVenta),
+                    producto.descripcion || 'Sin descripción'
+                ]);
                 
-                let y = 60;
-                
-                productosStockBajo.forEach((producto, index) => {
-                    if (y > 250) {
-                        doc.addPage();
-                        y = 20;
-                    }
-                    
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(`${index + 1}. ${producto.nombre}`, 20, y);
-                    y += 8;
-                    
-                    doc.setFont('helvetica', 'normal');
-                    doc.text(`   Stock actual: ${producto.cantidadStockInicial}`, 25, y);
-                    y += 6;
-                    doc.text(`   Stock mínimo: ${producto.minimoStock}`, 25, y);
-                    y += 6;
-                    doc.text(`   Precio venta: $${this.formatearNumero(producto.precioVenta)}`, 25, y);
-                    y += 6;
-                    
-                    if (producto.descripcion) {
-                        const desc = producto.descripcion.length > 60 ? 
-                            producto.descripcion.substring(0, 60) + '...' : producto.descripcion;
-                        doc.text(`   Descripción: ${desc}`, 25, y);
-                        y += 6;
-                    }
-                    y += 8;
+                doc.autoTable({
+                    head: headers,
+                    body: data,
+                    startY: 68,
+                    styles: { 
+                        fontSize: 9,
+                        textColor: [0, 0, 0],
+                        fillColor: [255, 255, 255],
+                        font: 'helvetica',
+                        cellPadding: 4,
+                        lineColor: [0, 0, 0],
+                        lineWidth: 0.1
+                    },
+                    headStyles: { 
+                        fontSize: 10,
+                        fillColor: [255, 255, 255],
+                        textColor: [0, 0, 0],
+                        fontStyle: 'bold',
+                        font: 'helvetica',
+                        halign: 'center',
+                        cellPadding: 5
+                    },
+                    bodyStyles: {
+                        fontSize: 9,
+                        textColor: [0, 0, 0],
+                        fillColor: [255, 255, 255],
+                        font: 'helvetica'
+                    },
+                    alternateRowStyles: {
+                        fillColor: [255, 255, 255]
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 40 },
+                        1: { cellWidth: 25, halign: 'center' },
+                        2: { cellWidth: 25, halign: 'center' },
+                        3: { cellWidth: 30, halign: 'right' },
+                        4: { cellWidth: 60 }
+                    },
+                    margin: { bottom: 40 }
                 });
                 
-                // Footer
-                const pageCount = doc.internal.getNumberOfPages();
-                for (let i = 1; i <= pageCount; i++) {
-                    doc.setPage(i);
-                    doc.setDrawColor(0, 0, 0);
-                    doc.line(20, 280, 190, 280);
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFontSize(8);
-                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
-                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
-                }
+                // Footer profesional
+                const pageHeight = doc.internal.pageSize.height;
+                doc.setLineWidth(0.5);
+                doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Página 1 de 1', 20, pageHeight - 15);
+                doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
                 
                 const fecha = new Date().toISOString().split('T')[0];
                 doc.save(`productos-stock-bajo-${fecha}.pdf`);
@@ -558,40 +581,62 @@ new Vue({
                             </select>
                         </div>
                         <button @click="limpiarFiltros" class="btn btn-secondary btn-small" style="margin: 0 2px;">Limpiar</button>
+                        <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible" style="margin: 0 2px;">Nuevo Producto</button>
                         <button @click="exportarPDF" class="btn btn-small" v-if="!formularioVisible" style="margin: 0 2px;">
                             <i class="fas fa-file-pdf"></i> Exportar
                         </button>
                         <button @click="exportarStockBajo" class="btn btn-small" v-if="!formularioVisible" style="margin: 0 2px;">
                             <i class="fas fa-file-pdf"></i> Stock Mínimo
                         </button>
-                        <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible" style="margin: 0 2px;">Nuevo Producto</button>
                     </div>
                     
-                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 600px;">
+                    <div v-if="formularioVisible" class="form-container">
                         <h3>{{ nuevoProducto.id ? 'Modificar Producto - ' + productoSeleccionado : 'Nuevo Producto' }}</h3>
-                        <label>Nombre: *</label>
-                        <input type="text" v-model="nuevoProducto.nombre" placeholder="Ingrese el nombre del producto" required/>
-                        <label>Descripción:</label>
-                        <textarea v-model="nuevoProducto.descripcion" placeholder="Descripción del producto" rows="3" style="resize: vertical;"></textarea>
-                        <label>Precio Compra: *</label>
-                        <input type="number" v-model="nuevoProducto.precioCompra" placeholder="Ingrese el precio de compra" required/>
-                        <label>Precio Venta: *</label>
-                        <input type="number" v-model="nuevoProducto.precioVenta" placeholder="Ingrese el precio de venta" required/>
-                        <label>Stock Inicial: *</label>
-                        <input type="number" v-model="nuevoProducto.cantidadStockInicial" placeholder="Ingrese el stock inicial" required/>
-                        <label>Stock Óptimo: *</label>
-                        <input type="number" v-model="nuevoProducto.cantidadOptimaStock" placeholder="Ingrese el stock óptimo" required/>
-                        <label>Stock Mínimo: *</label>
-                        <input type="number" v-model="nuevoProducto.minimoStock" placeholder="Ingrese el stock mínimo" required/>
-                        <label style="display: inline-flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;">
-                            Activo:<input type="checkbox" v-model="nuevoProducto.activo" style="margin: 0; padding: 0; margin-left: 1px;"/>
-                        </label>
-                        <label style="display: inline-flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;">
-                            En Promoción:<input type="checkbox" v-model="nuevoProducto.enPromocion" style="margin: 0; padding: 0; margin-left: 1px;"/>
-                        </label>
-                        <div v-if="nuevoProducto.enPromocion">
-                            <label>Precio Promoción:</label>
-                            <input type="number" v-model="nuevoProducto.precioPromocion" placeholder="Ingrese el precio de promoción"/>
+                        <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: end;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <label>Nombre: *</label>
+                                <input type="text" v-model="nuevoProducto.nombre" placeholder="Nombre del producto" required/>
+                            </div>
+                            <div style="flex: 1; min-width: 150px;">
+                                <label>Precio Compra: *</label>
+                                <input type="number" v-model="nuevoProducto.precioCompra" placeholder="Precio compra" required/>
+                            </div>
+                            <div style="flex: 1; min-width: 150px;">
+                                <label>Precio Venta: *</label>
+                                <input type="number" v-model="nuevoProducto.precioVenta" placeholder="Precio venta" required/>
+                            </div>
+                            <div style="flex: 1; min-width: 120px;">
+                                <label>Stock Inicial: *</label>
+                                <input type="number" v-model="nuevoProducto.cantidadStockInicial" placeholder="Stock inicial" required/>
+                            </div>
+                            <div style="flex: 1; min-width: 120px;">
+                                <label>Stock Óptimo: *</label>
+                                <input type="number" v-model="nuevoProducto.cantidadOptimaStock" placeholder="Stock óptimo" required/>
+                            </div>
+                            <div style="flex: 1; min-width: 120px;">
+                                <label>Stock Mínimo: *</label>
+                                <input type="number" v-model="nuevoProducto.minimoStock" placeholder="Stock mínimo" required/>
+                            </div>
+                            <div style="flex: none; min-width: 80px;">
+                                <label style="display: flex; align-items: center; gap: 5px; margin: 0;">
+                                    <input type="checkbox" v-model="nuevoProducto.activo" style="margin: 0;"/>
+                                    Activo
+                                </label>
+                            </div>
+                            <div style="flex: none; min-width: 100px;">
+                                <label style="display: flex; align-items: center; gap: 5px; margin: 0;">
+                                    <input type="checkbox" v-model="nuevoProducto.enPromocion" style="margin: 0;"/>
+                                    Promoción
+                                </label>
+                            </div>
+                            <div v-if="nuevoProducto.enPromocion" style="flex: 1; min-width: 150px;">
+                                <label>Precio Promoción:</label>
+                                <input type="number" v-model="nuevoProducto.precioPromocion" placeholder="Precio promoción"/>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <label>Descripción:</label>
+                            <textarea v-model="nuevoProducto.descripcion" placeholder="Descripción del producto" rows="2" style="resize: vertical; width: 150px; height: 150px;"></textarea>
                         </div>
                         <div style="display: flex; gap: 10px; margin-top: 15px;">
                             <button @click="nuevoProducto.id ? modificarProducto() : agregarProducto()" class="btn">
@@ -608,7 +653,6 @@ new Vue({
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Nombre</th>
                                 <th>Descripción</th>
                                 <th>Precio Compra</th>
@@ -628,7 +672,6 @@ new Vue({
                                 'stock-bajo': getStockStatus(producto) === 'bajo',
                                 'stock-advertencia': getStockStatus(producto) === 'advertencia'
                             }">
-                                <td>{{ producto.id }}</td>
                                 <td>
                                     <strong>{{ producto.nombre }}</strong>
                                     <i v-if="tieneStockBajo(producto)" class="fas fa-exclamation-triangle stock-alert-icon" title="Stock bajo"></i>

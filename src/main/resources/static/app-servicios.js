@@ -47,6 +47,7 @@ new Vue({
             return this.serviciosFiltrados.slice(inicio, inicio + this.itemsPorPagina);
         }
     },
+
     methods: {
         async checkAuthAndRedirect() {
             try {
@@ -250,105 +251,120 @@ new Vue({
             return categoria ? categoria.descripcion : '';
         },
         
+
+        
         exportarPDF() {
             try {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
-                // Título
-                doc.setTextColor(0, 0, 0);
-                doc.setFontSize(20);
-                doc.setFont('helvetica', 'bold');
-                doc.text('Peluquería LUNA', 20, 20);
+                const serviciosParaExportar = this.serviciosFiltrados;
+                const itemsPorPagina = 15;
+                const totalPaginas = Math.ceil(serviciosParaExportar.length / itemsPorPagina);
                 
-                doc.setTextColor(0, 0, 0);
-                doc.setFontSize(16);
-                doc.text('Catálogo de Servicios', 20, 35);
-                
-                // Fecha y total
-                doc.setFontSize(10);
-                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
-                doc.text(`Total de servicios: ${this.serviciosFiltrados.length}`, 150, 25);
-                
-                // Línea decorativa
-                doc.setDrawColor(0, 0, 0);
-                doc.setLineWidth(1);
-                doc.line(20, 45, 190, 45);
-                
-                let y = 60;
-                
-                // Agrupar por categoría
-                const serviciosPorCategoria = {};
-                this.serviciosFiltrados.forEach(servicio => {
-                    const categoria = this.getCategoriaDescripcion(servicio);
-                    if (!serviciosPorCategoria[categoria]) {
-                        serviciosPorCategoria[categoria] = [];
-                    }
-                    serviciosPorCategoria[categoria].push(servicio);
-                });
-                
-                // Mostrar servicios por categoría
-                Object.keys(serviciosPorCategoria).forEach(categoria => {
-                    if (y > 250) {
-                        doc.addPage();
-                        y = 20;
-                    }
+                for (let pagina = 0; pagina < totalPaginas; pagina++) {
+                    if (pagina > 0) doc.addPage();
                     
-                    // Título de categoría
+                    // Header profesional
+                    doc.setLineWidth(2);
+                    doc.line(20, 25, 190, 25);
+                    
                     doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(24);
                     doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(14);
-                    doc.text(categoria.toUpperCase(), 20, y);
-                    y += 15;
+                    doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
                     
-                    // Servicios de la categoría
-                    serviciosPorCategoria[categoria].forEach((servicio, index) => {
-                        if (y > 250) {
-                            doc.addPage();
-                            y = 20;
-                        }
-                        
-                        doc.setTextColor(0, 0, 0);
-                        doc.setFont('helvetica', 'bold');
-                        doc.setFontSize(12);
-                        doc.text(`• ${servicio.nombre}`, 25, y);
-                        y += 8;
-                        
-                        doc.setTextColor(0, 0, 0);
-                        doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(10);
-                        
-                        if (servicio.descripcion) {
-                            const descripcion = servicio.descripcion.length > 80 ? 
-                                servicio.descripcion.substring(0, 80) + '...' : servicio.descripcion;
-                            doc.text(`   Descripción: ${descripcion}`, 30, y);
-                            y += 6;
-                        }
-                        
-                        doc.text(`   Precio: $${this.formatearNumero(servicio.precioBase)}`, 30, y);
-                        y += 6;
-                        
-                        doc.text(`   Estado: ${servicio.activo ? 'Activo' : 'Inactivo'}`, 30, y);
-                        y += 10;
+                    doc.setLineWidth(0.5);
+                    doc.line(20, 28, 190, 28);
+                    
+                    doc.setFontSize(16);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('CATÁLOGO DE SERVICIOS', 105, 40, { align: 'center' });
+                    
+                    // Información del reporte
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                    doc.text(`Total de servicios: ${serviciosParaExportar.length}`, 20, 62);
+                    if (this.filtroBusqueda.trim()) {
+                        doc.text(`Filtro aplicado: "${this.filtroBusqueda}"`, 20, 69);
+                    }
+                    
+                    const inicio = pagina * itemsPorPagina;
+                    const fin = Math.min(inicio + itemsPorPagina, serviciosParaExportar.length);
+                    const serviciosPagina = serviciosParaExportar.slice(inicio, fin);
+                    
+                    const headers = [['NOMBRE DEL SERVICIO', 'DESCRIPCIÓN', 'PRECIO BASE', 'CATEGORÍA', 'ESTADO']];
+                    const data = serviciosPagina.map((servicio) => [
+                        servicio.nombre || '',
+                        servicio.descripcion || 'Sin descripción',
+                        this.formatearNumero(servicio.precioBase),
+                        this.getCategoriaDescripcion(servicio),
+                        servicio.activo ? 'Activo' : 'Inactivo'
+                    ]);
+                    
+                    doc.autoTable({
+                        head: headers,
+                        body: data,
+                        startY: this.filtroBusqueda.trim() ? 75 : 68,
+                        styles: { 
+                            fontSize: 8,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            cellPadding: 2,
+                            lineColor: [0, 0, 0],
+                            lineWidth: 0.1,
+                            overflow: 'linebreak'
+                        },
+                        headStyles: { 
+                            fontSize: 8,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'center',
+                            cellPadding: 3
+                        },
+                        bodyStyles: {
+                            fontSize: 8,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            overflow: 'linebreak'
+                        },
+                        alternateRowStyles: {
+                            fillColor: [255, 255, 255]
+                        },
+                        columnStyles: {
+                            0: { cellWidth: 45, overflow: 'linebreak' },
+                            1: { cellWidth: 70, overflow: 'linebreak' },
+                            2: { cellWidth: 25, halign: 'right' },
+                            3: { cellWidth: 30, overflow: 'linebreak' },
+                            4: { cellWidth: 20, halign: 'center' }
+                        },
+                        margin: { bottom: 40 }
                     });
                     
-                    y += 5;
-                });
-                
-                // Footer
-                const pageCount = doc.internal.getNumberOfPages();
-                for (let i = 1; i <= pageCount; i++) {
-                    doc.setPage(i);
-                    doc.setDrawColor(0, 0, 0);
-                    doc.line(20, 280, 190, 280);
-                    doc.setTextColor(0, 0, 0);
+                    // Footer profesional
+                    const pageHeight = doc.internal.pageSize.height;
+                    doc.setLineWidth(0.5);
+                    doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                    
                     doc.setFontSize(8);
-                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
-                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`Página ${pagina + 1} de ${totalPaginas}`, 20, pageHeight - 15);
+                    doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
                 }
                 
                 const fecha = new Date().toISOString().split('T')[0];
-                doc.save(`catalogo-servicios-${fecha}.pdf`);
+                const filtroTexto = this.filtroBusqueda.trim() ? '-filtrado' : '';
+                doc.save(`catalogo-servicios${filtroTexto}-${fecha}.pdf`);
                 NotificationSystem.success('Catálogo de servicios exportado exitosamente');
                 
             } catch (error) {
@@ -375,25 +391,40 @@ new Vue({
                         </button>
                     </div>
                     
-                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 500px;">
+                    <div v-if="formularioVisible" class="form-container">
                         <h3>{{ nuevoServicio.id ? 'Modificar Servicio - ' + servicioSeleccionado : 'Nuevo Servicio' }}</h3>
-                        <label>Nombre: *</label>
-                        <input type="text" v-model="nuevoServicio.nombre" placeholder="Ingrese el nombre del servicio" required/>
-                        <label>Descripción:</label>
-                        <textarea v-model="nuevoServicio.descripcion" placeholder="Descripción del servicio" rows="3" style="resize: vertical;"></textarea>
-                        <label>Precio Base: *</label>
-                        <input type="number" v-model="nuevoServicio.precioBase" placeholder="Ingrese el precio base" required/>
-                        <label>Categoría:</label>
-                        <select v-model="nuevoServicio.categoriaId">
-                            <option value="" disabled>Seleccionar Categoría</option>
-                            <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
-                                {{ categoria.descripcion }}
-                            </option>
-                        </select>
-                        <label style="display: inline-flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;">
-                            Activo:<input type="checkbox" v-model="nuevoServicio.activo" style="margin: 0; padding: 0; margin-left: 1px;"/>
-                        </label>
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label>Nombre: *</label>
+                                <input type="text" v-model="nuevoServicio.nombre" placeholder="Ingrese el nombre del servicio" required/>
+                            </div>
+                            <div class="form-col">
+                                <label>Precio Base: *</label>
+                                <input type="number" v-model="nuevoServicio.precioBase" placeholder="Ingrese el precio base" required/>
+                            </div>
+                            <div class="form-col">
+                                <label>Categoría:</label>
+                                <select v-model="nuevoServicio.categoriaId">
+                                    <option value="" disabled selected>Selecciona una categoría</option>
+                                    <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
+                                        {{ categoria.descripcion }}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row" style="gap: 20px;">
+                            <div class="form-col" style="flex: none; width: 150px;">
+                                <label>Descripción:</label>
+                                <textarea v-model="nuevoServicio.descripcion" placeholder="Descripción del servicio" rows="2" style="resize: vertical; width: 150px;"></textarea>
+                            </div>
+                            <div class="form-col" style="flex: none; width: auto; display: flex; align-items: flex-end; padding-bottom: 10px;">
+                                <label style="display: flex; align-items: center; gap: 8px; margin: 0; white-space: nowrap;">
+                                    <input type="checkbox" v-model="nuevoServicio.activo" style="margin: 0;"/>
+                                    Servicio Activo
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-buttons">
                             <button @click="nuevoServicio.id ? modificarServicio() : agregarServicio()" class="btn">
                                 {{ nuevoServicio.id ? 'Modificar' : 'Agregar' }}
                             </button>
@@ -404,7 +435,6 @@ new Vue({
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Nombre</th>
                                 <th>Descripción</th>
                                 <th>Precio Base</th>
@@ -415,7 +445,6 @@ new Vue({
                         </thead>
                         <tbody>
                             <tr v-for="servicio in serviciosPaginados" :key="servicio.id">
-                                <td>{{ servicio.id }}</td>
                                 <td>{{ servicio.nombre }}</td>
                                 <td>{{ servicio.descripcion }}</td>
                                 <td>{{ formatearNumero(servicio.precioBase) }}</td>

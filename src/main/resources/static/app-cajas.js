@@ -305,9 +305,9 @@ new Vue({
                 y += 6;
                 doc.text(`Cierre: ${this.formatearHora(this.historialCaja.horaCierre)}`, 25, y);
                 y += 6;
-                doc.text(`Monto Inicial: $${this.formatearNumero(this.historialCaja.montoInicial || 0)}`, 25, y);
+                doc.text(`Monto Inicial: ${this.formatearNumero(this.historialCaja.montoInicial || 0)}`, 25, y);
                 y += 6;
-                doc.text(`Monto Final: $${this.formatearNumero(this.historialCaja.montoFinal || 0)}`, 25, y);
+                doc.text(`Monto Final: ${this.formatearNumero(this.historialCaja.montoFinal || 0)}`, 25, y);
                 y += 15;
                 
                 if (this.historialVentas.length > 0) {
@@ -331,7 +331,7 @@ new Vue({
                         doc.setFontSize(9);
                         doc.text(`   Cliente: ${venta.cliente ? venta.cliente.nombreCompleto : 'N/A'}`, 30, y);
                         y += 5;
-                        doc.text(`   Monto: $${this.formatearNumero(venta.montoTotal)}`, 30, y);
+                        doc.text(`   Monto: ${this.formatearNumero(venta.montoTotal)}`, 30, y);
                         y += 5;
                         doc.text(`   Método: ${venta.metodoPago || 'N/A'}`, 30, y);
                         y += 8;
@@ -535,9 +535,9 @@ new Vue({
                     y += 6;
                     doc.text(`   Cierre: ${this.formatearHora(caja.horaCierre)}`, 25, y);
                     y += 6;
-                    doc.text(`   Monto Inicial: $${this.formatearNumero(caja.montoInicial || 0)}`, 25, y);
+                    doc.text(`   Monto Inicial: ${this.formatearNumero(caja.montoInicial || 0)}`, 25, y);
                     y += 6;
-                    doc.text(`   Monto Final: $${this.formatearNumero(caja.montoFinal || 0)}`, 25, y);
+                    doc.text(`   Monto Final: ${this.formatearNumero(caja.montoFinal || 0)}`, 25, y);
                     y += 6;
                     doc.text(`   Estado: ${caja.estado.toUpperCase()}`, 25, y);
                     y += 10;

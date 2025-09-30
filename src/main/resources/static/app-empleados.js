@@ -349,7 +349,7 @@ new Vue({
                             y += 6;
                         }
                         
-                        doc.text(`   Sueldo Base: $${this.formatearNumero(empleado.sueldoBase)}`, 30, y);
+                        doc.text(`   Sueldo Base: ${this.formatearNumero(empleado.sueldoBase)}`, 30, y);
                         y += 6;
                         
                         if (empleado.comisionPorcentaje > 0) {
@@ -358,7 +358,7 @@ new Vue({
                         }
                         
                         const sueldoTotal = this.calcularSueldoTotal(empleado);
-                        doc.text(`   Sueldo Total: $${this.formatearNumero(sueldoTotal)}`, 30, y);
+                        doc.text(`   Sueldo Total: ${this.formatearNumero(sueldoTotal)}`, 30, y);
                         y += 6;
                         
                         doc.text(`   Estado: ${empleado.activo ? 'Activo' : 'Inactivo'}`, 30, y);

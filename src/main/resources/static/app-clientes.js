@@ -180,13 +180,8 @@ new Vue({
             };
             this.formularioVisible = true;
             this.clienteSeleccionado = cliente.nombreCompleto;
-            // Scroll al formulario
-            this.$nextTick(() => {
-                const formulario = document.querySelector('.form-container');
-                if (formulario) {
-                    formulario.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            });
+            // Scroll al top de la página
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         },
         
         validarEmail(email) {
@@ -237,88 +232,129 @@ new Vue({
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
-                // Título
-                doc.setTextColor(0, 0, 0);
-                doc.setFontSize(20);
-                doc.setFont('helvetica', 'bold');
-                doc.text('Peluquería LUNA', 20, 20);
+                const clientesParaExportar = this.clientesFiltrados;
+                const itemsPorPagina = 20;
+                const totalPaginas = Math.ceil(clientesParaExportar.length / itemsPorPagina);
                 
-                doc.setTextColor(0, 0, 0);
-                doc.setFontSize(16);
-                doc.text('Lista de Clientes', 20, 35);
-                
-                // Fecha y total
-                doc.setFontSize(10);
-                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
-                doc.text(`Total de clientes: ${this.clientesFiltrados.length}`, 150, 25);
-                
-                // Línea decorativa
-                doc.setDrawColor(0, 0, 0);
-                doc.setLineWidth(1);
-                doc.line(20, 45, 190, 45);
-                
-                let y = 60;
-                
-                // Lista de clientes
-                this.clientesFiltrados.forEach((cliente, index) => {
-                    if (y > 250) {
-                        doc.addPage();
-                        y = 20;
-                    }
+                for (let pagina = 0; pagina < totalPaginas; pagina++) {
+                    if (pagina > 0) doc.addPage();
+                    
+                    // Header profesional
+                    doc.setLineWidth(2);
+                    doc.line(20, 25, 190, 25);
                     
                     doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(24);
                     doc.setFont('helvetica', 'bold');
-                    doc.text(`${index + 1}. ${cliente.nombreCompleto}`, 20, y);
-                    y += 8;
+                    doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
                     
-                    doc.setTextColor(0, 0, 0);
+                    doc.setLineWidth(0.5);
+                    doc.line(20, 28, 190, 28);
+                    
+                    doc.setFontSize(16);
                     doc.setFont('helvetica', 'normal');
+                    doc.text('LISTA DE CLIENTES', 105, 40, { align: 'center' });
                     
-                    if (cliente.telefono) {
-                        doc.text(`   Teléfono: ${cliente.telefono}`, 25, y);
-                        y += 6;
+                    // Información del reporte
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                    doc.text(`Total de registros: ${clientesParaExportar.length}`, 20, 62);
+                    if (this.filtroBusqueda.trim()) {
+                        doc.text(`Filtro aplicado: "${this.filtroBusqueda}"`, 20, 69);
                     }
-                    if (cliente.ruc) {
-                        doc.text(`   RUC: ${cliente.ruc}`, 25, y);
-                        y += 6;
-                    }
-                    if (cliente.correo) {
-                        doc.text(`   Email: ${cliente.correo}`, 25, y);
-                        y += 6;
-                    }
-                    if (cliente.fechaNacimiento) {
-                        doc.text(`   Fecha Nacimiento: ${this.formatearFecha(cliente.fechaNacimiento)}`, 25, y);
-                        y += 6;
-                    }
-                    if (cliente.redesSociales) {
-                        const redes = cliente.redesSociales.length > 50 ? 
-                            cliente.redesSociales.substring(0, 50) + '...' : cliente.redesSociales;
-                        doc.text(`   Redes Sociales: ${redes}`, 25, y);
-                        y += 6;
-                    }
-                    y += 8;
-                });
-                
-                // Footer
-                const pageCount = doc.internal.getNumberOfPages();
-                for (let i = 1; i <= pageCount; i++) {
-                    doc.setPage(i);
-                    doc.setDrawColor(0, 0, 0);
-                    doc.line(20, 280, 190, 280);
-                    doc.setTextColor(0, 0, 0);
+                    
+                    const inicio = pagina * itemsPorPagina;
+                    const fin = Math.min(inicio + itemsPorPagina, clientesParaExportar.length);
+                    const clientesPagina = clientesParaExportar.slice(inicio, fin);
+                    
+                    const headers = [['NOMBRE COMPLETO', 'TELÉFONO', 'RUC', 'EMAIL', 'EDAD']];
+                    const data = clientesPagina.map((cliente) => [
+                        cliente.nombreCompleto || '',
+                        cliente.telefono || 'No registrado',
+                        cliente.ruc || 'No registrado',
+                        cliente.correo || 'No registrado',
+                        this.calcularEdad(cliente.fechaNacimiento)
+                    ]);
+                    
+                    doc.autoTable({
+                        head: headers,
+                        body: data,
+                        startY: this.filtroBusqueda.trim() ? 75 : 68,
+                        styles: { 
+                            fontSize: 9,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            cellPadding: 4,
+                            lineColor: [0, 0, 0],
+                            lineWidth: 0.1
+                        },
+                        headStyles: { 
+                            fontSize: 10,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'center',
+                            cellPadding: 5
+                        },
+                        bodyStyles: {
+                            fontSize: 9,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica'
+                        },
+                        alternateRowStyles: {
+                            fillColor: [255, 255, 255]
+                        },
+                        columnStyles: {
+                            0: { cellWidth: 50 },
+                            1: { cellWidth: 30 },
+                            2: { cellWidth: 30 },
+                            3: { cellWidth: 50 },
+                            4: { cellWidth: 20, halign: 'center' }
+                        },
+                        margin: { bottom: 40 }
+                    });
+                    
+                    // Footer profesional
+                    const pageHeight = doc.internal.pageSize.height;
+                    doc.setLineWidth(0.5);
+                    doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                    
                     doc.setFontSize(8);
-                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
-                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`Página ${pagina + 1} de ${totalPaginas}`, 20, pageHeight - 15);
+                    doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
                 }
                 
                 const fecha = new Date().toISOString().split('T')[0];
-                doc.save(`lista-clientes-${fecha}.pdf`);
+                const filtroTexto = this.filtroBusqueda.trim() ? '-filtrado' : '';
+                doc.save(`lista-clientes${filtroTexto}-${fecha}.pdf`);
                 NotificationSystem.success('Lista de clientes exportada exitosamente');
                 
             } catch (error) {
                 console.error('Error al generar PDF:', error);
                 NotificationSystem.error('Error al generar el PDF: ' + error.message);
             }
+        },
+        
+        calcularEdad(fechaNacimiento) {
+            if (!fechaNacimiento) return 'N/A';
+            const hoy = new Date();
+            const nacimiento = new Date(fechaNacimiento);
+            let edad = hoy.getFullYear() - nacimiento.getFullYear();
+            const mes = hoy.getMonth() - nacimiento.getMonth();
+            if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+                edad--;
+            }
+            return edad + ' años';
         }
     },
     template: `
@@ -327,12 +363,12 @@ new Vue({
                 <h1 class="page-title">Gestión de Clientes</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
-                    <div class="filters-container">
-                        <div class="filter-group">
+                    <div class="filters-container" style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap; width: fit-content; padding: 15px; margin: 15px 0;">
+                        <div class="filter-group" style="flex: none; width: auto;">
                             <label>Buscar Cliente:</label>
-                            <input type="text" v-model="filtroBusqueda" @input="filtrarClientes" placeholder="Buscar por nombre, teléfono, RUC o email..." class="search-bar"/>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarClientes" placeholder="Buscar por nombre, teléfono, RUC o email..." class="search-bar" style="width: 300px;"/>
                         </div>
-                        <div class="filter-group" style="flex-direction: row; gap: 10px; align-items: end;">
+                        <div style="display: flex; gap: 10px; align-items: end;">
                             <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
                             <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nuevo Cliente</button>
                             <button @click="exportarPDF" class="btn btn-small">
@@ -343,19 +379,35 @@ new Vue({
                     
                     <div v-if="formularioVisible" class="form-container">
                         <h3>{{ nuevoCliente.id ? 'Modificar Cliente - ' + clienteSeleccionado : 'Nuevo Cliente' }}</h3>
-                        <label>Nombre Completo: *</label>
-                        <input type="text" v-model="nuevoCliente.nombreCompleto" placeholder="Ingrese el nombre completo" required/>
-                        <label>Teléfono:</label>
-                        <input type="tel" v-model="nuevoCliente.telefono" placeholder="Ej: 0981234567" maxlength="10"/>
-                        <label>RUC:</label>
-                        <input type="text" v-model="nuevoCliente.ruc" placeholder="Ingrese el RUC" maxlength="20"/>
-                        <label>Correo Electrónico:</label>
-                        <input type="email" v-model="nuevoCliente.correo" placeholder="ejemplo@correo.com"/>
-                        <label>Fecha de Nacimiento:</label>
-                        <input type="date" v-model="nuevoCliente.fechaNacimiento" style="width: auto;"/>
-                        <label>Redes Sociales:</label>
-                        <textarea v-model="nuevoCliente.redesSociales" placeholder="Facebook, Instagram, etc." rows="3" style="width: auto; min-width: 250px; resize: vertical;"></textarea>
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label>Nombre Completo: *</label>
+                                <input type="text" v-model="nuevoCliente.nombreCompleto" placeholder="Ingrese el nombre completo" required/>
+                            </div>
+                            <div class="form-col">
+                                <label>Teléfono:</label>
+                                <input type="tel" v-model="nuevoCliente.telefono" placeholder="Ej: 0981234567" maxlength="10"/>
+                            </div>
+                            <div class="form-col">
+                                <label>RUC:</label>
+                                <input type="text" v-model="nuevoCliente.ruc" placeholder="Ingrese el RUC" maxlength="20"/>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label>Correo Electrónico:</label>
+                                <input type="email" v-model="nuevoCliente.correo" placeholder="ejemplo@correo.com"/>
+                            </div>
+                            <div class="form-col">
+                                <label>Fecha de Nacimiento:</label>
+                                <input type="date" v-model="nuevoCliente.fechaNacimiento"/>
+                            </div>
+                            <div class="form-col">
+                                <label>Redes Sociales:</label>
+                                <textarea v-model="nuevoCliente.redesSociales" placeholder="Facebook, Instagram, etc." rows="2" style="resize: vertical;"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-buttons">
                             <button @click="nuevoCliente.id ? modificarCliente() : agregarCliente()" class="btn">
                                 {{ nuevoCliente.id ? 'Modificar' : 'Agregar' }}
                             </button>

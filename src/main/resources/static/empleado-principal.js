@@ -277,11 +277,11 @@ new Vue({
                 
                 doc.setFontSize(12);
                 doc.setFont('helvetica', 'normal');
-                doc.text(`Total a Pagar: $${this.formatearNumero(this.resumenMensual.totalAPagar)}`, 20, y);
+                doc.text(`Total a Pagar: ${this.formatearNumero(this.resumenMensual.totalAPagar)}`, 20, y);
                 y += 10;
-                doc.text(`Total Pagado: $${this.formatearNumero(this.resumenMensual.totalPagado)}`, 20, y);
+                doc.text(`Total Pagado: ${this.formatearNumero(this.resumenMensual.totalPagado)}`, 20, y);
                 y += 10;
-                doc.text(`Diferencia a Pagar: $${this.formatearNumero(this.resumenMensual.totalDiferencia)}`, 20, y);
+                doc.text(`Diferencia a Pagar: ${this.formatearNumero(this.resumenMensual.totalDiferencia)}`, 20, y);
                 
                 const fecha = new Date().toISOString().split('T')[0];
                 doc.save(`resumen-mensual-${this.getNombreMesActual()}-${fecha}.pdf`);
@@ -322,11 +322,11 @@ new Vue({
                 doc.setFontSize(12);
                 doc.text(`Área: ${this.empleadoSeleccionado.area ? this.empleadoSeleccionado.area.nombre : 'N/A'}`, 20, y);
                 y += 8;
-                doc.text(`Sueldo Base: $${this.formatearNumero(this.detalleEmpleado.sueldoBase)}`, 20, y);
+                doc.text(`Sueldo Base: ${this.formatearNumero(this.detalleEmpleado.sueldoBase)}`, 20, y);
                 y += 8;
-                doc.text(`Comisión Total: $${this.formatearNumero(this.detalleEmpleado.comisionTotal)}`, 20, y);
+                doc.text(`Comisión Total: ${this.formatearNumero(this.detalleEmpleado.comisionTotal)}`, 20, y);
                 y += 8;
-                doc.text(`Total a Cobrar: $${this.formatearNumero(this.detalleEmpleado.sueldoTotal)}`, 20, y);
+                doc.text(`Total a Cobrar: ${this.formatearNumero(this.detalleEmpleado.sueldoTotal)}`, 20, y);
                 y += 8;
                 doc.text(`Servicios Realizados: ${this.detalleEmpleado.totalServicios}`, 20, y);
                 
@@ -395,15 +395,15 @@ new Vue({
                     doc.setFont('helvetica', 'normal');
                     doc.text(`   Área: ${empleado.area ? empleado.area.nombre : 'N/A'}`, 25, y);
                     y += 6;
-                    doc.text(`   Sueldo Base: $${this.formatearNumero(empleado.sueldoBase)}`, 25, y);
+                    doc.text(`   Sueldo Base: ${this.formatearNumero(empleado.sueldoBase)}`, 25, y);
                     y += 6;
-                    doc.text(`   Comisión (${empleado.comisionPorcentaje}%): $${this.formatearNumero(empleado.comisionTotal)}`, 25, y);
+                    doc.text(`   Comisión (${empleado.comisionPorcentaje}%): ${this.formatearNumero(empleado.comisionTotal)}`, 25, y);
                     y += 6;
-                    doc.text(`   Total a Cobrar: $${this.formatearNumero(empleado.sueldoTotal)}`, 25, y);
+                    doc.text(`   Total a Cobrar: ${this.formatearNumero(empleado.sueldoTotal)}`, 25, y);
                     y += 6;
-                    doc.text(`   Ya Pagado: $${this.formatearNumero(empleado.totalPagado || 0)}`, 25, y);
+                    doc.text(`   Ya Pagado: ${this.formatearNumero(empleado.totalPagado || 0)}`, 25, y);
                     y += 6;
-                    doc.text(`   Diferencia: $${this.formatearNumero(empleado.diferencia)}`, 25, y);
+                    doc.text(`   Diferencia: ${this.formatearNumero(empleado.diferencia)}`, 25, y);
                     y += 12;
                 });
                 

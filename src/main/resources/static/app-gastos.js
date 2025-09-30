@@ -142,7 +142,7 @@ new Vue({
                     doc.setFont('helvetica', 'normal');
                     doc.setFontSize(10);
                     
-                    doc.text(`   Monto: $${this.formatearNumero(gasto.monto)}`, 25, y);
+                    doc.text(`   Monto: ${this.formatearNumero(gasto.monto)}`, 25, y);
                     y += 6;
                     doc.text(`   Fecha: ${this.formatearFecha(gasto.fechaGasto)}`, 25, y);
                     y += 6;
@@ -155,7 +155,7 @@ new Vue({
                 y += 10;
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(14);
-                doc.text(`TOTAL: $${this.formatearNumero(this.totalGastos)}`, 20, y);
+                doc.text(`TOTAL: ${this.formatearNumero(this.totalGastos)}`, 20, y);
                 
                 const pageCount = doc.internal.getNumberOfPages();
                 for (let i = 1; i <= pageCount; i++) {
