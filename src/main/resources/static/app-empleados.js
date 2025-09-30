@@ -14,6 +14,7 @@ new Vue({
             empleadosFiltrados: [],
             areas: [],
             filtroBusqueda: '',
+            filtroArea: '',
             paginaActual: 1,
             itemsPorPagina: 10,
             formularioVisible: false,
@@ -93,19 +94,30 @@ new Vue({
         },
         
         filtrarEmpleados() {
-            if (this.filtroBusqueda.trim() === '') {
-                this.empleadosFiltrados = this.empleados;
-            } else {
+            let filtrados = this.empleados;
+            
+            // Filtro por texto
+            if (this.filtroBusqueda.trim() !== '') {
                 const busqueda = this.filtroBusqueda.toLowerCase();
-                this.empleadosFiltrados = this.empleados.filter(empleado =>
+                filtrados = filtrados.filter(empleado =>
                     empleado.nombreCompleto.toLowerCase().includes(busqueda) ||
                     empleado.correo.toLowerCase().includes(busqueda) ||
                     empleado.telefono.includes(busqueda)
                 );
             }
+            
+            // Filtro por área
+            if (this.filtroArea.trim() !== '') {
+                filtrados = filtrados.filter(empleado =>
+                    empleado.area && empleado.area.nombre.toLowerCase().includes(this.filtroArea.toLowerCase())
+                );
+            }
+            
+            this.empleadosFiltrados = filtrados;
         },
         limpiarFiltros() {
             this.filtroBusqueda = '';
+            this.filtroArea = '';
             this.filtrarEmpleados();
         },
         
@@ -259,6 +271,124 @@ new Vue({
             ).join(' ');
         },
         
+        exportarPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Título
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Peluquería LUNA', 20, 20);
+                
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(16);
+                doc.text('Lista de Empleados', 20, 35);
+                
+                // Fecha y total
+                doc.setFontSize(10);
+                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
+                doc.text(`Total de empleados: ${this.empleadosFiltrados.length}`, 150, 25);
+                
+                // Línea decorativa
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(1);
+                doc.line(20, 45, 190, 45);
+                
+                let y = 60;
+                
+                // Agrupar por área
+                const empleadosPorArea = {};
+                this.empleadosFiltrados.forEach(empleado => {
+                    const area = empleado.area ? empleado.area.nombre : 'Sin área';
+                    if (!empleadosPorArea[area]) {
+                        empleadosPorArea[area] = [];
+                    }
+                    empleadosPorArea[area].push(empleado);
+                });
+                
+                // Mostrar empleados por área
+                Object.keys(empleadosPorArea).forEach(area => {
+                    if (y > 250) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    
+                    // Título de área
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(14);
+                    doc.text(area.toUpperCase(), 20, y);
+                    y += 15;
+                    
+                    // Empleados del área
+                    empleadosPorArea[area].forEach((empleado, index) => {
+                        if (y > 250) {
+                            doc.addPage();
+                            y = 20;
+                        }
+                        
+                        doc.setTextColor(0, 0, 0);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(12);
+                        doc.text(`• ${empleado.nombreCompleto}`, 25, y);
+                        y += 8;
+                        
+                        doc.setTextColor(0, 0, 0);
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(10);
+                        
+                        if (empleado.correo) {
+                            doc.text(`   Correo: ${empleado.correo}`, 30, y);
+                            y += 6;
+                        }
+                        
+                        if (empleado.telefono) {
+                            doc.text(`   Teléfono: ${empleado.telefono}`, 30, y);
+                            y += 6;
+                        }
+                        
+                        doc.text(`   Sueldo Base: $${this.formatearNumero(empleado.sueldoBase)}`, 30, y);
+                        y += 6;
+                        
+                        if (empleado.comisionPorcentaje > 0) {
+                            doc.text(`   Comisión: ${empleado.comisionPorcentaje}%`, 30, y);
+                            y += 6;
+                        }
+                        
+                        const sueldoTotal = this.calcularSueldoTotal(empleado);
+                        doc.text(`   Sueldo Total: $${this.formatearNumero(sueldoTotal)}`, 30, y);
+                        y += 6;
+                        
+                        doc.text(`   Estado: ${empleado.activo ? 'Activo' : 'Inactivo'}`, 30, y);
+                        y += 10;
+                    });
+                    
+                    y += 5;
+                });
+                
+                // Footer
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setDrawColor(0, 0, 0);
+                    doc.line(20, 280, 190, 280);
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(8);
+                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
+                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                }
+                
+                const fecha = new Date().toISOString().split('T')[0];
+                doc.save(`lista-empleados-${fecha}.pdf`);
+                NotificationSystem.success('Lista de empleados exportada exitosamente');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                NotificationSystem.error('Error al generar el PDF: ' + error.message);
+            }
+        }
 
     },
     template: `
@@ -267,14 +397,21 @@ new Vue({
                 <h1 class="page-title">Gestión de Empleados</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
-                    <div class="filters-container">
+                    <div class="filters-container" style="display: flex; gap: 15px; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; width: fit-content;">
                         <div class="filter-group">
                             <label>Buscar Empleado:</label>
-                            <input type="text" v-model="filtroBusqueda" @input="filtrarEmpleados" placeholder="Buscar empleado..." class="search-bar"/>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarEmpleados" placeholder="Buscar empleado..." class="search-bar" style="width: 300px;"/>
                         </div>
-                        <button @click="limpiarFiltros" class="btn btn-secondary">Limpiar Filtros</button>
+                        <div class="filter-group">
+                            <label>Filtrar por Área:</label>
+                            <input type="text" v-model="filtroArea" @input="filtrarEmpleados" placeholder="Buscar por área..." class="search-bar" style="width: 200px;"/>
+                        </div>
+                        <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
+                        <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nuevo Empleado</button>
+                        <button @click="exportarPDF" class="btn btn-small" v-if="!formularioVisible">
+                            <i class="fas fa-file-pdf"></i> Exportar PDF
+                        </button>
                     </div>
-                    <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Empleado</button>
                     
                     <div v-if="formularioVisible" class="form-container">
                         <h3>{{ nuevoEmpleado.id ? "Modificar Empleado: " + nuevoEmpleado.nombreCompleto : "Agregar Empleado" }}</h3>

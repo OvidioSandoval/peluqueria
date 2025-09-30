@@ -102,10 +102,6 @@ new Vue({
                 NotificationSystem.error('El precio base debe ser mayor a 0');
                 return;
             }
-            if (!this.nuevoServicio.categoriaId) {
-                NotificationSystem.error('Debe seleccionar una categoría');
-                return;
-            }
             try {
                 const servicioData = {
                     nombre: this.capitalizarTexto(this.nuevoServicio.nombre.trim()),
@@ -139,10 +135,6 @@ new Vue({
             }
             if (!this.nuevoServicio.precioBase || this.nuevoServicio.precioBase <= 0) {
                 NotificationSystem.error('El precio base debe ser mayor a 0');
-                return;
-            }
-            if (!this.nuevoServicio.categoriaId) {
-                NotificationSystem.error('Debe seleccionar una categoría');
                 return;
             }
             try {
@@ -391,8 +383,8 @@ new Vue({
                         <textarea v-model="nuevoServicio.descripcion" placeholder="Descripción del servicio" rows="3" style="resize: vertical;"></textarea>
                         <label>Precio Base: *</label>
                         <input type="number" v-model="nuevoServicio.precioBase" placeholder="Ingrese el precio base" required/>
-                        <label>Categoría: *</label>
-                        <select v-model="nuevoServicio.categoriaId" required>
+                        <label>Categoría:</label>
+                        <select v-model="nuevoServicio.categoriaId">
                             <option value="" disabled>Seleccionar Categoría</option>
                             <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
                                 {{ categoria.descripcion }}

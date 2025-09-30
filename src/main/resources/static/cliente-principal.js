@@ -528,7 +528,7 @@ new Vue({
                                             class="mr-3"
                                             style="width: 300px;"
                                         ></v-text-field>
-                                        <v-btn @click="limpiarFiltros" color="warning" outlined small class="mr-2">
+                                        <v-btn @click="limpiarFiltros" color="btn btn-secondary btn-small" outlined small class="mr-2">
                                             Limpiar
                                         </v-btn>
                                         <v-btn @click="toggleFrecuentes" color="primary" small>

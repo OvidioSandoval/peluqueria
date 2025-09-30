@@ -128,6 +128,18 @@ new Vue({
                 NotificationSystem.error('El precio de venta debe ser mayor a 0');
                 return;
             }
+            if (this.nuevoProducto.cantidadStockInicial === null || this.nuevoProducto.cantidadStockInicial === undefined || this.nuevoProducto.cantidadStockInicial < 0) {
+                NotificationSystem.error('El stock inicial es requerido y debe ser mayor o igual a 0');
+                return;
+            }
+            if (!this.nuevoProducto.cantidadOptimaStock || this.nuevoProducto.cantidadOptimaStock <= 0) {
+                NotificationSystem.error('El stock óptimo es requerido y debe ser mayor a 0');
+                return;
+            }
+            if (!this.nuevoProducto.minimoStock || this.nuevoProducto.minimoStock <= 0) {
+                NotificationSystem.error('El stock mínimo es requerido y debe ser mayor a 0');
+                return;
+            }
             try {
                 const productoData = {
                     nombre: this.capitalizarTexto(this.nuevoProducto.nombre.trim()),
@@ -169,6 +181,18 @@ new Vue({
             }
             if (!this.nuevoProducto.precioVenta || this.nuevoProducto.precioVenta <= 0) {
                 NotificationSystem.error('El precio de venta debe ser mayor a 0');
+                return;
+            }
+            if (this.nuevoProducto.cantidadStockInicial === null || this.nuevoProducto.cantidadStockInicial === undefined || this.nuevoProducto.cantidadStockInicial < 0) {
+                NotificationSystem.error('El stock inicial es requerido y debe ser mayor o igual a 0');
+                return;
+            }
+            if (!this.nuevoProducto.cantidadOptimaStock || this.nuevoProducto.cantidadOptimaStock <= 0) {
+                NotificationSystem.error('El stock óptimo es requerido y debe ser mayor a 0');
+                return;
+            }
+            if (!this.nuevoProducto.minimoStock || this.nuevoProducto.minimoStock <= 0) {
+                NotificationSystem.error('El stock mínimo es requerido y debe ser mayor a 0');
                 return;
             }
             try {
@@ -236,6 +260,9 @@ new Vue({
             this.nuevoProducto = { ...producto };
             this.formularioVisible = true;
             this.productoSeleccionado = producto.nombre;
+            this.$nextTick(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
         },
         cambiarPagina(pagina) {
             if (pagina >= 1 && pagina <= this.totalPaginas) {
@@ -284,7 +311,7 @@ new Vue({
             if (!producto.minimoStock) return 'normal';
             const stockActual = producto.cantidadStockInicial || 0;
             if (stockActual < producto.minimoStock) return 'bajo';
-            if (stockActual <= producto.minimoStock * 1.2) return 'advertencia';
+            if (stockActual <= producto.minimoStock + 2) return 'advertencia';
             return 'normal';
         },
         limpiarFiltros() {
@@ -299,12 +326,12 @@ new Vue({
                 const doc = new jsPDF();
                 
                 // Título
-                doc.setTextColor(218, 165, 32);
+                doc.setTextColor(0, 0, 0);
                 doc.setFontSize(20);
                 doc.setFont('helvetica', 'bold');
                 doc.text('Peluquería LUNA', 20, 20);
                 
-                doc.setTextColor(139, 69, 19);
+                doc.setTextColor(0, 0, 0);
                 doc.setFontSize(16);
                 doc.text('Inventario de Productos', 20, 35);
                 
@@ -315,12 +342,12 @@ new Vue({
                 
                 const stockBajo = this.productosFiltrados.filter(p => this.getStockStatus(p) === 'bajo').length;
                 if (stockBajo > 0) {
-                    doc.setTextColor(220, 53, 69);
+                    doc.setTextColor(0, 0, 0);
                     doc.text(`Productos con stock bajo: ${stockBajo}`, 150, 35);
                 }
                 
                 // Línea decorativa
-                doc.setDrawColor(218, 165, 32);
+                doc.setDrawColor(0, 0, 0);
                 doc.setLineWidth(1);
                 doc.line(20, 45, 190, 45);
                 
@@ -328,7 +355,7 @@ new Vue({
                 
                 // Alertas de stock si existen
                 if (this.alertasStock.length > 0) {
-                    doc.setTextColor(139, 69, 19);
+                    doc.setTextColor(0, 0, 0);
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(14);
                     doc.text('ALERTAS DE STOCK BAJO', 20, y);
@@ -340,7 +367,7 @@ new Vue({
                             y = 20;
                         }
                         
-                        doc.setTextColor(220, 53, 69);
+                        doc.setTextColor(0, 0, 0);
                         doc.setFont('helvetica', 'bold');
                         doc.text(`⚠ ${producto.nombre}`, 25, y);
                         y += 8;
@@ -354,7 +381,7 @@ new Vue({
                 }
                 
                 // Inventario completo
-                doc.setTextColor(139, 69, 19);
+                doc.setTextColor(0, 0, 0);
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(14);
                 doc.text('INVENTARIO COMPLETO', 20, y);
@@ -366,15 +393,7 @@ new Vue({
                         y = 20;
                     }
                     
-                    // Color según estado de stock
-                    const status = this.getStockStatus(producto);
-                    if (status === 'bajo') {
-                        doc.setTextColor(220, 53, 69);
-                    } else if (status === 'advertencia') {
-                        doc.setTextColor(255, 193, 7);
-                    } else {
-                        doc.setTextColor(218, 165, 32);
-                    }
+                    doc.setTextColor(0, 0, 0);
                     
                     doc.setFont('helvetica', 'bold');
                     doc.text(`${index + 1}. ${producto.nombre}`, 20, y);
@@ -416,9 +435,9 @@ new Vue({
                 const pageCount = doc.internal.getNumberOfPages();
                 for (let i = 1; i <= pageCount; i++) {
                     doc.setPage(i);
-                    doc.setDrawColor(218, 165, 32);
+                    doc.setDrawColor(0, 0, 0);
                     doc.line(20, 280, 190, 280);
-                    doc.setTextColor(139, 69, 19);
+                    doc.setTextColor(0, 0, 0);
                     doc.setFontSize(8);
                     doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
                     doc.text(`Página ${i} de ${pageCount}`, 170, 290);
@@ -432,6 +451,90 @@ new Vue({
                 console.error('Error al generar PDF:', error);
                 NotificationSystem.error('Error al generar el PDF: ' + error.message);
             }
+        },
+        
+        exportarStockBajo() {
+            try {
+                const productosStockBajo = this.productos.filter(p => this.getStockStatus(p) === 'bajo');
+                
+                if (productosStockBajo.length === 0) {
+                    NotificationSystem.warning('No hay productos con stock bajo para exportar');
+                    return;
+                }
+                
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Título
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Peluquería LUNA', 20, 20);
+                
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(16);
+                doc.text('Productos con Stock Bajo', 20, 35);
+                
+                // Fecha y total
+                doc.setFontSize(10);
+                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
+                doc.text(`Total productos: ${productosStockBajo.length}`, 150, 25);
+                
+                // Línea decorativa
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(1);
+                doc.line(20, 45, 190, 45);
+                
+                let y = 60;
+                
+                productosStockBajo.forEach((producto, index) => {
+                    if (y > 250) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`${index + 1}. ${producto.nombre}`, 20, y);
+                    y += 8;
+                    
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`   Stock actual: ${producto.cantidadStockInicial}`, 25, y);
+                    y += 6;
+                    doc.text(`   Stock mínimo: ${producto.minimoStock}`, 25, y);
+                    y += 6;
+                    doc.text(`   Precio venta: $${this.formatearNumero(producto.precioVenta)}`, 25, y);
+                    y += 6;
+                    
+                    if (producto.descripcion) {
+                        const desc = producto.descripcion.length > 60 ? 
+                            producto.descripcion.substring(0, 60) + '...' : producto.descripcion;
+                        doc.text(`   Descripción: ${desc}`, 25, y);
+                        y += 6;
+                    }
+                    y += 8;
+                });
+                
+                // Footer
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setDrawColor(0, 0, 0);
+                    doc.line(20, 280, 190, 280);
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(8);
+                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
+                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                }
+                
+                const fecha = new Date().toISOString().split('T')[0];
+                doc.save(`productos-stock-bajo-${fecha}.pdf`);
+                NotificationSystem.success('Reporte de stock bajo exportado exitosamente');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                NotificationSystem.error('Error al generar el PDF: ' + error.message);
+            }
         }
     },
     template: `
@@ -440,45 +543,46 @@ new Vue({
                 <h1 class="page-title">Gestión de Productos</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
-                    <div class="filters-container">
-                        <div class="filter-group">
+                    <div class="filters-container" style="gap: 10px; padding: 15px; width: fit-content;">
+                        <div class="filter-group" style="min-width: auto; flex: none;">
                             <label>Buscar Producto:</label>
-                            <input type="text" v-model="filtroBusqueda" @input="filtrarProductos" placeholder="Buscar producto..." class="search-bar"/>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarProductos" placeholder="Buscar producto..." class="search-bar" style="width: 280px;"/>
                         </div>
-                        <div class="filter-group">
+                        <div class="filter-group" style="min-width: auto; flex: none;">
                             <label>Estado de Stock:</label>
-                            <select v-model="filtroStock" @change="filtrarProductos" class="filter-select">
+                            <select v-model="filtroStock" @change="filtrarProductos" class="filter-select" style="width: 140px;">
                                 <option value="todos">Todos</option>
                                 <option value="bajo">Stock Bajo</option>
                                 <option value="advertencia">Advertencia</option>
                                 <option value="normal">Normal</option>
                             </select>
                         </div>
-                        <button @click="limpiarFiltros" class="btn btn-secondary">Limpiar Filtros</button>
+                        <button @click="limpiarFiltros" class="btn btn-secondary btn-small" style="margin: 0 2px;">Limpiar</button>
+                        <button @click="exportarPDF" class="btn btn-small" v-if="!formularioVisible" style="margin: 0 2px;">
+                            <i class="fas fa-file-pdf"></i> Exportar
+                        </button>
+                        <button @click="exportarStockBajo" class="btn btn-small" v-if="!formularioVisible" style="margin: 0 2px;">
+                            <i class="fas fa-file-pdf"></i> Stock Mínimo
+                        </button>
+                        <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible" style="margin: 0 2px;">Nuevo Producto</button>
                     </div>
-                    <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Producto</button>
-                    <button @click="exportarPDF" class="btn" class="btn" v-if="!formularioVisible">
-                        <i class="fas fa-file-pdf"></i> Exportar PDF
-                    </button>
                     
-                    <div v-if="formularioVisible" class="form-container">
-                        <h3>{{ nuevoProducto.id ? 'Modificar Producto: ' + productoSeleccionado : 'Agregar Producto' }}</h3>
-                        <label>Nombre:</label>
-                        <input type="text" v-model="nuevoProducto.nombre" placeholder="Nombre" required/>
+                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 600px;">
+                        <h3>{{ nuevoProducto.id ? 'Modificar Producto - ' + productoSeleccionado : 'Nuevo Producto' }}</h3>
+                        <label>Nombre: *</label>
+                        <input type="text" v-model="nuevoProducto.nombre" placeholder="Ingrese el nombre del producto" required/>
                         <label>Descripción:</label>
-                        <textarea v-model="nuevoProducto.descripcion" placeholder="Descripción"></textarea>
-                        <div style="display: flex; flex-direction: column;">
-                            <label>Precio Compra:</label>
-                            <input type="number" v-model="nuevoProducto.precioCompra" placeholder="Precio Compra" required/>
-                        </div>
-                        <label>Precio Venta:</label>
-                        <input type="number" v-model="nuevoProducto.precioVenta" placeholder="Precio Venta" required/>
-                        <label>Stock Inicial:</label>
-                        <input type="number" v-model="nuevoProducto.cantidadStockInicial" placeholder="Stock Inicial" required/>
-                        <label>Stock Óptimo:</label>
-                        <input type="number" v-model="nuevoProducto.cantidadOptimaStock" placeholder="Stock Óptimo"/>
-                        <label>Stock Mínimo:</label>
-                        <input type="number" v-model="nuevoProducto.minimoStock" placeholder="Stock Mínimo"/>
+                        <textarea v-model="nuevoProducto.descripcion" placeholder="Descripción del producto" rows="3" style="resize: vertical;"></textarea>
+                        <label>Precio Compra: *</label>
+                        <input type="number" v-model="nuevoProducto.precioCompra" placeholder="Ingrese el precio de compra" required/>
+                        <label>Precio Venta: *</label>
+                        <input type="number" v-model="nuevoProducto.precioVenta" placeholder="Ingrese el precio de venta" required/>
+                        <label>Stock Inicial: *</label>
+                        <input type="number" v-model="nuevoProducto.cantidadStockInicial" placeholder="Ingrese el stock inicial" required/>
+                        <label>Stock Óptimo: *</label>
+                        <input type="number" v-model="nuevoProducto.cantidadOptimaStock" placeholder="Ingrese el stock óptimo" required/>
+                        <label>Stock Mínimo: *</label>
+                        <input type="number" v-model="nuevoProducto.minimoStock" placeholder="Ingrese el stock mínimo" required/>
                         <label style="display: inline-flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;">
                             Activo:<input type="checkbox" v-model="nuevoProducto.activo" style="margin: 0; padding: 0; margin-left: 1px;"/>
                         </label>
@@ -487,13 +591,13 @@ new Vue({
                         </label>
                         <div v-if="nuevoProducto.enPromocion">
                             <label>Precio Promoción:</label>
-                            <input type="number" v-model="nuevoProducto.precioPromocion" placeholder="Precio Promoción"/>
+                            <input type="number" v-model="nuevoProducto.precioPromocion" placeholder="Ingrese el precio de promoción"/>
                         </div>
-                        <div class="form-buttons">
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
                             <button @click="nuevoProducto.id ? modificarProducto() : agregarProducto()" class="btn">
                                 {{ nuevoProducto.id ? 'Modificar' : 'Agregar' }}
                             </button>
-                            <button @click="toggleFormulario()" class="btn" class="btn">Cancelar</button>
+                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
                         </div>
                     </div>
                     <div v-if="alertasStock.length > 0" class="alert-summary">
@@ -622,12 +726,7 @@ style.textContent = `
         margin-bottom: 20px; 
         border-left: 4px solid #ffc107; 
     }
-    .filters-container {
-        display: flex;
-        gap: 20px;
-        margin-bottom: 20px;
-        align-items: end;
-    }
+
     .filter-group {
         display: flex;
         flex-direction: column;
@@ -639,10 +738,7 @@ style.textContent = `
         font-size: 14px;
         background: white;
     }
-    .btn-secondary {
-        background: #6c757d !important;
-        color: white !important;
-    }
+
     @keyframes pulse {
         0% { opacity: 1; }
         50% { opacity: 0.5; }
