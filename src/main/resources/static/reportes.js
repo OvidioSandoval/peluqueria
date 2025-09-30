@@ -12,7 +12,7 @@ new Vue({
             serviciosMasSolicitados: [],
             clientesMasFrecuentes: [],
             productosBajoStock: [],
-            sueldosComisiones: [],
+
             historialDescuentos: [],
             filtros: {
                 nombre: '',
@@ -32,18 +32,53 @@ new Vue({
                 case 'servicios': datos = this.serviciosMasSolicitados; break;
                 case 'clientes': datos = this.clientesMasFrecuentes; break;
                 case 'productos': datos = this.productosBajoStock; break;
-                case 'empleados': datos = this.sueldosComisiones; break;
+
                 case 'descuentos': datos = this.historialDescuentos; break;
             }
             
+            if (!this.filtros.busqueda && !this.filtros.fecha) {
+                return datos;
+            }
+            
             return datos.filter(item => {
-                const nombre = (item.nombre || item.nombreCompleto || '').toLowerCase();
-                const fecha = item.fecha || '';
-                const monto = item.monto || item.total || item.sueldo || 0;
+                let cumpleBusqueda = true;
+                let cumpleFecha = true;
                 
-                return (!this.filtros.nombre || nombre.includes(this.filtros.nombre.toLowerCase())) &&
-                       (!this.filtros.fecha || fecha.includes(this.filtros.fecha)) &&
-                       (!this.filtros.monto || monto.toString().includes(this.filtros.monto));
+                if (this.filtros.busqueda) {
+                    const busqueda = this.filtros.busqueda.toLowerCase();
+                    switch(this.reporteActivo) {
+                        case 'servicios':
+                            cumpleBusqueda = (item.nombre || '').toLowerCase().includes(busqueda) || 
+                                           (item.precio || 0).toString().includes(busqueda) ||
+                                           (item.cantidad || 0).toString().includes(busqueda);
+                            break;
+                        case 'clientes':
+                            cumpleBusqueda = (item.nombreCompleto || '').toLowerCase().includes(busqueda) ||
+                                           (item.telefono || '').includes(busqueda) ||
+                                           (item.correo || '').toLowerCase().includes(busqueda) ||
+                                           (item.visitas || 0).toString().includes(busqueda) ||
+                                           (item.totalGastado || 0).toString().includes(busqueda);
+                            break;
+                        case 'productos':
+                            cumpleBusqueda = (item.nombre || '').toLowerCase().includes(busqueda) ||
+                                           (item.stock || 0).toString().includes(busqueda) ||
+                                           (item.stockMinimo || 0).toString().includes(busqueda) ||
+                                           (item.precio || 0).toString().includes(busqueda);
+                            break;
+                        case 'descuentos':
+                            cumpleBusqueda = (item.cliente || '').toLowerCase().includes(busqueda) ||
+                                           (item.ventaId || '').toString().includes(busqueda) ||
+                                           (item.descuento || 0).toString().includes(busqueda);
+                            break;
+                    }
+                }
+                
+                if (this.filtros.fecha) {
+                    const fechaItem = item.fecha || item.fechaNacimiento || '';
+                    cumpleFecha = fechaItem.includes(this.filtros.fecha);
+                }
+                
+                return cumpleBusqueda && cumpleFecha;
             });
         }
     },
@@ -55,7 +90,7 @@ new Vue({
                     this.cargarServiciosMasSolicitados(),
                     this.cargarClientesMasFrecuentes(),
                     this.cargarProductosBajoStock(),
-                    this.cargarSueldosComisiones(),
+
                     this.cargarHistorialDescuentos()
                 ]);
             } catch (error) {
@@ -80,10 +115,7 @@ new Vue({
             this.productosBajoStock = await response.json();
         },
 
-        async cargarSueldosComisiones() {
-            const response = await fetch(`${config.apiBaseUrl}/reportes/sueldos-comisiones`);
-            this.sueldosComisiones = await response.json();
-        },
+
 
         async cargarHistorialDescuentos() {
             const response = await fetch(`${config.apiBaseUrl}/reportes/historial-descuentos`);
@@ -93,70 +125,43 @@ new Vue({
         exportarPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            const pageWidth = doc.internal.pageSize.width;
-            const pageHeight = doc.internal.pageSize.height;
             
-            // Título principal "Peluquería Luna" en dorado
-            doc.setTextColor(218, 165, 32); // Dorado
-            doc.setFontSize(28);
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(20);
             doc.setFont('helvetica', 'bold');
-            doc.text('Peluqueria Luna', 20, 25);
+            doc.text('Peluquería LUNA', 20, 20);
             
-            // Fecha en la esquina superior derecha
-            doc.setTextColor(139, 69, 19); // Marrón
+            doc.setFontSize(16);
+            doc.text(this.getTituloReporte(), 20, 35);
+            
             doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text(new Date().toLocaleDateString('es-ES'), pageWidth - 40, 15);
+            doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
             
-            // Subtítulo del reporte en dorado
-            doc.setTextColor(184, 134, 11); // Dorado oscuro
-            doc.setFontSize(18);
-            doc.setFont('helvetica', 'bold');
-            doc.text(this.getTituloReporte(), 20, 45);
-            
-            // Línea decorativa dorada simple
-            doc.setDrawColor(218, 165, 32);
+            doc.setDrawColor(0, 0, 0);
             doc.setLineWidth(1);
-            doc.line(20, 50, pageWidth - 20, 50);
+            doc.line(20, 45, 190, 45);
             
-            let y = 65;
-            let itemCount = 0;
+            const headers = this.getHeadersParaPDF();
+            const data = this.datosReporteFiltrados.map(item => this.getRowDataParaPDF(item));
             
-            this.datosReporteFiltrados.forEach((item, index) => {
-                if (y > pageHeight - 30) {
-                    doc.addPage();
-                    y = 20;
+            doc.autoTable({
+                head: [headers],
+                body: data,
+                startY: 50,
+                styles: { 
+                    fontSize: 8,
+                    textColor: [0, 0, 0],
+                    fillColor: [255, 255, 255]
+                },
+                headStyles: { 
+                    fillColor: [255, 255, 255],
+                    textColor: [0, 0, 0],
+                    fontStyle: 'bold'
                 }
-                
-                // Número de item en dorado (solo texto, sin círculo)
-                doc.setTextColor(218, 165, 32); // Dorado
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'bold');
-                doc.text(`${index + 1}.`, 20, y);
-                
-                // Contenido del item en negro
-                doc.setTextColor(0, 0, 0); // Negro
-                doc.setFontSize(11);
-                doc.setFont('helvetica', 'normal');
-                const texto = this.formatearItemParaPDF(item);
-                doc.text(texto, 30, y);
-                
-                y += 15;
-                itemCount++;
             });
             
-            // Footer simple con línea dorada
-            doc.setDrawColor(218, 165, 32);
-            doc.setLineWidth(1);
-            doc.line(20, pageHeight - 25, pageWidth - 20, pageHeight - 25);
-            
-            doc.setTextColor(139, 69, 19); // Marrón
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Total de registros: ${itemCount}`, 20, pageHeight - 15);
-            doc.text('Peluquería Luna - Sistema de Gestión', pageWidth - 80, pageHeight - 15);
-            
-            doc.save(`reporte-${this.reporteActivo}-${new Date().toISOString().split('T')[0]}.pdf`);
+            const fecha = new Date().toISOString().split('T')[0];
+            doc.save(`reporte-${this.reporteActivo}-${fecha}.pdf`);
         },
 
         getTituloReporte() {
@@ -164,26 +169,39 @@ new Vue({
                 servicios: 'Servicios Más Solicitados',
                 clientes: 'Clientes Más Frecuentes',
                 productos: 'Productos con Bajo Stock',
-                empleados: 'Sueldos y Comisiones',
+
                 descuentos: 'Historial de Descuentos'
             };
             return titulos[this.reporteActivo];
         },
 
-        formatearItemParaPDF(item) {
+        getHeadersParaPDF() {
             switch(this.reporteActivo) {
                 case 'servicios':
-                    return `${item.nombre} - Precio: $${this.formatearNumero(item.precio || 0)}`;
+                    return ['Servicio', 'Cantidad Solicitada', 'Precio'];
                 case 'clientes':
-                    return `${item.nombreCompleto} - Visitas: ${item.visitas || 0} - Total: $${this.formatearNumero(item.totalGastado || 0)} - Tel: ${item.telefono || 'N/A'}`;
+                    return ['Cliente', 'Teléfono', 'Email', 'Visitas', 'Total Gastado', 'Fecha Nacimiento'];
                 case 'productos':
-                    return `${item.nombre} - Stock: ${item.stock} - Min: ${item.stockMinimo} - Precio: $${this.formatearNumero(item.precio || 0)}`;
-                case 'empleados':
-                    return `${item.nombreCompleto} - Sueldo Base: $${this.formatearNumero(item.sueldoBase || 0)} - Comision: ${item.comisionPorcentaje || 0}% - Total: $${this.formatearNumero(item.sueldoTotal || 0)}`;
+                    return ['Producto', 'Stock Actual', 'Stock Mínimo', 'Precio'];
                 case 'descuentos':
-                    return `Venta ${item.ventaId} - Cliente: ${item.cliente} - Descuento: $${this.formatearNumero(item.descuento || 0)}`;
+                    return ['Venta ID', 'Cliente', 'Descuento', 'Fecha'];
                 default:
-                    return JSON.stringify(item);
+                    return ['Datos'];
+            }
+        },
+        
+        getRowDataParaPDF(item) {
+            switch(this.reporteActivo) {
+                case 'servicios':
+                    return [item.nombre, item.cantidad || 0, this.formatearNumero(item.precio || 0)];
+                case 'clientes':
+                    return [item.nombreCompleto, item.telefono || 'N/A', item.correo || 'N/A', item.visitas || 0, this.formatearNumero(item.totalGastado || 0), this.formatearFecha(item.fechaNacimiento)];
+                case 'productos':
+                    return [item.nombre, item.stock || 0, item.stockMinimo || 0, this.formatearNumero(item.precio || 0)];
+                case 'descuentos':
+                    return [item.ventaId, item.cliente, this.formatearNumero(item.descuento || 0), this.formatearFecha(item.fecha)];
+                default:
+                    return [JSON.stringify(item)];
             }
         },
 
@@ -197,36 +215,39 @@ new Vue({
     },
     template: `
         <div class="glass-container">
-            <h1 class="page-title">
-                Reportes y Estadísticas
-            </h1>
+            <h1 class="page-title">Reportes y Estadísticas</h1>
+            <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
+            <main style="padding: 20px;">
             
-            <div class="reportes-nav">
-                <button @click="reporteActivo = 'servicios'" :class="{'active': reporteActivo === 'servicios'}" class="btn">
-                    Servicios Más Solicitados
+            <div class="reportes-nav" style="display: flex; gap: 8px; margin: 20px 0; flex-wrap: nowrap; overflow-x: auto; white-space: nowrap;">
+                <button @click="reporteActivo = 'servicios'" :class="{'active': reporteActivo === 'servicios'}" class="btn btn-small" style="min-width: fit-content; padding: 8px 12px; font-size: 0.85rem;">
+                    <i class="fas fa-cut"></i> Servicios
                 </button>
-                <button @click="reporteActivo = 'clientes'" :class="{'active': reporteActivo === 'clientes'}" class="btn">
-                    Clientes Más Frecuentes
+                <button @click="reporteActivo = 'clientes'" :class="{'active': reporteActivo === 'clientes'}" class="btn btn-small" style="min-width: fit-content; padding: 8px 12px; font-size: 0.85rem;">
+                    <i class="fas fa-user"></i> Clientes
                 </button>
-                <button @click="reporteActivo = 'productos'" :class="{'active': reporteActivo === 'productos'}" class="btn">
-                    Productos Bajo Stock
+                <button @click="reporteActivo = 'productos'" :class="{'active': reporteActivo === 'productos'}" class="btn btn-small" style="min-width: fit-content; padding: 8px 12px; font-size: 0.85rem;">
+                    <i class="fas fa-box"></i> Productos
                 </button>
-                <button @click="reporteActivo = 'empleados'" :class="{'active': reporteActivo === 'empleados'}" class="btn">
-                    Sueldos y Comisiones
+
+                <button @click="reporteActivo = 'descuentos'" :class="{'active': reporteActivo === 'descuentos'}" class="btn btn-small" style="min-width: fit-content; padding: 8px 12px; font-size: 0.85rem;">
+                    <i class="fas fa-percent"></i> Descuentos
                 </button>
-                <button @click="reporteActivo = 'descuentos'" :class="{'active': reporteActivo === 'descuentos'}" class="btn">
-                    Historial Descuentos
-                </button>
-                <button @click="window.location.href = '/web/empleado-principal'" class="btn" class="btn">
-                    <i class="fas fa-users"></i> Panel Empleados
+                <button @click="window.location.href = '/web/empleado-principal'" class="btn btn-small" style="min-width: fit-content; padding: 8px 12px; font-size: 0.85rem;">
+                    <i class="fas fa-users"></i> Empleados
                 </button>
             </div>
 
-            <div class="filtros-container">
-                <input v-model="filtros.nombre" placeholder="Filtrar por nombre" class="search-bar">
-                <input v-model="filtros.fecha" type="date" class="search-bar">
-                <input v-model="filtros.monto" placeholder="Filtrar por monto" class="search-bar">
-                <button @click="exportarPDF()" class="btn btn-export">
+            <div class="filters-container" style="display: flex; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; gap: 15px; width: fit-content;">
+                <div class="filter-group">
+                    <label>Buscar:</label>
+                    <input v-model="filtros.busqueda" placeholder="Nombre o monto..." class="search-bar" style="width: 200px;"/>
+                </div>
+                <div class="filter-group">
+                    <label>Fecha:</label>
+                    <input v-model="filtros.fecha" type="date" class="search-bar" style="width: 140px;"/>
+                </div>
+                <button @click="exportarPDF()" class="btn btn-small">
                     <i class="fas fa-file-pdf"></i> Exportar PDF
                 </button>
             </div>
@@ -305,30 +326,7 @@ new Vue({
                     </table>
                 </div>
 
-                <!-- Sueldos y Comisiones -->
-                <div v-if="reporteActivo === 'empleados'">
-                    <h3>Sueldos y Comisiones de Empleados</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Empleado</th>
-                                <th>Sueldo Base</th>
-                                <th>% Comisión</th>
-                                <th>Comisiones</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="empleado in datosReporteFiltrados" :key="empleado.id">
-                                <td>{{ empleado.nombreCompleto }}</td>
-                                <td>{{ formatearNumero(empleado.sueldoBase || 0) }}</td>
-                                <td>{{ empleado.comisionPorcentaje || 0 }}%</td>
-                                <td>{{ formatearNumero(empleado.comisiones || 0) }}</td>
-                                <td>{{ formatearNumero(empleado.sueldoTotal || 0) }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+
 
                 <!-- Historial de Descuentos -->
                 <div v-if="reporteActivo === 'descuentos'">
@@ -353,6 +351,7 @@ new Vue({
                     </table>
                 </div>
             </div>
+            </main>
         </div>
     `
 });
