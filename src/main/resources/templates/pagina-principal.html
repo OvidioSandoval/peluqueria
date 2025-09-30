@@ -8,21 +8,118 @@
   <link rel="stylesheet" href="/unified-styles.css">
   <link rel="stylesheet" href="/compact-styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.css">
+  <style>
+    .cards-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      padding: 40px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .card {
+      background: rgba(255, 248, 220, 0.95);
+      border-radius: 15px;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+      text-decoration: none;
+      color: #5d4037;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      text-decoration: none;
+      color: #5d4037;
+    }
+    .card i {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      color: #8b4513;
+    }
+    .card h3 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+    .header {
+      text-align: center;
+      padding: 20px;
+      background: rgba(255, 248, 220, 0.95);
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      margin: 0;
+      color: #5d4037;
+      font-size: 2.5rem;
+      text-shadow: 0 2px 4px rgba(255,255,255,0.8);
+    }
+  </style>
 </head>
 <body class="page-principal">
-<div style="position: fixed; top: 0; left: 0; right: 0; height: 70px; background: rgba(255, 248, 220, 0.95); backdrop-filter: blur(15px); border-bottom: 2px solid rgba(139, 69, 19, 0.2); display: flex; align-items: center; justify-content: center; z-index: 1000;">
-    <h2 style="margin: 0; font-size: 1.5rem; color: #5d4037; font-weight: 800; text-shadow: 0 2px 4px rgba(255,255,255,0.8), 0 1px 2px rgba(93,64,55,0.3);">Peluquería LUNA</h2>
+
+<div class="header">
+  <h1>Peluquería LUNA</h1>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.js"></script>
-
-<div class="content" id="app">
+<div class="cards-container">
+  <a href="/web/cliente-principal" class="card">
+    <i class="fas fa-users"></i>
+    <h3>Clientes</h3>
+  </a>
+  
+  <a href="/web/turnos" class="card">
+    <i class="fas fa-calendar-check"></i>
+    <h3>Turnos</h3>
+  </a>
+  
+  <a href="/web/calendario-turno" class="card">
+    <i class="fas fa-calendar-alt"></i>
+    <h3>Calendario</h3>
+  </a>
+  
+  <a href="/web/registro-compra" class="card">
+    <i class="fas fa-cart-plus"></i>
+    <h3>Nueva Compra</h3>
+  </a>
+  
+  <a href="/web/registro-venta" class="card">
+    <i class="fas fa-plus-circle"></i>
+    <h3>Nueva Venta</h3>
+  </a>
+  
+  <a href="/web/servicios" class="card">
+    <i class="fas fa-cut"></i>
+    <h3>Servicios</h3>
+  </a>
+  
+  <a href="/web/productos" class="card">
+    <i class="fas fa-shopping-bag"></i>
+    <h3>Productos</h3>
+  </a>
+  
+  <a href="/web/empleado-principal" class="card">
+    <i class="fas fa-user-tie"></i>
+    <h3>Empleados</h3>
+  </a>
+  
+  <a href="/web/gastos" class="card">
+    <i class="fas fa-receipt"></i>
+    <h3>Gastos</h3>
+  </a>
+  
+  <a href="/web/reportes" class="card">
+    <i class="fas fa-chart-bar"></i>
+    <h3>Reportes</h3>
+  </a>
+  
+  <a href="/web/panel-control" class="card">
+    <i class="fas fa-tachometer-alt"></i>
+    <h3>Panel de Control</h3>
+  </a>
 </div>
-
-<script src="/script.js"></script>
-<script type="module" src="/pagina-principal.js"></script>
 
 </body>
 </html>
