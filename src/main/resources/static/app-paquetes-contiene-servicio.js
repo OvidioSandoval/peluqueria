@@ -224,32 +224,41 @@ new Vue({
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i></button>
                 <main style="padding: 20px;">
 
-                    <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Paquete</button>
+                    <div class="filters-container" style="display: flex; gap: 15px; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; width: fit-content;">
+                        <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nueva Relación</button>
+                    </div>
                     
-                    <div v-if="formularioVisible" class="form-container">
-                        <h3>{{ nuevaRelacion.id ? 'Modificar Relación - ' + relacionSeleccionada : 'Agregar Relación' }}</h3>
-                        <label>Paquete:</label>
-                        <select v-model="nuevaRelacion.paqueteId" required>
-                            <option value="" disabled>Seleccionar Paquete</option>
-                            <option v-for="paquete in paquetes" :key="paquete.id" :value="paquete.id">
-                                {{ paquete.descripcion }}
-                            </option>
-                        </select>
-                        <label>Servicio:</label>
-                        <select v-model="nuevaRelacion.servicioId" required>
-                            <option value="" disabled>Seleccionar Servicio</option>
-                            <option v-for="servicio in servicios" :key="servicio.id" :value="servicio.id">
-                                {{ servicio.nombre }}
-                            </option>
-                        </select>
-                        <br>
-                        <label>Cantidad:</label>
-                        <input type="number" v-model="nuevaRelacion.cantidad" placeholder="Cantidad" min="1" required/>
-                        <div style="display: flex; gap: 10px;">
+                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 800px;">
+                        <h3>{{ nuevaRelacion.id ? 'Modificar Relación - ' + relacionSeleccionada : 'Nueva Relación' }}</h3>
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <label>Paquete: *</label>
+                                <select v-model="nuevaRelacion.paqueteId" required>
+                                    <option value="" disabled>Seleccionar Paquete</option>
+                                    <option v-for="paquete in paquetes" :key="paquete.id" :value="paquete.id">
+                                        {{ paquete.descripcion }}
+                                    </option>
+                                </select>
+                            </div>
+                            <div style="flex: 1; min-width: 200px;">
+                                <label>Servicio: *</label>
+                                <select v-model="nuevaRelacion.servicioId" required>
+                                    <option value="" disabled>Seleccionar Servicio</option>
+                                    <option v-for="servicio in servicios" :key="servicio.id" :value="servicio.id">
+                                        {{ servicio.nombre }}
+                                    </option>
+                                </select>
+                            </div>
+                            <div style="flex: 0 0 150px;">
+                                <label>Cantidad: *</label>
+                                <input type="number" v-model="nuevaRelacion.cantidad" placeholder="Cantidad" min="1" required/>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
                             <button @click="nuevaRelacion.id ? modificarRelacion() : agregarRelacion()" class="btn">
                                 {{ nuevaRelacion.id ? 'Modificar' : 'Agregar' }}
                             </button>
-                            <button @click="toggleFormulario()" class="btn" class="btn">Cancelar</button>
+                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
                         </div>
                     </div>
                     

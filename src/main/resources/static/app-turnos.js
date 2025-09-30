@@ -15,6 +15,9 @@ new Vue({
             clientes: [],
             servicios: [],
             empleados: [],
+            filtroBusqueda: '',
+            filtroFecha: new Date().toISOString().split('T')[0],
+            filtroHora: new Date().toTimeString().substring(0, 5),
 
             paginaActual: 1,
             itemsPorPagina: 10,
@@ -51,6 +54,7 @@ new Vue({
         this.fetchServicios();
         this.fetchEmpleados();
         this.startAutoRefresh();
+        this.filtrarTurnos();
     },
     beforeDestroy() {
         this.stopAutoRefresh();
@@ -112,7 +116,33 @@ new Vue({
             }
         },
         filtrarTurnos() {
-            this.turnosFiltrados = [...this.turnos];
+            let turnosFiltrados = [...this.turnos];
+            
+            if (this.filtroBusqueda.trim() !== '') {
+                const busqueda = this.filtroBusqueda.toLowerCase();
+                turnosFiltrados = turnosFiltrados.filter(turno =>
+                    (turno.cliente && turno.cliente.nombreCompleto && turno.cliente.nombreCompleto.toLowerCase().includes(busqueda)) ||
+                    (turno.servicio && turno.servicio.nombre && turno.servicio.nombre.toLowerCase().includes(busqueda)) ||
+                    (turno.empleado && turno.empleado.nombreCompleto && turno.empleado.nombreCompleto.toLowerCase().includes(busqueda)) ||
+                    (turno.estado && turno.estado.toLowerCase().includes(busqueda))
+                );
+            }
+            
+            if (this.filtroFecha) {
+                turnosFiltrados = turnosFiltrados.filter(turno => {
+                    const fechaTurno = this.formatearFechaParaInput(turno.fecha);
+                    return fechaTurno === this.filtroFecha;
+                });
+            }
+            
+            if (this.filtroHora) {
+                turnosFiltrados = turnosFiltrados.filter(turno => {
+                    const horaTurno = this.formatearHoraParaInput(turno.hora);
+                    return horaTurno === this.filtroHora;
+                });
+            }
+            
+            this.turnosFiltrados = turnosFiltrados;
         },
         async agregarTurno() {
             if (!this.nuevoTurno.clienteId || !this.nuevoTurno.servicioId || !this.nuevoTurno.empleadoId || !this.nuevoTurno.fecha || !this.nuevoTurno.hora) {
@@ -361,6 +391,90 @@ new Vue({
                 palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase()
             ).join(' ');
         },
+        
+        limpiarFiltros() {
+            this.filtroBusqueda = '';
+            this.filtroFecha = '';
+            this.filtroHora = '';
+            this.filtrarTurnos();
+        },
+        
+        exportarPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Peluquería LUNA', 20, 20);
+                
+                doc.setFontSize(16);
+                doc.text('Registro de Turnos', 20, 35);
+                
+                doc.setFontSize(10);
+                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
+                doc.text(`Total: ${this.turnosFiltrados.length} turnos`, 150, 25);
+                
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(1);
+                doc.line(20, 45, 190, 45);
+                
+                const headers = [['Cliente', 'Servicio', 'Empleado', 'Fecha', 'Hora', 'Estado', 'Motivo Cancelación', 'Recordatorio']];
+                const data = this.turnosFiltrados.map(turno => [
+                    this.getClienteName(turno),
+                    this.getServicioName(turno),
+                    this.getEmpleadoName(turno),
+                    this.formatearFechaParaInput(turno.fecha),
+                    this.formatearHoraParaInput(turno.hora),
+                    turno.estado,
+                    turno.motivoCancelacion || '-',
+                    turno.recordatorioEnviado ? 'Enviado' : 'No enviado'
+                ]);
+                
+                doc.autoTable({
+                    head: headers,
+                    body: data,
+                    startY: 50,
+                    styles: { 
+                        fontSize: 8,
+                        textColor: [0, 0, 0],
+                        fillColor: [255, 255, 255]
+                    },
+                    headStyles: { 
+                        fillColor: [255, 255, 255],
+                        textColor: [0, 0, 0],
+                        fontStyle: 'bold'
+                    },
+                    bodyStyles: {
+                        textColor: [0, 0, 0],
+                        fillColor: [255, 255, 255]
+                    },
+                    alternateRowStyles: {
+                        fillColor: [255, 255, 255]
+                    }
+                });
+                
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setDrawColor(0, 0, 0);
+                    doc.line(20, 280, 190, 280);
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(8);
+                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
+                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                }
+                
+                const fecha = new Date().toISOString().split('T')[0];
+                doc.save(`turnos-${fecha}.pdf`);
+                NotificationSystem.success('Registro de turnos exportado exitosamente');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                NotificationSystem.error('Error al generar el PDF: ' + error.message);
+            }
+        },
     },
     template: `
         <div class="glass-container">
@@ -369,17 +483,33 @@ new Vue({
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
 
-                    <div class="main-buttons">
-                        <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Turno</button>
-                        <button @click="toggleFormularioCliente()" class="btn" v-if="!formularioVisible" class="btn">
+                    <div class="filters-container" style="display: flex; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; width: fit-content;">
+                        <div class="filter-group" style="margin-right: 20px;">
+                            <label>Buscar:</label>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarTurnos" placeholder="Cliente, servicio, empleado, estado..." class="search-bar" style="width: 240px;"/>
+                        </div>
+                        <div class="filter-group" style="margin-right: 15px;">
+                            <label>Fecha:</label>
+                            <input type="date" v-model="filtroFecha" @change="filtrarTurnos" class="search-bar" style="width: 140px;"/>
+                        </div>
+                        <div class="filter-group" style="margin-right: 5px;">
+                            <label>Hora:</label>
+                            <input type="time" v-model="filtroHora" @change="filtrarTurnos" class="search-bar" style="width: 120px;"/>
+                        </div>
+                        <button @click="limpiarFiltros" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">Limpiar</button>
+                        <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nuevo Turno</button>
+                        <button @click="toggleFormularioCliente()" class="btn btn-small" v-if="!formularioVisible">
                             <i class="fas fa-user-plus"></i> Nuevo Cliente
+                        </button>
+                        <button @click="exportarPDF" class="btn btn-small" v-if="!formularioVisible">
+                            <i class="fas fa-file-pdf"></i> Exportar PDF
                         </button>
                     </div>
                     
-                    <div v-if="formularioVisible" class="form-container">
+                    <div v-if="formularioVisible" class="form-container" style="background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); width: fit-content; max-width: 1000px;">
                         <h3>{{ nuevoTurno.id ? 'Modificar Turno - ' + turnoSeleccionado : 'Agregar Turno' }}</h3>
-                        <div class="form-row">
-                            <div class="form-col">
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px;">
                                 <label>Cliente:</label>
                                 <select v-model="nuevoTurno.clienteId" required>
                                     <option value="" disabled>Seleccionar Cliente</option>
@@ -388,7 +518,7 @@ new Vue({
                                     </option>
                                 </select>
                             </div>
-                            <div class="form-col">
+                            <div style="flex: 1; min-width: 200px;">
                                 <label>Servicio:</label>
                                 <select v-model="nuevoTurno.servicioId" required>
                                     <option value="" disabled>Seleccionar Servicio</option>
@@ -397,9 +527,7 @@ new Vue({
                                     </option>
                                 </select>
                             </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-col">
+                            <div style="flex: 1; min-width: 200px;">
                                 <label>Empleado:</label>
                                 <select v-model="nuevoTurno.empleadoId" required>
                                     <option value="" disabled>Seleccionar Empleado</option>
@@ -408,7 +536,7 @@ new Vue({
                                     </option>
                                 </select>
                             </div>
-                            <div class="form-col">
+                            <div style="flex: 1; min-width: 150px;">
                                 <label>Estado:</label>
                                 <select v-model="nuevoTurno.estado">
                                     <option value="pendiente">Pendiente</option>
@@ -418,74 +546,72 @@ new Vue({
                                 </select>
                             </div>
                         </div>
-                        <div class="datetime-row">
-                            <div>
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px;">
+                            <div style="flex: 1; min-width: 150px;">
                                 <label>Fecha:</label>
                                 <input type="date" v-model="nuevoTurno.fecha" required/>
                             </div>
-                            <div>
+                            <div style="flex: 1; min-width: 150px;">
                                 <label>Hora:</label>
                                 <input type="time" v-model="nuevoTurno.hora" required/>
                             </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-col">
+                            <div style="flex: 2; min-width: 200px;">
                                 <label>Motivo Cancelación:</label>
                                 <input type="text" v-model="nuevoTurno.motivoCancelacion" placeholder="Opcional"/>
                             </div>
-                            <div class="form-col-auto">
+                            <div style="flex: 1; min-width: 150px;">
                                 <label>Recordatorio:</label>
-                                <div style="display: flex; align-items: center; gap: 8px; margin-top: 200px;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
                                     <input type="checkbox" v-model="nuevoTurno.recordatorioEnviado" style="width: auto; margin: 0;"/>
                                     <span>{{ nuevoTurno.recordatorioEnviado ? 'Enviado' : 'No enviado' }}</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="form-buttons">
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
                             <button @click="nuevoTurno.id ? modificarTurno() : agregarTurno()" class="btn">
                                 {{ nuevoTurno.id ? 'Modificar' : 'Agregar' }}
                             </button>
-                            <button @click="toggleFormulario()" class="btn" class="btn">
+                            <button @click="toggleFormulario()" class="btn btn-secondary">
                                 Cancelar
                             </button>
                         </div>
                     </div>
                     
-                    <div v-if="formularioClienteVisible" class="form-container">
+                    <div v-if="formularioClienteVisible" class="form-container" style="background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); width: fit-content; max-width: 800px;">
                         <h3><i class="fas fa-user-plus"></i> Nuevo Cliente</h3>
-                        <div class="form-row">
-                            <div class="form-col">
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px;">
                                 <label>Nombre Completo:</label>
                                 <input type="text" v-model="nuevoCliente.nombreCompleto" placeholder="Nombre Completo" required/>
                             </div>
-                            <div class="form-col">
+                            <div style="flex: 1; min-width: 150px;">
                                 <label>Teléfono:</label>
                                 <input type="tel" v-model="nuevoCliente.telefono" placeholder="Teléfono" maxlength="10"/>
                             </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-col">
+                            <div style="flex: 1; min-width: 150px;">
                                 <label>RUC:</label>
                                 <input type="text" v-model="nuevoCliente.ruc" placeholder="RUC" maxlength="20"/>
                             </div>
-                            <div class="form-col">
+                        </div>
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px;">
+                            <div style="flex: 2; min-width: 200px;">
                                 <label>Correo Electrónico:</label>
                                 <input type="email" v-model="nuevoCliente.correo" placeholder="Correo"/>
                             </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-col">
+                            <div style="flex: 1; min-width: 150px;">
                                 <label>Fecha de Nacimiento:</label>
                                 <input type="date" v-model="nuevoCliente.fechaNacimiento"/>
                             </div>
                         </div>
-                        <label>Redes Sociales:</label>
-                        <textarea v-model="nuevoCliente.redesSociales" placeholder="Redes Sociales"></textarea>
-                        <div class="form-buttons">
-                            <button @click="agregarCliente()" class="btn" class="btn">
+                        <div style="margin-top: 15px;">
+                            <label>Redes Sociales:</label>
+                            <textarea v-model="nuevoCliente.redesSociales" placeholder="Redes Sociales" style="width: 100%;"></textarea>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button @click="agregarCliente()" class="btn">
                                 <i class="fas fa-user-plus"></i> Agregar
                             </button>
-                            <button @click="toggleFormularioCliente()" class="btn" class="btn">
+                            <button @click="toggleFormularioCliente()" class="btn btn-secondary">
                                 Cancelar
                             </button>
                         </div>
@@ -494,23 +620,25 @@ new Vue({
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Cliente</th>
                                 <th>Servicio</th>
                                 <th>Empleado</th>
                                 <th>Fecha y Hora</th>
                                 <th>Estado</th>
+                                <th>Motivo Cancelación</th>
+                                <th>Recordatorio</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="turno in turnosPaginados" :key="turno.id">
-                                <td>{{ turno.id }}</td>
                                 <td>{{ getClienteName(turno) }}</td>
                                 <td>{{ getServicioName(turno) }}</td>
                                 <td>{{ getEmpleadoName(turno) }}</td>
                                 <td>{{ formatearFechaHora(turno.fecha, turno.hora) }}</td>
                                 <td>{{ turno.estado }}</td>
+                                <td>{{ turno.motivoCancelacion || '-' }}</td>
+                                <td>{{ turno.recordatorioEnviado ? 'Enviado' : 'No enviado' }}</td>
                                 <td>
                                     <button @click="cargarTurno(turno)" class="btn-small">Editar</button>
                                     <button @click="eliminarTurno(turno)" class="btn-small btn-danger">Eliminar</button>

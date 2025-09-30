@@ -12,6 +12,7 @@ new Vue({
         return {
             proveedores: [],
             proveedoresFiltrados: [],
+            filtroBusqueda: '',
 
             paginaActual: 1,
             itemsPorPagina: 10,
@@ -65,7 +66,19 @@ new Vue({
             }
         },
         filtrarProveedores() {
-            this.proveedoresFiltrados = this.proveedores;
+            if (this.filtroBusqueda.trim() === '') {
+                this.proveedoresFiltrados = this.proveedores;
+            } else {
+                const busqueda = this.filtroBusqueda.toLowerCase();
+                this.proveedoresFiltrados = this.proveedores.filter(proveedor =>
+                    proveedor.descripcion && proveedor.descripcion.toLowerCase().includes(busqueda)
+                );
+            }
+        },
+        
+        limpiarFiltros() {
+            this.filtroBusqueda = '';
+            this.filtrarProveedores();
         },
         async agregarProveedor() {
             if (!this.nuevoProveedor.descripcion.trim()) {
@@ -177,33 +190,36 @@ new Vue({
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
 
-                    <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Proveedor</button>
+                    <div class="filters-container" style="display: flex; gap: 15px; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; width: fit-content;">
+                        <div class="filter-group">
+                            <label>Buscar Proveedor:</label>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarProveedores" placeholder="Buscar por descripción..." class="search-bar" style="width: 300px;"/>
+                        </div>
+                        <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
+                        <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nuevo Proveedor</button>
+                    </div>
                     
-                    <div v-if="formularioVisible" class="form-container">
-                        <h3>{{ nuevoProveedor.id ? 'Modificar Proveedor - ' + nuevoProveedor.descripcion : 'Agregar Proveedor' }}</h3>
-                        <label>Descripción:</label>
-                        <input type="text" v-model="nuevoProveedor.descripcion" placeholder="Descripción del proveedor" required/>
-                        <div class="form-buttons">
+                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 500px;">
+                        <h3>{{ nuevoProveedor.id ? 'Modificar Proveedor - ' + proveedorSeleccionado : 'Nuevo Proveedor' }}</h3>
+                        <label>Descripción: *</label>
+                        <input type="text" v-model="nuevoProveedor.descripcion" placeholder="Ingrese la descripción del proveedor" required/>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
                             <button @click="nuevoProveedor.id ? modificarProveedor() : agregarProveedor()" class="btn">
                                 {{ nuevoProveedor.id ? 'Modificar' : 'Agregar' }}
                             </button>
-                            <button @click="toggleFormulario()" class="btn" class="btn">
-                                Cancelar
-                            </button>
+                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
                         </div>
                     </div>
                     
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Descripción</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="proveedor in proveedoresPaginados" :key="proveedor.id">
-                                <td>{{ proveedor.id }}</td>
                                 <td>{{ proveedor.descripcion }}</td>
                                 <td>
                                     <button @click="cargarProveedor(proveedor)" class="btn-small">Editar</button>
