@@ -1,4 +1,4 @@
-import config from './config.js';
+﻿import config from './config.js';
 import NotificationSystem from './notification-system.js';
 
 new Vue({
@@ -197,7 +197,7 @@ new Vue({
     },
     template: `
         <div class="glass-container">
-            <h1 style="text-align: center; margin-top: 60px; margin-bottom: var(--space-8); color: #5d4037;">
+            <h1 class="page-title">
                 Reportes y Estadísticas
             </h1>
             
@@ -217,7 +217,7 @@ new Vue({
                 <button @click="reporteActivo = 'descuentos'" :class="{'active': reporteActivo === 'descuentos'}" class="btn">
                     Historial Descuentos
                 </button>
-                <button @click="window.location.href = '/web/empleado-principal'" class="btn" style="background: #28a745;">
+                <button @click="window.location.href = '/web/empleado-principal'" class="btn" class="btn">
                     <i class="fas fa-users"></i> Panel Empleados
                 </button>
             </div>
@@ -356,3 +356,4 @@ new Vue({
         </div>
     `
 });
+

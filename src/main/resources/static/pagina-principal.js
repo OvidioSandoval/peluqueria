@@ -1,4 +1,4 @@
-import config from './config.js';
+﻿import config from './config.js';
 
 new Vue({
     vuetify: new Vuetify({
@@ -47,7 +47,7 @@ new Vue({
     },
     template: `
         <div class="glass-container">
-            <h1>Página Principal - Peluquería LUNA</h1>
+            <h1 class="page-title">Página Principal - Peluquería LUNA</h1>
             <div class="stats-container">
                 <div 
                     v-for="pagina in paginas" 

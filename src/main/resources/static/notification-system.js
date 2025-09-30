@@ -1,4 +1,4 @@
-// Sistema de notificaciones para reemplazar alert() y confirm()
+﻿// Sistema de notificaciones para reemplazar alert() y confirm()
 const NotificationSystem = {
     show(message, type = 'info', duration = 3000) {
         const notification = document.createElement('div');
@@ -112,7 +112,7 @@ const notificationStyles = `
     display: flex;
     gap: 10px;
     justify-content: center;
-    margin-top: 15px;
+    margin-top: 200px;
 }
 
 .btn-confirm, .btn-cancel {
@@ -131,3 +131,4 @@ const notificationStyles = `
 document.head.insertAdjacentHTML('beforeend', notificationStyles);
 
 export default NotificationSystem;
+

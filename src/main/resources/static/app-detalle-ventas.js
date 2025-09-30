@@ -164,7 +164,7 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 style="text-align: center; margin-top: 120px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Detalle de Ventas</h1>
+                <h1 class="page-title">Gestión de Detalle de Ventas</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i></button>
                 <main style="padding: 20px;">
                     <div class="filters-container">
@@ -280,4 +280,7 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+
+
 

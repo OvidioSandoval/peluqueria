@@ -365,13 +365,13 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 style="text-align: center; margin-top: 120px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Turnos</h1>
+                <h1 class="page-title">Gestión de Turnos</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
 
                     <div class="main-buttons">
                         <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Turno</button>
-                        <button @click="toggleFormularioCliente()" class="btn" v-if="!formularioVisible" style="background: #28a745;">
+                        <button @click="toggleFormularioCliente()" class="btn" v-if="!formularioVisible" class="btn">
                             <i class="fas fa-user-plus"></i> Nuevo Cliente
                         </button>
                     </div>
@@ -435,7 +435,7 @@ new Vue({
                             </div>
                             <div class="form-col-auto">
                                 <label>Recordatorio:</label>
-                                <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-top: 200px;">
                                     <input type="checkbox" v-model="nuevoTurno.recordatorioEnviado" style="width: auto; margin: 0;"/>
                                     <span>{{ nuevoTurno.recordatorioEnviado ? 'Enviado' : 'No enviado' }}</span>
                                 </div>
@@ -445,7 +445,7 @@ new Vue({
                             <button @click="nuevoTurno.id ? modificarTurno() : agregarTurno()" class="btn">
                                 {{ nuevoTurno.id ? 'Modificar' : 'Agregar' }}
                             </button>
-                            <button @click="toggleFormulario()" class="btn" style="background: #6c757d !important;">
+                            <button @click="toggleFormulario()" class="btn" class="btn">
                                 Cancelar
                             </button>
                         </div>
@@ -482,10 +482,10 @@ new Vue({
                         <label>Redes Sociales:</label>
                         <textarea v-model="nuevoCliente.redesSociales" placeholder="Redes Sociales"></textarea>
                         <div class="form-buttons">
-                            <button @click="agregarCliente()" class="btn" style="background: #28a745;">
+                            <button @click="agregarCliente()" class="btn" class="btn">
                                 <i class="fas fa-user-plus"></i> Agregar
                             </button>
-                            <button @click="toggleFormularioCliente()" class="btn" style="background: #6c757d !important;">
+                            <button @click="toggleFormularioCliente()" class="btn" class="btn">
                                 Cancelar
                             </button>
                         </div>
@@ -529,4 +529,9 @@ new Vue({
         </div>
     `
 });
+
+
+
+
+
 

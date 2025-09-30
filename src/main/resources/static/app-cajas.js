@@ -1,4 +1,4 @@
-import config from './config.js';
+﻿import config from './config.js';
 import NotificationSystem from './notification-system.js';
 
 new Vue({
@@ -370,14 +370,14 @@ new Vue({
                     .btn-secondary { background: #6c757d !important; color: white !important; }
                     .btn-secondary:hover { background: #5a6268 !important; }
                 </style>
-                <h1 style="text-align: center; margin-top: 120px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Cajas</h1>
+                <h1 class="page-title">Gestión de Cajas</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
 
                     <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
                         <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nueva Caja</button>
 
-                        <button @click="exportarPDF()" class="btn" style="background: #dc3545;"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+                        <button @click="exportarPDF()" class="btn" class="btn"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
                     </div>
                     
                     <div v-if="formularioVisible" class="form-container">
@@ -468,3 +468,7 @@ new Vue({
         </div>
     `
 });
+
+
+
+

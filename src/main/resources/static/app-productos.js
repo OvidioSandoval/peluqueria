@@ -1,4 +1,4 @@
-import config from './config.js';
+﻿import config from './config.js';
 import NotificationSystem from './notification-system.js';
 
 new Vue({
@@ -437,7 +437,7 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 style="text-align: center; margin-top: 120px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Productos</h1>
+                <h1 class="page-title">Gestión de Productos</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
                     <div class="filters-container">
@@ -457,7 +457,7 @@ new Vue({
                         <button @click="limpiarFiltros" class="btn btn-secondary">Limpiar Filtros</button>
                     </div>
                     <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Producto</button>
-                    <button @click="exportarPDF" class="btn" style="background: #28a745; margin-left: 10px;" v-if="!formularioVisible">
+                    <button @click="exportarPDF" class="btn" class="btn" v-if="!formularioVisible">
                         <i class="fas fa-file-pdf"></i> Exportar PDF
                     </button>
                     
@@ -493,7 +493,7 @@ new Vue({
                             <button @click="nuevoProducto.id ? modificarProducto() : agregarProducto()" class="btn">
                                 {{ nuevoProducto.id ? 'Modificar' : 'Agregar' }}
                             </button>
-                            <button @click="toggleFormulario()" class="btn" style="background: #6c757d !important;">Cancelar</button>
+                            <button @click="toggleFormulario()" class="btn" class="btn">Cancelar</button>
                         </div>
                     </div>
                     <div v-if="alertasStock.length > 0" class="alert-summary">
@@ -650,3 +650,7 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+
+
+

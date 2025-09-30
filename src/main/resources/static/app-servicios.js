@@ -1,4 +1,4 @@
-import config from './config.js';
+﻿import config from './config.js';
 import NotificationSystem from './notification-system.js';
 
 new Vue({
@@ -210,6 +210,9 @@ new Vue({
             };
             this.formularioVisible = true;
             this.servicioSeleccionado = servicio.nombre;
+            this.$nextTick(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
         },
         getCategoriaDescripcion(servicio) {
             return servicio.categoriaDescripcion || 'Sin categoría';
@@ -261,12 +264,12 @@ new Vue({
                 const doc = new jsPDF();
                 
                 // Título
-                doc.setTextColor(218, 165, 32);
+                doc.setTextColor(0, 0, 0);
                 doc.setFontSize(20);
                 doc.setFont('helvetica', 'bold');
                 doc.text('Peluquería LUNA', 20, 20);
                 
-                doc.setTextColor(139, 69, 19);
+                doc.setTextColor(0, 0, 0);
                 doc.setFontSize(16);
                 doc.text('Catálogo de Servicios', 20, 35);
                 
@@ -276,7 +279,7 @@ new Vue({
                 doc.text(`Total de servicios: ${this.serviciosFiltrados.length}`, 150, 25);
                 
                 // Línea decorativa
-                doc.setDrawColor(218, 165, 32);
+                doc.setDrawColor(0, 0, 0);
                 doc.setLineWidth(1);
                 doc.line(20, 45, 190, 45);
                 
@@ -300,7 +303,7 @@ new Vue({
                     }
                     
                     // Título de categoría
-                    doc.setTextColor(139, 69, 19);
+                    doc.setTextColor(0, 0, 0);
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(14);
                     doc.text(categoria.toUpperCase(), 20, y);
@@ -313,7 +316,7 @@ new Vue({
                             y = 20;
                         }
                         
-                        doc.setTextColor(218, 165, 32);
+                        doc.setTextColor(0, 0, 0);
                         doc.setFont('helvetica', 'bold');
                         doc.setFontSize(12);
                         doc.text(`• ${servicio.nombre}`, 25, y);
@@ -344,9 +347,9 @@ new Vue({
                 const pageCount = doc.internal.getNumberOfPages();
                 for (let i = 1; i <= pageCount; i++) {
                     doc.setPage(i);
-                    doc.setDrawColor(218, 165, 32);
+                    doc.setDrawColor(0, 0, 0);
                     doc.line(20, 280, 190, 280);
-                    doc.setTextColor(139, 69, 19);
+                    doc.setTextColor(0, 0, 0);
                     doc.setFontSize(8);
                     doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
                     doc.text(`Página ${i} de ${pageCount}`, 170, 290);
@@ -365,31 +368,30 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 style="text-align: center; margin-top: 120px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Servicios</h1>
+                <h1 class="page-title">Gestión de Servicios</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
-                    <div class="filters-container">
+                    <div class="filters-container" style="display: flex; gap: 15px; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; width: fit-content;">
                         <div class="filter-group">
                             <label>Buscar Servicio:</label>
-                            <input type="text" v-model="filtroBusqueda" @input="filtrarServicios" placeholder="Buscar servicio..." class="search-bar"/>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarServicios" placeholder="Buscar servicio..." class="search-bar" style="width: 300px;"/>
                         </div>
-                        <button @click="limpiarFiltros" class="btn btn-secondary">Limpiar Filtros</button>
+                        <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
+                        <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nuevo Servicio</button>
+                        <button @click="exportarPDF" class="btn btn-small" v-if="!formularioVisible">
+                            <i class="fas fa-file-pdf"></i> Exportar PDF
+                        </button>
                     </div>
-                    <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Servicio</button>
-                    <button @click="exportarPDF" class="btn" style="background: #28a745; margin-left: 10px;" v-if="!formularioVisible">
-                        <i class="fas fa-file-pdf"></i> Exportar PDF
-                    </button>
                     
-                    <div v-if="formularioVisible" class="form-container">
-                        <h3>{{ nuevoServicio.id ? 'Modificar Servicio: ' + servicioSeleccionado : 'Agregar Servicio' }}</h3>
-                        <label>Nombre:</label>
-                        <input type="text" v-model="nuevoServicio.nombre" placeholder="Nombre" required/>
+                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 500px;">
+                        <h3>{{ nuevoServicio.id ? 'Modificar Servicio - ' + servicioSeleccionado : 'Nuevo Servicio' }}</h3>
+                        <label>Nombre: *</label>
+                        <input type="text" v-model="nuevoServicio.nombre" placeholder="Ingrese el nombre del servicio" required/>
                         <label>Descripción:</label>
-                        <textarea v-model="nuevoServicio.descripcion" placeholder="Descripción"></textarea>
-                        <br>
-                        <label>Precio Base:</label>
-                        <input type="number" v-model="nuevoServicio.precioBase" placeholder="Precio Base" required/>
-                        <label>Categoría:</label>
+                        <textarea v-model="nuevoServicio.descripcion" placeholder="Descripción del servicio" rows="3" style="resize: vertical;"></textarea>
+                        <label>Precio Base: *</label>
+                        <input type="number" v-model="nuevoServicio.precioBase" placeholder="Ingrese el precio base" required/>
+                        <label>Categoría: *</label>
                         <select v-model="nuevoServicio.categoriaId" required>
                             <option value="" disabled>Seleccionar Categoría</option>
                             <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
@@ -399,11 +401,11 @@ new Vue({
                         <label style="display: inline-flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;">
                             Activo:<input type="checkbox" v-model="nuevoServicio.activo" style="margin: 0; padding: 0; margin-left: 1px;"/>
                         </label>
-                        <div class="form-buttons">
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
                             <button @click="nuevoServicio.id ? modificarServicio() : agregarServicio()" class="btn">
                                 {{ nuevoServicio.id ? 'Modificar' : 'Agregar' }}
                             </button>
-                            <button @click="toggleFormulario()" class="btn" style="background: #6c757d !important;">Cancelar</button>
+                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
                         </div>
                     </div>
                     
@@ -445,3 +447,7 @@ new Vue({
         </div>
     `
 });
+
+
+
+

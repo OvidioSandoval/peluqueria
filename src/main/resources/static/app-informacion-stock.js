@@ -300,7 +300,7 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 style="text-align: center; margin-top: 120px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Información de Stock</h1>
+                <h1 class="page-title">Gestión de Información de Stock</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i></button>
                 <main style="padding: 20px;">
                     <div class="filters-container" style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
@@ -318,7 +318,7 @@ new Vue({
                         </div>
                     </div>
                     <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-                        <button @click="limpiarFiltros()" class="btn" style="background: #6c757d;">Limpiar Filtros</button>
+                        <button @click="limpiarFiltros()" class="btn" class="btn">Limpiar Filtros</button>
                         <button @click="toggleFormulario()" class="btn">{{ formularioVisible ? 'Cancelar' : 'Nuevo Stock' }}</button>
                     </div>
                     
@@ -349,7 +349,7 @@ new Vue({
                             <button @click="nuevoStock.id ? modificarStock() : agregarStock()" class="btn">
                                 {{ nuevoStock.id ? 'Modificar' : 'Agregar' }}
                             </button>
-                            <button @click="toggleFormulario()" class="btn" style="background: #6c757d !important;">Cancelar</button>
+                            <button @click="toggleFormulario()" class="btn" class="btn">Cancelar</button>
                         </div>
                     </div>
                     
@@ -393,4 +393,8 @@ new Vue({
         </div>
     `
 });
+
+
+
+
 

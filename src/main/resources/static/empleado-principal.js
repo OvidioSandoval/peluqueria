@@ -1,4 +1,4 @@
-import config from './config.js';
+﻿import config from './config.js';
 import NotificationSystem from './notification-system.js';
 
 new Vue({
@@ -322,7 +322,7 @@ new Vue({
                 <v-container fluid>
                     <v-row>
                         <v-col cols="12">
-                            <h1>Panel de Empleados - {{ getNombreMesActual() }} {{ new Date().getFullYear() }}</h1>
+                            <h1 class="page-title">Panel de Empleados - {{ getNombreMesActual() }} {{ new Date().getFullYear() }}</h1>
                         </v-col>
                     </v-row>
                     

@@ -264,7 +264,7 @@ new Vue({
     template: `
         <div class="glass-container">
             <div>
-                <h1 style="text-align: center; margin-top: 120px; margin-bottom: 20px; color: #5d4037; font-weight: 800;">Gestión de Empleados</h1>
+                <h1 class="page-title">Gestión de Empleados</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
                     <div class="filters-container">
@@ -312,11 +312,11 @@ new Vue({
                             </div>
                             <div class="form-field">
                                 <label>Sueldo Total (Calculado)</label>
-                                <input type="number" :value="calcularSueldoTotal(nuevoEmpleado)" readonly style="background: #f5f5f5;"/>
+                                <input type="number" :value="calcularSueldoTotal(nuevoEmpleado)" readonly class="btn"/>
                             </div>
                             <div class="form-field">
                                 <label>Diferencia (Calculada)</label>
-                                <input type="number" :value="calcularDiferencia(nuevoEmpleado)" readonly style="background: #f5f5f5;"/>
+                                <input type="number" :value="calcularDiferencia(nuevoEmpleado)" readonly class="btn"/>
                             </div>
                             <div class="form-field">
                                 <label>Fecha de Ingreso</label>
@@ -328,9 +328,9 @@ new Vue({
                                 </label>
                             </div>
                         </div>
-                        <div class="form-buttons" style="margin-top: 15px;">
+                        <div class="form-buttons" style="margin-top: 200px;">
                             <button @click="nuevoEmpleado.id ? modificarEmpleado() : agregarEmpleado()" class="btn">{{ nuevoEmpleado.id ? "Confirmar" : "Agregar" }}</button>
-                            <button @click="toggleFormulario()" class="btn" style="background: #6c757d !important;">Cancelar</button>
+                            <button @click="toggleFormulario()" class="btn" class="btn">Cancelar</button>
                         </div>
                     </div>
                     
@@ -655,7 +655,7 @@ style.textContent = `
 .tabla-pagos table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
+    margin-top: 200px;
 }
 
 .tabla-pagos th,
@@ -691,7 +691,7 @@ style.textContent = `
 .servicios-tabla {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
+    margin-top: 200px;
 }
 
 .servicios-tabla th,
@@ -712,4 +712,9 @@ style.textContent = `
 }
 `;
 document.head.appendChild(style);
+
+
+
+
+
 

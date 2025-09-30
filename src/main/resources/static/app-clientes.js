@@ -1,4 +1,4 @@
-import config from './config.js';
+﻿import config from './config.js';
 import NotificationSystem from './notification-system.js';
 
 new Vue({
@@ -25,9 +25,7 @@ new Vue({
                 redesSociales: '',
                 fechaNacimiento: null
             },
-            filtroNombre: '',
-            filtroTelefono: '',
-            filtroRuc: '',
+
             clienteSeleccionado: '',
 
             mostrarSalir: false,
@@ -60,49 +58,28 @@ new Vue({
             }
         },
         filtrarClientes() {
-            let clientesFiltrados = this.clientes;
-            
-            if (this.filtroNombre.trim() !== '') {
-                const nombre = this.filtroNombre.toLowerCase();
-                clientesFiltrados = clientesFiltrados.filter(cliente =>
-                    cliente.nombreCompleto && cliente.nombreCompleto.toLowerCase().includes(nombre)
-                );
-            }
-            
-            if (this.filtroTelefono.trim() !== '') {
-                const telefono = this.filtroTelefono.toLowerCase();
-                clientesFiltrados = clientesFiltrados.filter(cliente =>
-                    cliente.telefono && cliente.telefono.toLowerCase().includes(telefono)
-                );
-            }
-            
-            if (this.filtroRuc.trim() !== '') {
-                const ruc = this.filtroRuc.toLowerCase();
-                clientesFiltrados = clientesFiltrados.filter(cliente =>
-                    cliente.ruc && cliente.ruc.toLowerCase().includes(ruc)
-                );
-            }
-            
-            if (this.filtroBusqueda.trim() !== '') {
+            if (this.filtroBusqueda.trim() === '') {
+                this.clientesFiltrados = this.clientes;
+            } else {
                 const busqueda = this.filtroBusqueda.toLowerCase();
-                clientesFiltrados = clientesFiltrados.filter(cliente =>
+                this.clientesFiltrados = this.clientes.filter(cliente =>
                     (cliente.nombreCompleto && cliente.nombreCompleto.toLowerCase().includes(busqueda)) ||
                     (cliente.telefono && cliente.telefono.toLowerCase().includes(busqueda)) ||
                     (cliente.ruc && cliente.ruc.toLowerCase().includes(busqueda)) ||
                     (cliente.correo && cliente.correo.toLowerCase().includes(busqueda))
                 );
             }
-            
-            this.clientesFiltrados = clientesFiltrados;
+            this.paginaActual = 1;
         },
         limpiarFiltros() {
             this.filtroBusqueda = '';
-            this.filtroNombre = '';
-            this.filtroTelefono = '';
-            this.filtroRuc = '';
             this.filtrarClientes();
         },
         async agregarCliente() {
+            if (!this.nuevoCliente.nombreCompleto.trim()) {
+                NotificationSystem.error('El nombre completo es obligatorio');
+                return;
+            }
             if (!this.validarEmail(this.nuevoCliente.correo)) {
                 NotificationSystem.error('Por favor ingrese un email válido');
                 return;
@@ -130,6 +107,10 @@ new Vue({
             }
         },
         async modificarCliente() {
+            if (!this.nuevoCliente.nombreCompleto.trim()) {
+                NotificationSystem.error('El nombre completo es obligatorio');
+                return;
+            }
             if (!this.validarEmail(this.nuevoCliente.correo)) {
                 NotificationSystem.error('Por favor ingrese un email válido');
                 return;
@@ -199,6 +180,13 @@ new Vue({
             };
             this.formularioVisible = true;
             this.clienteSeleccionado = cliente.nombreCompleto;
+            // Scroll al formulario
+            this.$nextTick(() => {
+                const formulario = document.querySelector('.form-container');
+                if (formulario) {
+                    formulario.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
         },
         
         validarEmail(email) {
@@ -250,12 +238,12 @@ new Vue({
                 const doc = new jsPDF();
                 
                 // Título
-                doc.setTextColor(218, 165, 32);
+                doc.setTextColor(0, 0, 0);
                 doc.setFontSize(20);
                 doc.setFont('helvetica', 'bold');
                 doc.text('Peluquería LUNA', 20, 20);
                 
-                doc.setTextColor(139, 69, 19);
+                doc.setTextColor(0, 0, 0);
                 doc.setFontSize(16);
                 doc.text('Lista de Clientes', 20, 35);
                 
@@ -265,7 +253,7 @@ new Vue({
                 doc.text(`Total de clientes: ${this.clientesFiltrados.length}`, 150, 25);
                 
                 // Línea decorativa
-                doc.setDrawColor(218, 165, 32);
+                doc.setDrawColor(0, 0, 0);
                 doc.setLineWidth(1);
                 doc.line(20, 45, 190, 45);
                 
@@ -278,7 +266,7 @@ new Vue({
                         y = 20;
                     }
                     
-                    doc.setTextColor(218, 165, 32);
+                    doc.setTextColor(0, 0, 0);
                     doc.setFont('helvetica', 'bold');
                     doc.text(`${index + 1}. ${cliente.nombreCompleto}`, 20, y);
                     y += 8;
@@ -315,9 +303,9 @@ new Vue({
                 const pageCount = doc.internal.getNumberOfPages();
                 for (let i = 1; i <= pageCount; i++) {
                     doc.setPage(i);
-                    doc.setDrawColor(218, 165, 32);
+                    doc.setDrawColor(0, 0, 0);
                     doc.line(20, 280, 190, 280);
-                    doc.setTextColor(139, 69, 19);
+                    doc.setTextColor(0, 0, 0);
                     doc.setFontSize(8);
                     doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
                     doc.text(`Página ${i} de ${pageCount}`, 170, 290);
@@ -336,68 +324,42 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 style="text-align: center; margin-top: 120px; margin-bottom: var(--space-8); color: #5d4037; text-shadow: 0 2px 4px rgba(255,255,255,0.9), 0 1px 2px rgba(93,64,55,0.4); font-weight: 800;">Gestión de Clientes</h1>
+                <h1 class="page-title">Gestión de Clientes</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
                     <div class="filters-container">
                         <div class="filter-group">
-                            <label>Buscar General:</label>
-                            <input type="text" v-model="filtroBusqueda" @input="filtrarClientes" placeholder="Buscar en todos los campos..." class="search-bar"/>
+                            <label>Buscar Cliente:</label>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarClientes" placeholder="Buscar por nombre, teléfono, RUC o email..." class="search-bar"/>
                         </div>
-                        <div class="filter-group">
-                            <label>Por Nombre:</label>
-                            <input type="text" v-model="filtroNombre" @input="filtrarClientes" placeholder="Filtrar por nombre..." class="search-bar"/>
+                        <div class="filter-group" style="flex-direction: row; gap: 10px; align-items: end;">
+                            <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
+                            <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nuevo Cliente</button>
+                            <button @click="exportarPDF" class="btn btn-small">
+                                <i class="fas fa-file-pdf"></i> Exportar PDF
+                            </button>
                         </div>
-                        <div class="filter-group">
-                            <label>Por Teléfono:</label>
-                            <input type="text" v-model="filtroTelefono" @input="filtrarClientes" placeholder="Filtrar por teléfono..." class="search-bar"/>
-                        </div>
-                        <div class="filter-group">
-                            <label>Por RUC:</label>
-                            <input type="text" v-model="filtroRuc" @input="filtrarClientes" placeholder="Filtrar por RUC..." class="search-bar"/>
-                        </div>
-                        <button @click="limpiarFiltros" class="btn btn-secondary">Limpiar Filtros</button>
-                        <button @click="toggleFormulario()" class="btn" v-if="!formularioVisible">Nuevo Cliente</button>
-                        <button @click="exportarPDF" class="btn" style="background: #28a745;">
-                            <i class="fas fa-file-pdf"></i> Exportar PDF
-                        </button>
                     </div>
                     
                     <div v-if="formularioVisible" class="form-container">
-                        <h3>{{ nuevoCliente.id ? 'Modificar: ' + clienteSeleccionado : 'Nuevo Cliente' }}</h3>
-                        <div class="form-row">
-                            <div class="form-col">
-                                <label>Nombre Completo:</label>
-                                <input type="text" v-model="nuevoCliente.nombreCompleto" placeholder="Nombre Completo" required/>
-                            </div>
-                            <div class="form-col">
-                                <label>Teléfono:</label>
-                                <input type="tel" v-model="nuevoCliente.telefono" placeholder="Teléfono" maxlength="10"/>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-col">
-                                <label>RUC:</label>
-                                <input type="text" v-model="nuevoCliente.ruc" placeholder="RUC" maxlength="20"/>
-                            </div>
-                            <div class="form-col">
-                                <label>Correo Electrónico:</label>
-                                <input type="email" v-model="nuevoCliente.correo" placeholder="Correo"/>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-col">
-                                <label>Fecha de Nacimiento:</label>
-                                <input type="date" v-model="nuevoCliente.fechaNacimiento"/>
-                            </div>
-                        </div>
+                        <h3>{{ nuevoCliente.id ? 'Modificar Cliente - ' + clienteSeleccionado : 'Nuevo Cliente' }}</h3>
+                        <label>Nombre Completo: *</label>
+                        <input type="text" v-model="nuevoCliente.nombreCompleto" placeholder="Ingrese el nombre completo" required/>
+                        <label>Teléfono:</label>
+                        <input type="tel" v-model="nuevoCliente.telefono" placeholder="Ej: 0981234567" maxlength="10"/>
+                        <label>RUC:</label>
+                        <input type="text" v-model="nuevoCliente.ruc" placeholder="Ingrese el RUC" maxlength="20"/>
+                        <label>Correo Electrónico:</label>
+                        <input type="email" v-model="nuevoCliente.correo" placeholder="ejemplo@correo.com"/>
+                        <label>Fecha de Nacimiento:</label>
+                        <input type="date" v-model="nuevoCliente.fechaNacimiento" style="width: auto;"/>
                         <label>Redes Sociales:</label>
-                        <textarea v-model="nuevoCliente.redesSociales" placeholder="Redes Sociales"></textarea>
-                        <div class="form-buttons">
+                        <textarea v-model="nuevoCliente.redesSociales" placeholder="Facebook, Instagram, etc." rows="3" style="width: auto; min-width: 250px; resize: vertical;"></textarea>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
                             <button @click="nuevoCliente.id ? modificarCliente() : agregarCliente()" class="btn">
                                 {{ nuevoCliente.id ? 'Modificar' : 'Agregar' }}
                             </button>
-                            <button @click="toggleFormulario()" class="btn" style="background: #6c757d !important;">Cancelar</button>
+                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
                         </div>
                     </div>
                     
@@ -436,6 +398,7 @@ new Vue({
                         <span>Página {{ paginaActual }} de {{ totalPaginas }}</span>
                         <button @click="cambiarPagina(paginaActual + 1)" :disabled="paginaActual === totalPaginas">Siguiente</button>
                     </div>
+
                 </main>
             </div>
         </div>
@@ -445,18 +408,23 @@ new Vue({
 const style = document.createElement('style');
 style.textContent = `
     .filters-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        display: flex;
         gap: 15px;
+        align-items: end;
         margin-bottom: 20px;
-        padding: 20px;
-        background: rgba(255,255,255,0.9);
-        border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 15px;
+        background: rgba(252, 228, 236, 0.9);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1);
+        border: 1px solid rgba(179, 229, 252, 0.3);
+        flex-wrap: wrap;
+        width: fit-content;
     }
     .filter-group {
         display: flex;
         flex-direction: column;
+        min-width: fit-content;
     }
     .filter-group label {
         font-weight: bold;
@@ -469,6 +437,7 @@ style.textContent = `
         border-radius: 5px;
         font-size: 14px;
         transition: border-color 0.3s;
+        width: 300px;
     }
     .search-bar:focus {
         border-color: #5d4037;
@@ -495,6 +464,9 @@ confirmStyle.textContent = `
         border: 2px solid #333 !important;
         box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
         z-index: 99999 !important;
+        width: auto !important;
+        max-width: 500px !important;
+        padding: 20px !important;
     }
     .swal2-title {
         color: #000000 !important;
@@ -528,3 +500,7 @@ confirmStyle.textContent = `
     }
 `;
 document.head.appendChild(confirmStyle);
+
+
+
+

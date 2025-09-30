@@ -22,12 +22,8 @@ new Vue({
             cargandoHistorial: false,
             cargandoFrecuentes: false,
             generandoPDF: false,
-            filtros: {
-                nombre: '',
-                ruc: '',
-                telefono: '',
-                email: ''
-            }
+            busqueda: '',
+            paginaHistorial: 1
         };
     },
     mounted() {
@@ -136,47 +132,22 @@ new Vue({
         },
         
         filtrarClientes() {
-            let clientesFiltrados = this.clientes;
-            
-            if (this.filtros.nombre.trim() !== '') {
-                const nombre = this.filtros.nombre.toLowerCase();
-                clientesFiltrados = clientesFiltrados.filter(cliente =>
-                    cliente.nombreCompleto && cliente.nombreCompleto.toLowerCase().includes(nombre)
+            if (this.busqueda.trim() === '') {
+                this.clientesFiltrados = this.clientes;
+            } else {
+                const busqueda = this.busqueda.toLowerCase();
+                this.clientesFiltrados = this.clientes.filter(cliente =>
+                    (cliente.nombreCompleto && cliente.nombreCompleto.toLowerCase().includes(busqueda)) ||
+                    (cliente.ruc && cliente.ruc.toLowerCase().includes(busqueda)) ||
+                    (cliente.telefono && cliente.telefono.toLowerCase().includes(busqueda)) ||
+                    (cliente.correo && cliente.correo.toLowerCase().includes(busqueda))
                 );
             }
-            
-            if (this.filtros.ruc.trim() !== '') {
-                const ruc = this.filtros.ruc.toLowerCase();
-                clientesFiltrados = clientesFiltrados.filter(cliente =>
-                    cliente.ruc && cliente.ruc.toLowerCase().includes(ruc)
-                );
-            }
-            
-            if (this.filtros.telefono.trim() !== '') {
-                const telefono = this.filtros.telefono.toLowerCase();
-                clientesFiltrados = clientesFiltrados.filter(cliente =>
-                    cliente.telefono && cliente.telefono.toLowerCase().includes(telefono)
-                );
-            }
-            
-            if (this.filtros.email.trim() !== '') {
-                const email = this.filtros.email.toLowerCase();
-                clientesFiltrados = clientesFiltrados.filter(cliente =>
-                    cliente.correo && cliente.correo.toLowerCase().includes(email)
-                );
-            }
-            
-            this.clientesFiltrados = clientesFiltrados;
             this.paginaActual = 1;
         },
         
         limpiarFiltros() {
-            this.filtros = {
-                nombre: '',
-                ruc: '',
-                telefono: '',
-                email: ''
-            };
+            this.busqueda = '';
             this.filtrarClientes();
         },
         
@@ -190,6 +161,7 @@ new Vue({
             this.mostrarHistorial = false;
             this.clienteSeleccionado = null;
             this.historialServicios = [];
+            this.paginaHistorial = 1;
         },
         
         toggleFrecuentes() {
@@ -218,6 +190,13 @@ new Vue({
             }
         },
         
+        cambiarPaginaHistorial(pagina) {
+            const totalPaginasHistorial = Math.ceil(this.historialServicios.length / 5);
+            if (pagina >= 1 && pagina <= totalPaginasHistorial) {
+                this.paginaHistorial = pagina;
+            }
+        },
+        
         calcularEdad(fechaNacimiento) {
             if (!fechaNacimiento) return 'N/A';
             const hoy = new Date();
@@ -240,64 +219,109 @@ new Vue({
             return colores[metodoPago] || 'grey';
         },
         
-        exportarPDF() {
+        exportarClientesFrecuentes() {
             try {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
                 // Título
-                doc.setTextColor(218, 165, 32);
+                doc.setTextColor(0, 0, 0);
                 doc.setFontSize(20);
                 doc.setFont('helvetica', 'bold');
                 doc.text('Peluquería LUNA', 20, 20);
                 
-                doc.setTextColor(139, 69, 19);
+                doc.setTextColor(0, 0, 0);
                 doc.setFontSize(16);
-                doc.text('Reporte de Clientes', 20, 35);
+                doc.text('Clientes Frecuentes', 20, 35);
                 
                 // Fecha
                 doc.setFontSize(10);
                 doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
-                doc.text(`Total de clientes: ${this.clientesFiltrados.length}`, 150, 25);
+                doc.text(`Total: ${this.clientesFrecuentes.length} clientes`, 150, 25);
                 
                 // Línea decorativa
-                doc.setDrawColor(218, 165, 32);
+                doc.setDrawColor(0, 0, 0);
                 doc.setLineWidth(1);
                 doc.line(20, 45, 190, 45);
                 
                 let y = 60;
                 
-                // Clientes frecuentes si están disponibles
-                if (this.clientesFrecuentes.length > 0) {
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFontSize(14);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text('CLIENTES FRECUENTES (TOP 10)', 20, y);
-                    y += 15;
+                this.clientesFrecuentes.forEach((item, index) => {
+                    if (y > 250) {
+                        doc.addPage();
+                        y = 20;
+                    }
                     
-                    this.clientesFrecuentes.slice(0, 10).forEach((item, index) => {
-                        if (y > 250) {
-                            doc.addPage();
-                            y = 20;
-                        }
-                        
-                        doc.setTextColor(218, 165, 32);
-                        doc.setFont('helvetica', 'bold');
-                        doc.text(`${index + 1}. ${item.cliente.nombreCompleto}`, 20, y);
-                        y += 8;
-                        
-                        doc.setTextColor(0, 0, 0);
-                        doc.setFont('helvetica', 'normal');
-                        doc.text(`   Visitas: ${item.cantidadVisitas} - Total gastado: $${this.formatearNumero(item.montoTotal)}`, 25, y);
-                        y += 10;
-                    });
-                    y += 10;
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`${index + 1}. ${item.cliente.nombreCompleto}`, 20, y);
+                    y += 8;
+                    
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`   Visitas: ${item.cantidadVisitas}`, 25, y);
+                    y += 6;
+                    doc.text(`   Total gastado: $${this.formatearNumero(item.montoTotal)}`, 25, y);
+                    y += 6;
+                    if (item.cliente.telefono) {
+                        doc.text(`   Teléfono: ${item.cliente.telefono}`, 25, y);
+                        y += 6;
+                    }
+                    if (item.cliente.correo) {
+                        doc.text(`   Email: ${item.cliente.correo}`, 25, y);
+                        y += 6;
+                    }
+                    y += 8;
+                });
+                
+                // Footer
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setDrawColor(0, 0, 0);
+                    doc.line(20, 280, 190, 280);
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(8);
+                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
+                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
                 }
                 
-                // Lista completa de clientes
+                const fecha = new Date().toISOString().split('T')[0];
+                doc.save(`clientes-frecuentes-${fecha}.pdf`);
+                NotificationSystem.success('Reporte de clientes frecuentes exportado exitosamente');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                NotificationSystem.error('Error al generar el PDF: ' + error.message);
+            }
+        },
+        
+        exportarListaClientes() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Título
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(20);
                 doc.setFont('helvetica', 'bold');
-                doc.text('LISTA COMPLETA DE CLIENTES', 20, y);
-                y += 15;
+                doc.text('Peluquería LUNA', 20, 20);
+                
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(16);
+                doc.text('Lista de Clientes', 20, 35);
+                
+                // Fecha
+                doc.setFontSize(10);
+                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
+                doc.text(`Total: ${this.clientesFiltrados.length} clientes`, 150, 25);
+                
+                // Línea decorativa
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(1);
+                doc.line(20, 45, 190, 45);
+                
+                let y = 60;
                 
                 this.clientesFiltrados.forEach((cliente, index) => {
                     if (y > 250) {
@@ -305,7 +329,7 @@ new Vue({
                         y = 20;
                     }
                     
-                    doc.setTextColor(218, 165, 32);
+                    doc.setTextColor(0, 0, 0);
                     doc.setFont('helvetica', 'bold');
                     doc.text(`${index + 1}. ${cliente.nombreCompleto}`, 20, y);
                     y += 8;
@@ -335,17 +359,127 @@ new Vue({
                 const pageCount = doc.internal.getNumberOfPages();
                 for (let i = 1; i <= pageCount; i++) {
                     doc.setPage(i);
-                    doc.setDrawColor(218, 165, 32);
+                    doc.setDrawColor(0, 0, 0);
                     doc.line(20, 280, 190, 280);
-                    doc.setTextColor(139, 69, 19);
+                    doc.setTextColor(0, 0, 0);
                     doc.setFontSize(8);
                     doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
                     doc.text(`Página ${i} de ${pageCount}`, 170, 290);
                 }
                 
                 const fecha = new Date().toISOString().split('T')[0];
-                doc.save(`reporte-clientes-${fecha}.pdf`);
-                NotificationSystem.success('Reporte PDF generado exitosamente');
+                doc.save(`lista-clientes-${fecha}.pdf`);
+                NotificationSystem.success('Lista de clientes exportada exitosamente');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                NotificationSystem.error('Error al generar el PDF: ' + error.message);
+            }
+        },
+        
+        exportarHistorialCliente() {
+            if (!this.clienteSeleccionado || this.historialServicios.length === 0) {
+                NotificationSystem.warning('No hay historial para exportar');
+                return;
+            }
+            
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Título
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Peluquería LUNA', 20, 20);
+                
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(16);
+                doc.text('Historial del Cliente', 20, 35);
+                
+                // Información del cliente
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text(this.clienteSeleccionado.nombreCompleto, 20, 50);
+                
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                let y = 60;
+                if (this.clienteSeleccionado.telefono) {
+                    doc.text(`Teléfono: ${this.clienteSeleccionado.telefono}`, 20, y);
+                    y += 6;
+                }
+                if (this.clienteSeleccionado.correo) {
+                    doc.text(`Email: ${this.clienteSeleccionado.correo}`, 20, y);
+                    y += 6;
+                }
+                
+                // Fecha de generación
+                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
+                doc.text(`Total servicios: ${this.historialServicios.length}`, 150, 25);
+                
+                // Línea decorativa
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(1);
+                doc.line(20, y + 5, 190, y + 5);
+                
+                y += 20;
+                
+                // Encabezados de tabla
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Fecha', 20, y);
+                doc.text('Servicio', 50, y);
+                doc.text('Precio', 110, y);
+                doc.text('Método Pago', 140, y);
+                doc.text('Colaborador', 170, y);
+                
+                y += 8;
+                doc.setLineWidth(0.5);
+                doc.line(20, y, 190, y);
+                y += 5;
+                
+                // Datos del historial
+                doc.setFont('helvetica', 'normal');
+                let totalGastado = 0;
+                
+                this.historialServicios.forEach((servicio, index) => {
+                    if (y > 250) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    
+                    doc.text(this.formatearFecha(servicio.fecha), 20, y);
+                    doc.text(servicio.tipoServicio.substring(0, 15), 50, y);
+                    doc.text(`$${this.formatearNumero(servicio.precioCobrado)}`, 110, y);
+                    doc.text(servicio.metodoPago, 140, y);
+                    doc.text(servicio.colaborador.substring(0, 15), 170, y);
+                    
+                    totalGastado += servicio.precioCobrado;
+                    y += 8;
+                });
+                
+                // Total gastado
+                y += 10;
+                doc.setFont('helvetica', 'bold');
+                doc.text(`Total gastado: $${this.formatearNumero(totalGastado)}`, 20, y);
+                
+                // Footer
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setDrawColor(0, 0, 0);
+                    doc.line(20, 280, 190, 280);
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(8);
+                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
+                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                }
+                
+                const fecha = new Date().toISOString().split('T')[0];
+                const nombreArchivo = `historial-${this.clienteSeleccionado.nombreCompleto.replace(/\s+/g, '-')}-${fecha}.pdf`;
+                doc.save(nombreArchivo);
+                NotificationSystem.success('Historial del cliente exportado exitosamente');
                 
             } catch (error) {
                 console.error('Error al generar PDF:', error);
@@ -356,101 +490,70 @@ new Vue({
     template: `
         <v-app>
             <v-main>
-                <v-container fluid>
-                    <v-row>
-                        <v-col cols="12">
-                            <h1>Gestión de Clientes</h1>
+                <v-container fluid class="pa-2">
+                    <v-row class="mb-2">
+                        <v-col cols="12" class="pb-2">
+                            <h1 class="page-title">Gestión de Clientes</h1>
                         </v-col>
                     </v-row>
                     
-                    <v-row>
-                        <v-col cols="12">
-                            <v-btn @click="toggleFrecuentes" color="primary" class="mr-3">
-                                {{ mostrarFrecuentes ? 'Ocultar' : 'Mostrar' }} Clientes Frecuentes
-                            </v-btn>
-                            <v-btn @click="exportarPDF" color="success" class="mr-3">
-                                <v-icon left>mdi-file-pdf</v-icon>
-                                Exportar PDF
-                            </v-btn>
+                    <v-row class="mb-2">
+                        <v-col cols="12" class="py-2">
                             <v-btn @click="window.history.back()" color="secondary">
-                                <v-icon left>mdi-arrow-left</v-icon>
-                                Volver
+                                <i class="fas fa-arrow-left"></i> Volver
                             </v-btn>
                         </v-col>
                     </v-row>
                     
-                    <!-- Filtros de Búsqueda -->
-                    <v-row>
-                        <v-col cols="12">
+                    <!-- Búsqueda Unificada -->
+                    <v-row class="mb-2">
+                        <v-col cols="12" class="py-2">
                             <v-card>
-                                <v-card-title>
-                                    <v-icon left>mdi-filter</v-icon>
-                                    Filtros de Búsqueda
+                                <v-card-title class="pb-2">
+                                    <v-icon left>mdi-magnify</v-icon>
+                                    Buscar Cliente
                                 </v-card-title>
-                                <v-card-text>
-                                    <v-row>
-                                        <v-col cols="12" md="3">
-                                            <v-text-field
-                                                v-model="filtros.nombre"
-                                                @input="filtrarClientes"
-                                                label="Buscar por nombre"
-                                                prepend-icon="mdi-account"
-                                                clearable
-                                                outlined
-                                                dense
-                                            ></v-text-field>
-                                        </v-col>
-                                        <v-col cols="12" md="3">
-                                            <v-text-field
-                                                v-model="filtros.ruc"
-                                                @input="filtrarClientes"
-                                                label="Buscar por RUC"
-                                                prepend-icon="mdi-card-account-details"
-                                                clearable
-                                                outlined
-                                                dense
-                                            ></v-text-field>
-                                        </v-col>
-                                        <v-col cols="12" md="3">
-                                            <v-text-field
-                                                v-model="filtros.telefono"
-                                                @input="filtrarClientes"
-                                                label="Buscar por teléfono"
-                                                prepend-icon="mdi-phone"
-                                                clearable
-                                                outlined
-                                                dense
-                                            ></v-text-field>
-                                        </v-col>
-                                        <v-col cols="12" md="3">
-                                            <v-text-field
-                                                v-model="filtros.email"
-                                                @input="filtrarClientes"
-                                                label="Buscar por email"
-                                                prepend-icon="mdi-email"
-                                                clearable
-                                                outlined
-                                                dense
-                                            ></v-text-field>
-                                        </v-col>
-                                    </v-row>
-                                    <v-row>
-                                        <v-col cols="12" class="text-center">
-                                            <v-btn @click="limpiarFiltros" color="warning" outlined>
-                                                <v-icon left>mdi-filter-remove</v-icon>
-                                                Limpiar Filtros
-                                            </v-btn>
-                                        </v-col>
-                                    </v-row>
+                                <v-card-text class="pa-3">
+                                    <div class="d-flex align-center" style="width: fit-content;">
+                                        <v-text-field
+                                            v-model="busqueda"
+                                            @input="filtrarClientes"
+                                            label="Buscar por nombre, RUC, teléfono o email"
+                                            prepend-icon="mdi-magnify"
+                                            clearable
+                                            outlined
+                                            dense
+                                            hide-details
+                                            placeholder="Ingrese cualquier dato del cliente..."
+                                            class="mr-3"
+                                            style="width: 300px;"
+                                        ></v-text-field>
+                                        <v-btn @click="limpiarFiltros" color="warning" outlined small class="mr-2">
+                                            Limpiar
+                                        </v-btn>
+                                        <v-btn @click="toggleFrecuentes" color="primary" small>
+                                            {{ mostrarFrecuentes ? 'Ocultar' : 'Ver' }} Frecuentes
+                                        </v-btn>
+                                    </div>
                                 </v-card-text>
                             </v-card>
                         </v-col>
                     </v-row>
                     
-                    <v-row v-if="mostrarFrecuentes">
-                        <v-col cols="12">
+                    <v-row v-if="mostrarFrecuentes" class="mb-2">
+                        <v-col cols="12" class="py-2">
                             <v-card>
-                                <v-card-title>Clientes Frecuentes</v-card-title>
+                                <v-card-title>
+                                    Clientes Frecuentes
+                                    <v-spacer></v-spacer>
+                                    <v-btn @click="exportarClientesFrecuentes" color="success" small class="mr-2">
+                                        <v-icon left small>mdi-file-pdf</v-icon>
+                                        Exportar
+                                    </v-btn>
+                                    <v-btn @click="mostrarFrecuentes = false" small icon style="background-color: transparent !important;">
+                                        <i class="fas fa-times" style="color: red !important; font-size: 16px;"></i>
+                                    </v-btn>
+                                </v-card-title>
                                 <v-card-text>
                                     <v-progress-circular v-if="cargandoFrecuentes" indeterminate></v-progress-circular>
                                     <v-list v-else>
@@ -469,10 +572,12 @@ new Vue({
                         </v-col>
                     </v-row>
                     
-                    <v-row>
-                        <v-col cols="12">
+                    <v-row class="mb-2">
+                        <v-col cols="12" class="py-2">
                             <v-card>
-                                <v-card-title>Lista de Clientes</v-card-title>
+                                <v-card-title>
+                                    Lista de Clientes
+                                </v-card-title>
                                 <v-card-text>
                                     <v-data-table
                                         :headers="[
@@ -504,12 +609,11 @@ new Vue({
                                         </template>
                                     </v-data-table>
                                     
-                                    <v-pagination
-                                        v-model="paginaActual"
-                                        :length="totalPaginas"
-                                        @input="cambiarPagina"
-                                        class="mt-4"
-                                    ></v-pagination>
+                                    <div class="pagination">
+                                        <button @click="cambiarPagina(paginaActual - 1)" :disabled="paginaActual === 1">Anterior</button>
+                                        <span>Página {{ paginaActual }} de {{ totalPaginas }}</span>
+                                        <button @click="cambiarPagina(paginaActual + 1)" :disabled="paginaActual === totalPaginas">Siguiente</button>
+                                    </div>
                                 </v-card-text>
                             </v-card>
                         </v-col>
@@ -520,8 +624,12 @@ new Vue({
                             <v-card-title>
                                 <span class="headline">Información del Cliente</span>
                                 <v-spacer></v-spacer>
-                                <v-btn icon @click="cerrarHistorial">
-                                    <v-icon>mdi-close</v-icon>
+                                <v-btn @click="exportarHistorialCliente" color="success" class="mr-2" small>
+                                    <v-icon left small>mdi-file-pdf</v-icon>
+                                    Exportar Historial
+                                </v-btn>
+                                <v-btn icon @click="cerrarHistorial" style="color: red !important;">
+                                    <i class="fas fa-times" style="color: red;"></i>
                                 </v-btn>
                             </v-card-title>
                             
@@ -593,31 +701,36 @@ new Vue({
                                                 <div v-else-if="historialServicios.length === 0" class="text-center">
                                                     <p>No hay servicios registrados para este cliente</p>
                                                 </div>
-                                                <v-data-table
-                                                    v-else
-                                                    :headers="[
-                                                        { text: 'Fecha', value: 'fecha' },
-                                                        { text: 'Servicio', value: 'tipoServicio' },
-                                                        { text: 'Precio', value: 'precioCobrado' },
-                                                        { text: 'Método Pago', value: 'metodoPago' },
-                                                        { text: 'Colaborador', value: 'colaborador' }
-                                                    ]"
-                                                    :items="historialServicios"
-                                                    :items-per-page="5"
-                                                    class="elevation-1"
-                                                >
-                                                    <template v-slot:item.fecha="{ item }">
-                                                        {{ formatearFecha(item.fecha) }}
-                                                    </template>
-                                                    <template v-slot:item.precioCobrado="{ item }">
-                                                        {{ formatearNumero(item.precioCobrado) }}
-                                                    </template>
-                                                    <template v-slot:item.metodoPago="{ item }">
-                                                        <v-chip small :color="getColorMetodoPago(item.metodoPago)" text-color="white">
-                                                            {{ item.metodoPago }}
-                                                        </v-chip>
-                                                    </template>
-                                                </v-data-table>
+                                                <div v-else>
+                                                    <table>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Fecha</th>
+                                                                <th>Servicio</th>
+                                                                <th>Precio</th>
+                                                                <th>Método Pago</th>
+                                                                <th>Colaborador</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr v-for="servicio in historialServicios.slice((paginaHistorial - 1) * 5, paginaHistorial * 5)" :key="servicio.fecha + servicio.tipoServicio">
+                                                                <td>{{ formatearFecha(servicio.fecha) }}</td>
+                                                                <td>{{ servicio.tipoServicio }}</td>
+                                                                <td>{{ formatearNumero(servicio.precioCobrado) }}</td>
+                                                                <td>
+                                                                    <span :style="{color: getColorMetodoPago(servicio.metodoPago), fontWeight: 'bold'}">{{ servicio.metodoPago }}</span>
+                                                                </td>
+                                                                <td>{{ servicio.colaborador }}</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    <div class="pagination" style="margin-top: 15px;">
+                                                        <button @click="cambiarPaginaHistorial(paginaHistorial - 1)" :disabled="paginaHistorial === 1">Anterior</button>
+                                                        <span>Página {{ paginaHistorial }} de {{ Math.ceil(historialServicios.length / 5) }}</span>
+                                                        <button @click="cambiarPaginaHistorial(paginaHistorial + 1)" :disabled="paginaHistorial === Math.ceil(historialServicios.length / 5)">Siguiente</button>
+                                                    </div>
+                                                </div>
+
                                             </v-card-text>
                                         </v-card>
                                     </v-col>
