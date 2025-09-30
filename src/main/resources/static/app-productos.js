@@ -617,26 +617,27 @@ new Vue({
                                 <label>Stock Mínimo: *</label>
                                 <input type="number" v-model="nuevoProducto.minimoStock" placeholder="Stock mínimo" required/>
                             </div>
-                            <div style="flex: none; min-width: 80px;">
-                                <label style="display: flex; align-items: center; gap: 5px; margin: 0;">
-                                    <input type="checkbox" v-model="nuevoProducto.activo" style="margin: 0;"/>
-                                    Activo
-                                </label>
-                            </div>
-                            <div style="flex: none; min-width: 100px;">
-                                <label style="display: flex; align-items: center; gap: 5px; margin: 0;">
-                                    <input type="checkbox" v-model="nuevoProducto.enPromocion" style="margin: 0;"/>
-                                    Promoción
-                                </label>
-                            </div>
+
                             <div v-if="nuevoProducto.enPromocion" style="flex: 1; min-width: 150px;">
                                 <label>Precio Promoción:</label>
                                 <input type="number" v-model="nuevoProducto.precioPromocion" placeholder="Precio promoción"/>
                             </div>
                         </div>
-                        <div style="margin-top: 15px;">
-                            <label>Descripción:</label>
-                            <textarea v-model="nuevoProducto.descripcion" placeholder="Descripción del producto" rows="2" style="resize: vertical; width: 150px; height: 150px;"></textarea>
+                        <div style="margin-top: 15px; display: flex; gap: 20px; align-items: flex-start;">
+                            <div>
+                                <label>Descripción:</label>
+                                <textarea v-model="nuevoProducto.descripcion" placeholder="Descripción del producto" rows="2" style="resize: vertical; width: 150px; height: 150px;"></textarea>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 25px;">
+                                <label style="display: flex; align-items: center; gap: 5px; margin: 0;">
+                                    <input type="checkbox" v-model="nuevoProducto.activo" style="margin: 0;"/>
+                                    Activo
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px; margin: 0;">
+                                    <input type="checkbox" v-model="nuevoProducto.enPromocion" style="margin: 0;"/>
+                                    Promoción
+                                </label>
+                            </div>
                         </div>
                         <div style="display: flex; gap: 10px; margin-top: 15px;">
                             <button @click="nuevoProducto.id ? modificarProducto() : agregarProducto()" class="btn">

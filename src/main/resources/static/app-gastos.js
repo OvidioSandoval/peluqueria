@@ -110,63 +110,106 @@ new Vue({
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
+                // Header profesional
+                doc.setLineWidth(2);
+                doc.line(20, 25, 190, 25);
+                
                 doc.setTextColor(0, 0, 0);
-                doc.setFontSize(20);
+                doc.setFontSize(24);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Peluquería LUNA', 20, 20);
+                doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
+                
+                doc.setLineWidth(0.5);
+                doc.line(20, 28, 190, 28);
                 
                 doc.setFontSize(16);
-                doc.text('Reporte de Gastos', 20, 35);
+                doc.setFont('helvetica', 'normal');
+                doc.text('REPORTE DE GASTOS', 105, 40, { align: 'center' });
                 
+                // Información del reporte
                 doc.setFontSize(10);
-                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
-                doc.text(`Total de gastos: ${this.gastosFiltrados.length}`, 150, 25);
-                
-                doc.setDrawColor(0, 0, 0);
-                doc.setLineWidth(1);
-                doc.line(20, 45, 190, 45);
-                
-                let y = 60;
-                
-                this.gastosFiltrados.forEach((gasto, index) => {
-                    if (y > 250) {
-                        doc.addPage();
-                        y = 20;
-                    }
-                    
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(12);
-                    doc.text(`${index + 1}. ${gasto.descripcion}`, 20, y);
-                    y += 8;
-                    
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(10);
-                    
-                    doc.text(`   Monto: ${this.formatearNumero(gasto.monto)}`, 25, y);
-                    y += 6;
-                    doc.text(`   Fecha: ${this.formatearFecha(gasto.fechaGasto)}`, 25, y);
-                    y += 6;
-                    doc.text(`   Categoría: ${gasto.categoriaGasto}`, 25, y);
-                    y += 6;
-                    doc.text(`   Empleado: ${gasto.empleado ? gasto.empleado.nombreCompleto : 'N/A'}`, 25, y);
-                    y += 10;
+                doc.setFont('helvetica', 'normal');
+                const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
                 });
+                doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                doc.text(`Total de gastos: ${this.gastosFiltrados.length}`, 20, 62);
                 
-                y += 10;
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(14);
-                doc.text(`TOTAL: ${this.formatearNumero(this.totalGastos)}`, 20, y);
-                
-                const pageCount = doc.internal.getNumberOfPages();
-                for (let i = 1; i <= pageCount; i++) {
-                    doc.setPage(i);
-                    doc.setDrawColor(0, 0, 0);
-                    doc.line(20, 280, 190, 280);
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFontSize(8);
-                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
-                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                // Tabla de gastos
+                if (this.gastosFiltrados.length > 0) {
+                    const headers = [['DESCRIPCIÓN', 'MONTO', 'FECHA', 'CATEGORÍA', 'EMPLEADO']];
+                    const data = this.gastosFiltrados.map((gasto) => [
+                        gasto.descripcion || '',
+                        this.formatearNumero(gasto.monto),
+                        this.formatearFecha(gasto.fechaGasto),
+                        gasto.categoriaGasto || '',
+                        gasto.empleado ? gasto.empleado.nombreCompleto : 'N/A'
+                    ]);
+                    
+                    const tableConfig = {
+                        head: headers,
+                        body: data,
+                        startY: 75,
+                        styles: { 
+                            fontSize: 9,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            cellPadding: 4,
+                            lineColor: [0, 0, 0],
+                            lineWidth: 0.1
+                        },
+                        headStyles: { 
+                            fontSize: 10,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'center',
+                            cellPadding: 5
+                        },
+                        bodyStyles: {
+                            fontSize: 9,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica'
+                        },
+                        alternateRowStyles: {
+                            fillColor: [255, 255, 255]
+                        },
+                        columnStyles: {
+                            0: { cellWidth: 'auto' },
+                            1: { cellWidth: 'auto', halign: 'right' },
+                            2: { cellWidth: 'auto', halign: 'center' },
+                            3: { cellWidth: 'auto' },
+                            4: { cellWidth: 'auto' }
+                        },
+                        margin: { bottom: 40 },
+                        foot: [['', '', '', 'TOTAL FINAL:', this.formatearNumero(this.totalGastos)]],
+                        footStyles: { 
+                            fontSize: 10,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'right'
+                        }
+                    };
+                    
+                    doc.autoTable(tableConfig);
                 }
+                
+                // Footer profesional
+                const pageHeight = doc.internal.pageSize.height;
+                doc.setLineWidth(0.5);
+                doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Página 1 de 1', 20, pageHeight - 15);
+                doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
                 
                 const fecha = new Date().toISOString().split('T')[0];
                 doc.save(`reporte-gastos-${fecha}.pdf`);
@@ -277,50 +320,58 @@ new Vue({
                         </button>
                     </div>
                     
-                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 500px;">
+                    <div v-if="formularioVisible" class="form-container">
                         <h3>{{ nuevoGasto.id ? 'Modificar Gasto: ' + nuevoGasto.descripcion : 'Nuevo Gasto' }}</h3>
-                        <label>Descripción: *</label>
-                        <input type="text" v-model="nuevoGasto.descripcion" placeholder="Ingrese la descripción del gasto" required/>
-                        <label>Monto: *</label>
-                        <input type="number" v-model="nuevoGasto.monto" placeholder="Ingrese el monto" min="0" required/>
-                        <label>Fecha del Gasto: *</label>
-                        <input type="date" v-model="nuevoGasto.fechaGasto" required/>
-                        <label>Categoría:</label>
-                        <input type="text" v-model="nuevoGasto.categoriaGasto" placeholder="Categoría del gasto"/>
-                        <label>Empleado:</label>
-                        <select v-model="nuevoGasto.empleado">
-                            <option value="" disabled>Seleccionar Empleado</option>
-                            <option v-for="empleado in empleados" :key="empleado.id" :value="empleado">{{ empleado.nombreCompleto }}</option>
-                        </select>
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
-                            <button @click="agregarGasto()" class="btn" v-if="!nuevoGasto.id">
-                                Agregar
-                            </button>
-                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: end; width: 100%;">
+                            <div class="filter-group" style="flex: 0 0 auto; width: 200px;">
+                                <label>Descripción *</label>
+                                <input type="text" v-model="nuevoGasto.descripcion" placeholder="Descripción del gasto" required class="search-bar"/>
+                            </div>
+                            <div class="filter-group" style="flex: 0 0 auto; width: 100px;">
+                                <label>Monto *</label>
+                                <input type="number" v-model="nuevoGasto.monto" placeholder="Monto" min="0" required class="search-bar"/>
+                            </div>
+                            <div class="filter-group" style="flex: 0 0 auto; width: 130px;">
+                                <label>Fecha *</label>
+                                <input type="date" v-model="nuevoGasto.fechaGasto" required class="search-bar"/>
+                            </div>
+                            <div class="filter-group" style="flex: 0 0 auto; width: 150px;">
+                                <label>Categoría</label>
+                                <input type="text" v-model="nuevoGasto.categoriaGasto" placeholder="Categoría" class="search-bar"/>
+                            </div>
+                            <div class="filter-group" style="flex: 0 0 auto; width: 180px;">
+                                <label>Empleado</label>
+                                <select v-model="nuevoGasto.empleado" class="search-bar">
+                                    <option value="" disabled>Seleccionar Empleado</option>
+                                    <option v-for="empleado in empleados" :key="empleado.id" :value="empleado">{{ empleado.nombreCompleto }}</option>
+                                </select>
+                            </div>
+                            <div style="flex: 0 0 auto;">
+                                <button @click="agregarGasto()" class="btn" v-if="!nuevoGasto.id">Agregar</button>
+                            </div>
+                            <div style="flex: 0 0 auto;">
+                                <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
+                            </div>
                         </div>
                     </div>
                     
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Descripción</th>
                                 <th>Monto</th>
                                 <th>Fecha</th>
                                 <th>Categoría</th>
                                 <th>Empleado</th>
-
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="gasto in gastosPaginados" :key="gasto.id">
-                                <td>{{ gasto.id }}</td>
                                 <td>{{ gasto.descripcion }}</td>
                                 <td>{{ formatearNumero(gasto.monto) }}</td>
                                 <td>{{ formatearFecha(gasto.fechaGasto) }}</td>
                                 <td>{{ gasto.categoriaGasto }}</td>
                                 <td>{{ gasto.empleado ? gasto.empleado.nombreCompleto : 'N/A' }}</td>
-
                             </tr>
                         </tbody>
                     </table>

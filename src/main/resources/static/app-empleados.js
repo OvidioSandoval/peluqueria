@@ -276,108 +276,129 @@ new Vue({
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
-                // Título
-                doc.setTextColor(0, 0, 0);
-                doc.setFontSize(20);
-                doc.setFont('helvetica', 'bold');
-                doc.text('Peluquería LUNA', 20, 20);
+                const empleadosParaExportar = this.empleadosFiltrados;
+                const itemsPorPagina = 15;
+                const totalPaginas = Math.ceil(empleadosParaExportar.length / itemsPorPagina);
                 
-                doc.setTextColor(0, 0, 0);
-                doc.setFontSize(16);
-                doc.text('Lista de Empleados', 20, 35);
-                
-                // Fecha y total
-                doc.setFontSize(10);
-                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
-                doc.text(`Total de empleados: ${this.empleadosFiltrados.length}`, 150, 25);
-                
-                // Línea decorativa
-                doc.setDrawColor(0, 0, 0);
-                doc.setLineWidth(1);
-                doc.line(20, 45, 190, 45);
-                
-                let y = 60;
-                
-                // Agrupar por área (usando empleados filtrados)
-                const empleadosPorArea = {};
-                this.empleadosFiltrados.forEach(empleado => {
-                    const area = empleado.area ? empleado.area.nombre : 'Sin área';
-                    if (!empleadosPorArea[area]) {
-                        empleadosPorArea[area] = [];
-                    }
-                    empleadosPorArea[area].push(empleado);
-                });
-                
-                // Mostrar empleados por área
-                Object.keys(empleadosPorArea).forEach(area => {
-                    if (y > 250) {
-                        doc.addPage();
-                        y = 20;
-                    }
+                for (let pagina = 0; pagina < totalPaginas; pagina++) {
+                    if (pagina > 0) doc.addPage();
                     
-                    // Título de área
+                    // Header profesional
+                    doc.setLineWidth(2);
+                    doc.line(20, 25, 190, 25);
+                    
                     doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(24);
                     doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(14);
-                    doc.text(area.toUpperCase(), 20, y);
-                    y += 15;
+                    doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
                     
-                    // Empleados del área
-                    empleadosPorArea[area].forEach((empleado, index) => {
-                        if (y > 250) {
-                            doc.addPage();
-                            y = 20;
-                        }
-                        
-                        doc.setTextColor(0, 0, 0);
-                        doc.setFont('helvetica', 'bold');
-                        doc.setFontSize(12);
-                        doc.text(`• ${empleado.nombreCompleto}`, 25, y);
-                        y += 8;
-                        
-                        doc.setTextColor(0, 0, 0);
-                        doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(10);
-                        
-                        if (empleado.correo) {
-                            doc.text(`   Correo: ${empleado.correo}`, 30, y);
-                            y += 6;
-                        }
-                        
-                        if (empleado.telefono) {
-                            doc.text(`   Teléfono: ${empleado.telefono}`, 30, y);
-                            y += 6;
-                        }
-                        
-                        doc.text(`   Sueldo Base: ${this.formatearNumero(empleado.sueldoBase)}`, 30, y);
-                        y += 6;
-                        
-                        if (empleado.comisionPorcentaje > 0) {
-                            doc.text(`   Comisión: ${empleado.comisionPorcentaje}%`, 30, y);
-                            y += 6;
-                        }
-                        
-                        const sueldoTotal = this.calcularSueldoTotal(empleado);
-                        doc.text(`   Sueldo Total: ${this.formatearNumero(sueldoTotal)}`, 30, y);
-                        y += 6;
-                        
-                        doc.text(`   Estado: ${empleado.activo ? 'Activo' : 'Inactivo'}`, 30, y);
-                        y += 10;
+                    doc.setLineWidth(0.5);
+                    doc.line(20, 28, 190, 28);
+                    
+                    doc.setFontSize(16);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('LISTA DE EMPLEADOS', 105, 40, { align: 'center' });
+                    
+                    // Información del reporte
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
                     });
+                    doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                    doc.text(`Total de empleados: ${empleadosParaExportar.length}`, 20, 62);
                     
-                    y += 5;
-                });
-                
-                // Footer
-                const pageCount = doc.internal.getNumberOfPages();
-                for (let i = 1; i <= pageCount; i++) {
-                    doc.setPage(i);
-                    doc.setDrawColor(0, 0, 0);
-                    doc.line(20, 280, 190, 280);
-                    doc.setTextColor(0, 0, 0);
+                    const inicio = pagina * itemsPorPagina;
+                    const fin = Math.min(inicio + itemsPorPagina, empleadosParaExportar.length);
+                    const empleadosPagina = empleadosParaExportar.slice(inicio, fin);
+                    
+                    const headers = [['NOMBRE', 'CORREO', 'ÁREA', 'SUELDO BASE', 'COMISIÓN %', 'SUELDO TOTAL', 'TOTAL PAGADO', 'DIFERENCIA']];
+                    const data = empleadosPagina.map((empleado) => [
+                        empleado.nombreCompleto || '',
+                        empleado.correo || 'No registrado',
+                        empleado.area ? empleado.area.nombre : 'Sin área',
+                        this.formatearNumero(empleado.sueldoBase),
+                        empleado.comisionPorcentaje + '%',
+                        this.formatearNumero(this.calcularSueldoTotal(empleado)),
+                        this.formatearNumero(empleado.totalPagado || 0),
+                        this.formatearNumero(this.calcularDiferencia(empleado))
+                    ]);
+                    
+                    // Calcular total pagado general
+                    const totalPagadoGeneral = empleadosParaExportar.reduce((sum, emp) => sum + (emp.totalPagado || 0), 0);
+                    
+                    const tableConfig = {
+                        head: headers,
+                        body: data,
+                        startY: 68,
+                        styles: { 
+                            fontSize: 8,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            cellPadding: 2,
+                            lineColor: [0, 0, 0],
+                            lineWidth: 0.1,
+                            overflow: 'linebreak'
+                        },
+                        headStyles: { 
+                            fontSize: 8,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'center',
+                            cellPadding: 3
+                        },
+                        bodyStyles: {
+                            fontSize: 8,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            overflow: 'linebreak'
+                        },
+                        alternateRowStyles: {
+                            fillColor: [255, 255, 255]
+                        },
+                        columnStyles: {
+                            0: { cellWidth: 'auto', overflow: 'linebreak' },
+                            1: { cellWidth: 'auto', overflow: 'linebreak' },
+                            2: { cellWidth: 'auto', overflow: 'linebreak' },
+                            3: { cellWidth: 'auto', halign: 'right' },
+                            4: { cellWidth: 'auto', halign: 'center' },
+                            5: { cellWidth: 'auto', halign: 'right' },
+                            6: { cellWidth: 'auto', halign: 'right' },
+                            7: { cellWidth: 'auto', halign: 'right' }
+                        },
+                        margin: { bottom: 40 }
+                    };
+                    
+                    // Agregar footer con total en la última página
+                    if (pagina === totalPaginas - 1) {
+                        tableConfig.foot = [['', '', '', '', '', '', 'TOTAL GENERAL:', this.formatearNumero(totalPagadoGeneral)]];
+                        tableConfig.footStyles = { 
+                            fontSize: 9,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'right'
+                        };
+                    }
+                    
+                    doc.autoTable(tableConfig);
+                    
+                    // Footer profesional
+                    const pageHeight = doc.internal.pageSize.height;
+                    doc.setLineWidth(0.5);
+                    doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                    
                     doc.setFontSize(8);
-                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
-                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`Página ${pagina + 1} de ${totalPaginas}`, 20, pageHeight - 15);
+                    doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
                 }
                 
                 const fecha = new Date().toISOString().split('T')[0];
@@ -413,30 +434,51 @@ new Vue({
                         </button>
                     </div>
                     
-                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 600px;">
+                    <div v-if="formularioVisible" class="form-container">
                         <h3>{{ nuevoEmpleado.id ? 'Modificar Empleado - ' + nuevoEmpleado.nombreCompleto : 'Nuevo Empleado' }}</h3>
-                        <label>Nombre Completo: *</label>
-                        <input type="text" v-model="nuevoEmpleado.nombreCompleto" placeholder="Ingrese el nombre completo" required/>
-                        <label>Correo Electrónico:</label>
-                        <input type="email" v-model="nuevoEmpleado.correo" placeholder="Ingrese el correo electrónico"/>
-                        <label>Teléfono:</label>
-                        <input type="tel" v-model="nuevoEmpleado.telefono" placeholder="Ingrese el teléfono"/>
-                        <label>Área: *</label>
-                        <select v-model="nuevoEmpleado.area" required>
-                            <option value="" disabled>Seleccionar Área</option>
-                            <option v-for="area in areas" :key="area.id" :value="area">{{ area.nombre }}</option>
-                        </select>
-                        <label>Sueldo Base:</label>
-                        <input type="number" v-model="nuevoEmpleado.sueldoBase" placeholder="Ingrese el sueldo base" min="0"/>
-                        <label>Comisión %:</label>
-                        <input type="number" v-model="nuevoEmpleado.comisionPorcentaje" placeholder="Ingrese el porcentaje de comisión" min="0" max="100"/>
-                        <label>Total Pagado:</label>
-                        <input type="number" v-model="nuevoEmpleado.totalPagado" placeholder="Ingrese el total pagado" min="0"/>
-                        <label>Fecha de Ingreso:</label>
-                        <input type="date" v-model="nuevoEmpleado.fechaIngreso"/>
-                        <label style="display: inline-flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;">
-                            Activo:<input type="checkbox" v-model="nuevoEmpleado.activo" style="margin: 0; padding: 0; margin-left: 1px;"/>
-                        </label>
+                        <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: end;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <label>Nombre Completo: *</label>
+                                <input type="text" v-model="nuevoEmpleado.nombreCompleto" placeholder="Nombre completo" required/>
+                            </div>
+                            <div style="flex: 1; min-width: 180px;">
+                                <label>Correo Electrónico:</label>
+                                <input type="email" v-model="nuevoEmpleado.correo" placeholder="Correo electrónico"/>
+                            </div>
+                            <div style="flex: 1; min-width: 150px;">
+                                <label>Teléfono:</label>
+                                <input type="tel" v-model="nuevoEmpleado.telefono" placeholder="Teléfono"/>
+                            </div>
+                            <div style="flex: 1; min-width: 150px;">
+                                <label>Área: *</label>
+                                <select v-model="nuevoEmpleado.area" required>
+                                    <option value="" disabled>Seleccionar Área</option>
+                                    <option v-for="area in areas" :key="area.id" :value="area">{{ area.nombre }}</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1; min-width: 120px;">
+                                <label>Sueldo Base:</label>
+                                <input type="number" v-model="nuevoEmpleado.sueldoBase" placeholder="Sueldo base" min="0"/>
+                            </div>
+                            <div style="flex: 1; min-width: 120px;">
+                                <label>Comisión %:</label>
+                                <input type="number" v-model="nuevoEmpleado.comisionPorcentaje" placeholder="Comisión %" min="0" max="100"/>
+                            </div>
+                            <div style="flex: 1; min-width: 120px;">
+                                <label>Total Pagado:</label>
+                                <input type="number" v-model="nuevoEmpleado.totalPagado" placeholder="Total pagado" min="0"/>
+                            </div>
+                            <div style="flex: 1; min-width: 150px;">
+                                <label>Fecha de Ingreso:</label>
+                                <input type="date" v-model="nuevoEmpleado.fechaIngreso"/>
+                            </div>
+                            <div style="flex: none; min-width: 80px;">
+                                <label style="display: flex; align-items: center; gap: 5px; margin: 0;">
+                                    <input type="checkbox" v-model="nuevoEmpleado.activo" style="margin: 0;"/>
+                                    Activo
+                                </label>
+                            </div>
+                        </div>
                         <div style="display: flex; gap: 10px; margin-top: 15px;">
                             <button @click="nuevoEmpleado.id ? modificarEmpleado() : agregarEmpleado()" class="btn">
                                 {{ nuevoEmpleado.id ? 'Modificar' : 'Agregar' }}
@@ -448,7 +490,6 @@ new Vue({
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Nombre</th>
                                 <th>Correo</th>
                                 <th>Area</th>
@@ -463,7 +504,6 @@ new Vue({
                         </thead>
                         <tbody>
                             <tr v-for="empleado in empleadosPaginados" :key="empleado.id">
-                                <td>{{ empleado.id }}</td>
                                 <td>{{ empleado.nombreCompleto }}</td>
                                 <td>{{ empleado.correo || '-' }}</td>
                                 <td>{{ empleado.area ? empleado.area.nombre : "N/A" }}</td>

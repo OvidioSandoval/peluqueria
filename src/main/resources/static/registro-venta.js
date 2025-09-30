@@ -266,122 +266,121 @@ new Vue({
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
+                // Header profesional
+                doc.setLineWidth(2);
+                doc.line(20, 25, 190, 25);
+                
                 doc.setTextColor(0, 0, 0);
-                doc.setFontSize(20);
+                doc.setFontSize(24);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Peluquería LUNA', 20, 20);
+                doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
+                
+                doc.setLineWidth(0.5);
+                doc.line(20, 28, 190, 28);
                 
                 doc.setFontSize(16);
-                doc.text('Registro de Venta', 20, 35);
-                
-                doc.setFontSize(10);
-                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
-                
-                doc.setDrawColor(0, 0, 0);
-                doc.setLineWidth(1);
-                doc.line(20, 45, 190, 45);
-                
-                let y = 60;
-                
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(14);
-                doc.text('INFORMACIÓN DE LA VENTA', 20, y);
-                y += 15;
-                
                 doc.setFont('helvetica', 'normal');
+                doc.text('REGISTRO DE VENTA', 105, 40, { align: 'center' });
+                
+                // Información del reporte
                 doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                doc.text(`Total de artículos: ${this.cantidadArticulos}`, 20, 62);
                 
-                if (this.venta.clienteId) {
-                    doc.text(`Cliente: ${this.getNombreCliente(this.venta.clienteId)}`, 25, y);
-                    y += 8;
-                }
-                
-                if (this.venta.empleadoId) {
-                    doc.text(`Empleado: ${this.getNombreEmpleado(this.venta.empleadoId)}`, 25, y);
-                    y += 8;
-                }
-                
-                doc.text(`Método de Pago: ${this.venta.metodoPago}`, 25, y);
-                y += 8;
+                // Información del cliente y empleado
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text(`Cliente: ${this.getNombreCliente(this.venta.clienteId)}`, 20, 75);
+                doc.text(`Empleado: ${this.getNombreEmpleado(this.venta.empleadoId)}`, 20, 85);
+                doc.text(`Método de Pago: ${this.venta.metodoPago}`, 120, 75);
                 
                 if (this.venta.descuentoAplicado > 0) {
-                    doc.text(`Descuento General: ${this.formatearNumero(this.venta.descuentoAplicado)}`, 25, y);
-                    y += 8;
+                    doc.text(`Descuento General: ${this.formatearNumero(this.venta.descuentoAplicado)}`, 120, 85);
                 }
                 
-                if (this.venta.observaciones) {
-                    doc.text(`Observaciones: ${this.venta.observaciones}`, 25, y);
-                    y += 8;
-                }
-                
-                y += 10;
-                
+                // Tabla de detalles
                 if (this.detalles.length > 0) {
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(14);
-                    doc.text('DETALLES DE LA VENTA', 20, y);
-                    y += 15;
+                    const headers = [['TIPO', 'ITEM', 'CANT.', 'PRECIO UNIT.', 'DESCUENTO', 'SUBTOTAL']];
+                    const data = this.detalles.map((detalle) => [
+                        detalle.tipo.toUpperCase(),
+                        detalle.item.nombre || '',
+                        detalle.cantidad.toString(),
+                        this.formatearNumero(detalle.precio),
+                        this.formatearNumero(detalle.descuento || 0),
+                        this.formatearNumero(detalle.cantidad * detalle.precio)
+                    ]);
                     
-                    this.detalles.forEach((detalle, index) => {
-                        if (y > 250) {
-                            doc.addPage();
-                            y = 20;
+                    const tableConfig = {
+                        head: headers,
+                        body: data,
+                        startY: 95,
+                        styles: { 
+                            fontSize: 9,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            cellPadding: 4,
+                            lineColor: [0, 0, 0],
+                            lineWidth: 0.1
+                        },
+                        headStyles: { 
+                            fontSize: 10,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'center',
+                            cellPadding: 5
+                        },
+                        bodyStyles: {
+                            fontSize: 9,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica'
+                        },
+                        alternateRowStyles: {
+                            fillColor: [255, 255, 255]
+                        },
+                        columnStyles: {
+                            0: { cellWidth: 'auto', halign: 'center' },
+                            1: { cellWidth: 'auto' },
+                            2: { cellWidth: 'auto', halign: 'center' },
+                            3: { cellWidth: 'auto', halign: 'right' },
+                            4: { cellWidth: 'auto', halign: 'right' },
+                            5: { cellWidth: 'auto', halign: 'right' }
+                        },
+                        margin: { bottom: 40 },
+                        foot: [['', '', '', 'SUBTOTAL:', this.formatearNumero(this.totalDescuentos), this.formatearNumero(this.subtotal)],
+                               ['', '', '', 'DESCUENTOS:', '', this.formatearNumero(this.totalDescuentos)],
+                               ['', '', '', 'TOTAL FINAL:', '', this.formatearNumero(this.total)]],
+                        footStyles: { 
+                            fontSize: 10,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'right'
                         }
-                        
-                        doc.setFont('helvetica', 'bold');
-                        doc.setFontSize(12);
-                        doc.text(`${index + 1}. ${detalle.item.nombre} (${detalle.tipo})`, 25, y);
-                        y += 8;
-                        
-                        doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(10);
-                        
-                        doc.text(`   Cantidad: ${detalle.cantidad}`, 30, y);
-                        y += 6;
-                        doc.text(`   Precio Unitario: ${this.formatearNumero(detalle.precio)}`, 30, y);
-                        y += 6;
-                        
-                        if (detalle.descuento > 0) {
-                            doc.text(`   Descuento: ${this.formatearNumero(detalle.descuento)}`, 30, y);
-                            y += 6;
-                        }
-                        
-                        doc.text(`   Subtotal: ${this.formatearNumero(detalle.cantidad * detalle.precio)}`, 30, y);
-                        y += 10;
-                    });
+                    };
                     
-                    y += 5;
+                    doc.autoTable(tableConfig);
                 }
                 
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(14);
-                doc.text('RESUMEN', 20, y);
-                y += 15;
+                // Footer profesional
+                const pageHeight = doc.internal.pageSize.height;
+                doc.setLineWidth(0.5);
+                doc.line(20, pageHeight - 25, 190, pageHeight - 25);
                 
+                doc.setFontSize(8);
                 doc.setFont('helvetica', 'normal');
-                doc.setFontSize(12);
-                
-                doc.text(`Total Artículos: ${this.cantidadArticulos}`, 25, y);
-                y += 8;
-                doc.text(`Subtotal: ${this.formatearNumero(this.subtotal)}`, 25, y);
-                y += 8;
-                doc.text(`Total Descuentos: ${this.formatearNumero(this.totalDescuentos)}`, 25, y);
-                y += 8;
-                
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(16);
-                doc.text(`TOTAL: ${this.formatearNumero(this.total)}`, 25, y);
-                
-                const pageCount = doc.internal.getNumberOfPages();
-                for (let i = 1; i <= pageCount; i++) {
-                    doc.setPage(i);
-                    doc.setDrawColor(0, 0, 0);
-                    doc.line(20, 280, 190, 280);
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFontSize(8);
-                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
-                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
-                }
+                doc.text('Página 1 de 1', 20, pageHeight - 15);
+                doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
                 
                 const fecha = new Date().toISOString().split('T')[0];
                 doc.save(`registro-venta-${fecha}.pdf`);
