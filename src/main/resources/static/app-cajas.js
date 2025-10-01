@@ -13,6 +13,10 @@ new Vue({
             cajas: [],
             cajasFiltradas: [],
             filtroBusqueda: '',
+            fechaInicio: new Date().toISOString().split('T')[0],
+            fechaFin: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            horaAperturaFiltro: '',
+            horaCierreFiltro: '',
             paginaActual: 1,
             itemsPorPagina: 10,
             formularioVisible: false,
@@ -57,6 +61,9 @@ new Vue({
         },
         totalProductos() {
             return this.cajasFiltradas.reduce((sum, caja) => sum + (caja.totalProductos || 0), 0);
+        },
+        totalDescuentos() {
+            return this.cajasFiltradas.reduce((sum, caja) => sum + (caja.totalDescuentos || 0), 0);
         }
     },
     methods: {
@@ -96,10 +103,12 @@ new Vue({
             }
         },
         filtrarCajas() {
-            let filtradas = [...this.cajas];
-            if (this.filtroBusqueda) {
+            let cajasFiltradas = this.cajas;
+            
+            // Filtro por texto
+            if (this.filtroBusqueda.trim() !== '') {
                 const busqueda = this.filtroBusqueda.toLowerCase();
-                filtradas = filtradas.filter(caja =>
+                cajasFiltradas = cajasFiltradas.filter(caja =>
                     (caja.nombre && caja.nombre.toLowerCase().includes(busqueda)) ||
                     this.getEmpleadoName(caja).toLowerCase().includes(busqueda) ||
                     this.formatearHora(caja.horaApertura).includes(busqueda) ||
@@ -109,7 +118,33 @@ new Vue({
                     caja.estado.toLowerCase().includes(busqueda)
                 );
             }
-            this.cajasFiltradas = filtradas;
+            
+            // Filtro por rango de fechas
+            if (this.fechaInicio) {
+                cajasFiltradas = cajasFiltradas.filter(caja => caja.fecha >= this.fechaInicio);
+            }
+            if (this.fechaFin) {
+                cajasFiltradas = cajasFiltradas.filter(caja => caja.fecha <= this.fechaFin);
+            }
+            
+            // Filtro por hora de apertura
+            if (this.horaAperturaFiltro) {
+                cajasFiltradas = cajasFiltradas.filter(caja => {
+                    const horaApertura = this.formatearHora(caja.horaApertura);
+                    return horaApertura.includes(this.horaAperturaFiltro);
+                });
+            }
+            
+            // Filtro por hora de cierre
+            if (this.horaCierreFiltro) {
+                cajasFiltradas = cajasFiltradas.filter(caja => {
+                    const horaCierre = this.formatearHora(caja.horaCierre);
+                    return horaCierre.includes(this.horaCierreFiltro);
+                });
+            }
+            
+            this.cajasFiltradas = cajasFiltradas;
+            this.paginaActual = 1;
         },
         async agregarCaja() {
             if (!this.nuevaCaja.nombre || !this.nuevaCaja.montoInicial) {
@@ -213,6 +248,10 @@ new Vue({
         },
         limpiarFiltros() {
             this.filtroBusqueda = '';
+            this.fechaInicio = '';
+            this.fechaFin = '';
+            this.horaAperturaFiltro = '';
+            this.horaCierreFiltro = '';
             this.filtrarCajas();
         },
         async cerrarCaja(caja) {
@@ -246,14 +285,38 @@ new Vue({
         },
         async verHistorial(caja) {
             try {
-                const response = await fetch(`${config.apiBaseUrl}/ventas`);
-                const todasLasVentas = await response.json();
+                const [ventasResponse, detalleVentasResponse] = await Promise.all([
+                    fetch(`${config.apiBaseUrl}/ventas`),
+                    fetch(`${config.apiBaseUrl}/detalle-ventas`)
+                ]);
+                
+                const todasLasVentas = await ventasResponse.json();
+                const detalleVentas = await detalleVentasResponse.json();
                 
                 const fechaCaja = caja.fecha;
-                this.historialVentas = todasLasVentas.filter(venta => {
+                const ventasDelDia = todasLasVentas.filter(venta => {
                     if (!venta.fechaVenta) return false;
                     const fechaVenta = typeof venta.fechaVenta === 'string' ? venta.fechaVenta : new Date(venta.fechaVenta).toISOString().split('T')[0];
                     return fechaVenta === fechaCaja;
+                });
+                
+                // Calcular totales por venta
+                this.historialVentas = ventasDelDia.map(venta => {
+                    const detallesVenta = detalleVentas.filter(detalle => detalle.venta && detalle.venta.id === venta.id);
+                    
+                    const totalServicios = detallesVenta
+                        .filter(detalle => detalle.servicio)
+                        .reduce((sum, detalle) => sum + (detalle.precioTotal || 0), 0);
+                        
+                    const totalProductos = detallesVenta
+                        .filter(detalle => detalle.producto)
+                        .reduce((sum, detalle) => sum + (detalle.precioTotal || 0), 0);
+                    
+                    return {
+                        ...venta,
+                        totalServicios,
+                        totalProductos
+                    };
                 });
                 
                 this.historialCaja = caja;
@@ -274,80 +337,133 @@ new Vue({
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
+                // Header profesional
+                doc.setLineWidth(2);
+                doc.line(20, 25, 190, 25);
+                
                 doc.setTextColor(0, 0, 0);
-                doc.setFontSize(20);
+                doc.setFontSize(24);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Peluquería LUNA', 20, 20);
+                doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
+                
+                doc.setLineWidth(0.5);
+                doc.line(20, 28, 190, 28);
                 
                 doc.setFontSize(16);
-                doc.text(`Historial de Caja: ${this.historialCaja.nombre}`, 20, 35);
-                
-                doc.setFontSize(10);
-                doc.text(`Fecha: ${this.formatearFecha(this.historialCaja.fecha)}`, 150, 15);
-                doc.text(`Total ventas: ${this.historialVentas.length}`, 150, 25);
-                
-                doc.setDrawColor(0, 0, 0);
-                doc.setLineWidth(1);
-                doc.line(20, 45, 190, 45);
-                
-                let y = 60;
-                
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(14);
-                doc.text('INFORMACIÓN DE LA CAJA', 20, y);
-                y += 15;
-                
                 doc.setFont('helvetica', 'normal');
+                doc.text('DETALLE DE CAJA', 105, 40, { align: 'center' });
+                
+                // Información de la caja
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text(this.historialCaja.nombre.toUpperCase(), 20, 55);
+                
                 doc.setFontSize(10);
-                doc.text(`Empleado: ${this.getEmpleadoName(this.historialCaja)}`, 25, y);
-                y += 6;
-                doc.text(`Apertura: ${this.formatearHora(this.historialCaja.horaApertura)}`, 25, y);
-                y += 6;
-                doc.text(`Cierre: ${this.formatearHora(this.historialCaja.horaCierre)}`, 25, y);
-                y += 6;
-                doc.text(`Monto Inicial: ${this.formatearNumero(this.historialCaja.montoInicial || 0)}`, 25, y);
-                y += 6;
-                doc.text(`Monto Final: ${this.formatearNumero(this.historialCaja.montoFinal || 0)}`, 25, y);
-                y += 15;
+                doc.setFont('helvetica', 'normal');
+                const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                doc.text(`Fecha: ${this.formatearFecha(this.historialCaja.fecha)}`, 20, 65);
+                doc.text(`Empleado: ${this.getEmpleadoName(this.historialCaja)}`, 20, 72);
+                doc.text(`Apertura: ${this.formatearHora(this.historialCaja.horaApertura)}`, 20, 79);
+                doc.text(`Cierre: ${this.formatearHora(this.historialCaja.horaCierre)}`, 20, 86);
                 
+                doc.text(`Fecha de generación: ${fechaGeneracion}`, 120, 55);
+                doc.text(`Monto inicial: ${this.formatearNumero(this.historialCaja.montoInicial || 0)}`, 120, 62);
+                doc.text(`Monto final: ${this.formatearNumero(this.historialCaja.montoFinal || 0)}`, 120, 69);
+                doc.text(`Total servicios: ${this.formatearNumero(this.historialCaja.totalServicios || 0)}`, 120, 76);
+                doc.text(`Total productos: ${this.formatearNumero(this.historialCaja.totalProductos || 0)}`, 120, 83);
+                doc.text(`Total descuentos: ${this.formatearNumero(this.historialCaja.totalDescuentos || 0)}`, 120, 90);
+                doc.text(`Estado: ${this.historialCaja.estado.toUpperCase()}`, 120, 97);
+                
+                // Tabla de ventas
                 if (this.historialVentas.length > 0) {
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(14);
-                    doc.text('VENTAS DEL DÍA', 20, y);
-                    y += 15;
+                    const headers = [['ID', 'CLIENTE', 'MONTO', 'MÉTODO\nPAGO', 'SERVICIOS', 'PRODUCTOS', 'DESCUENTOS']];
+                    const data = this.historialVentas.map((venta) => [
+                        venta.id.toString(),
+                        venta.cliente ? venta.cliente.nombreCompleto : 'N/A',
+                        this.formatearNumero(venta.montoTotal),
+                        venta.metodoPago || 'N/A',
+                        this.formatearNumero(venta.totalServicios || 0),
+                        this.formatearNumero(venta.totalProductos || 0),
+                        this.formatearNumero(venta.descuentoAplicado || 0)
+                    ]);
                     
-                    this.historialVentas.forEach((venta, index) => {
-                        if (y > 250) {
-                            doc.addPage();
-                            y = 20;
+                    const totalVentas = this.historialVentas.reduce((sum, venta) => sum + (venta.montoTotal || 0), 0);
+                    const totalServicios = this.historialVentas.reduce((sum, venta) => sum + (venta.totalServicios || 0), 0);
+                    const totalProductos = this.historialVentas.reduce((sum, venta) => sum + (venta.totalProductos || 0), 0);
+                    const totalDescuentos = this.historialVentas.reduce((sum, venta) => sum + (venta.descuentoAplicado || 0), 0);
+                    
+                    const tableConfig = {
+                        head: headers,
+                        body: data,
+                        startY: 105,
+                        styles: { 
+                            fontSize: 9,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            cellPadding: 4,
+                            lineColor: [0, 0, 0],
+                            lineWidth: 0.1
+                        },
+                        headStyles: { 
+                            fontSize: 10,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'center',
+                            cellPadding: 5
+                        },
+                        bodyStyles: {
+                            fontSize: 9,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica'
+                        },
+                        alternateRowStyles: {
+                            fillColor: [255, 255, 255]
+                        },
+                        columnStyles: {
+                            0: { cellWidth: 'auto', halign: 'center' },
+                            1: { cellWidth: 'auto' },
+                            2: { cellWidth: 'auto', halign: 'right' },
+                            3: { cellWidth: 'auto', halign: 'center' },
+                            4: { cellWidth: 'auto', halign: 'right' },
+                            5: { cellWidth: 'auto', halign: 'right' },
+                            6: { cellWidth: 'auto', halign: 'right' }
+                        },
+                        margin: { left: 10, right: 10, bottom: 40 },
+                        foot: [['', 'TOTALES:', this.formatearNumero(totalVentas), '', this.formatearNumero(totalServicios), this.formatearNumero(totalProductos), this.formatearNumero(totalDescuentos)]],
+                        footStyles: { 
+                            fontSize: 10,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'right'
                         }
-                        
-                        doc.setFont('helvetica', 'bold');
-                        doc.setFontSize(10);
-                        doc.text(`${index + 1}. Venta ID: ${venta.id}`, 25, y);
-                        y += 6;
-                        
-                        doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(9);
-                        doc.text(`   Cliente: ${venta.cliente ? venta.cliente.nombreCompleto : 'N/A'}`, 30, y);
-                        y += 5;
-                        doc.text(`   Monto: ${this.formatearNumero(venta.montoTotal)}`, 30, y);
-                        y += 5;
-                        doc.text(`   Método: ${venta.metodoPago || 'N/A'}`, 30, y);
-                        y += 8;
-                    });
+                    };
+                    
+                    doc.autoTable(tableConfig);
+                } else {
+                    doc.setFontSize(12);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('No hay ventas registradas para esta caja', 105, 115, { align: 'center' });
                 }
                 
-                const pageCount = doc.internal.getNumberOfPages();
-                for (let i = 1; i <= pageCount; i++) {
-                    doc.setPage(i);
-                    doc.setDrawColor(0, 0, 0);
-                    doc.line(20, 280, 190, 280);
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFontSize(8);
-                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
-                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
-                }
+                // Footer profesional
+                const pageHeight = doc.internal.pageSize.height;
+                doc.setLineWidth(0.5);
+                doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Página 1 de 1', 20, pageHeight - 15);
+                doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
                 
                 const fecha = new Date().toISOString().split('T')[0];
                 doc.save(`historial-caja-${this.historialCaja.nombre}-${fecha}.pdf`);
@@ -402,14 +518,12 @@ new Vue({
         async calcularTotales() {
             if (!this.nuevaCaja.id) return;
             try {
-                const [detalleVentaRes, ventasRes, movimientosRes] = await Promise.all([
-                    fetch(`${config.apiBaseUrl}/detalle-venta`),
-                    fetch(`${config.apiBaseUrl}/ventas`),
-                    fetch(`${config.apiBaseUrl}/movimientos-caja`)
+                const [detalleVentaRes, ventasRes] = await Promise.all([
+                    fetch(`${config.apiBaseUrl}/detalle-ventas`),
+                    fetch(`${config.apiBaseUrl}/ventas`)
                 ]);
                 const detalleVentas = await detalleVentaRes.json();
                 const ventas = await ventasRes.json();
-                const movimientos = await movimientosRes.json();
                 
                 const fechaCaja = this.nuevaCaja.fecha;
                 const ventasDelDia = ventas.filter(venta => 
@@ -423,24 +537,17 @@ new Vue({
                 
                 this.nuevaCaja.totalServicios = detallesDelDia
                     .filter(detalle => detalle.servicio)
-                    .reduce((sum, detalle) => sum + (detalle.cantidad * detalle.precioUnitario || 0), 0);
+                    .reduce((sum, detalle) => sum + (detalle.precioTotal || 0), 0);
                     
                 this.nuevaCaja.totalProductos = detallesDelDia
                     .filter(detalle => detalle.producto)
-                    .reduce((sum, detalle) => sum + (detalle.cantidad * detalle.precioUnitario || 0), 0);
+                    .reduce((sum, detalle) => sum + (detalle.precioTotal || 0), 0);
                     
-                this.nuevaCaja.totalDescuentos = ventasDelDia.reduce((sum, venta) => sum + (venta.descuentoAplicado || 0), 0);
+                const totalDescuentosDetalles = detallesDelDia.reduce((sum, detalle) => sum + (detalle.descuento || 0), 0);
+                const totalDescuentosGenerales = ventasDelDia.reduce((sum, venta) => sum + (venta.descuentoAplicado || 0), 0);
+                this.nuevaCaja.totalDescuentos = totalDescuentosDetalles + totalDescuentosGenerales;
                 
-                // Calcular monto final
-                const montoTotal = this.nuevaCaja.totalServicios + this.nuevaCaja.totalProductos;
-                const movimientosDelDia = movimientos.filter(mov => 
-                    mov.fecha && mov.fecha.startsWith(fechaCaja) && mov.cajaId === this.nuevaCaja.id
-                );
-                const totalMovimientos = movimientosDelDia.reduce((sum, mov) => {
-                    return mov.tipo === 'ingreso' ? sum + mov.monto : sum - mov.monto;
-                }, 0);
-                
-                this.nuevaCaja.montoFinal = this.nuevaCaja.montoInicial + montoTotal + totalMovimientos;
+                this.nuevaCaja.montoFinal = this.nuevaCaja.montoInicial + this.nuevaCaja.totalServicios + this.nuevaCaja.totalProductos - this.nuevaCaja.totalDescuentos;
             } catch (error) {
                 console.error('Error al calcular totales:', error);
             }
@@ -495,64 +602,111 @@ new Vue({
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
+                // Header profesional
+                doc.setLineWidth(2);
+                doc.line(20, 25, 190, 25);
+                
                 doc.setTextColor(0, 0, 0);
-                doc.setFontSize(20);
+                doc.setFontSize(24);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Peluquería LUNA', 20, 20);
+                doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
+                
+                doc.setLineWidth(0.5);
+                doc.line(20, 28, 190, 28);
                 
                 doc.setFontSize(16);
-                doc.text('Reporte de Cajas', 20, 35);
+                doc.setFont('helvetica', 'normal');
+                doc.text('REPORTE DE CAJAS', 105, 40, { align: 'center' });
                 
+                // Información del reporte
                 doc.setFontSize(10);
-                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
-                doc.text(`Total de cajas: ${this.cajasFiltradas.length}`, 150, 25);
-                
-                doc.setDrawColor(0, 0, 0);
-                doc.setLineWidth(1);
-                doc.line(20, 45, 190, 45);
-                
-                let y = 60;
-                
-                this.cajasFiltradas.forEach((caja, index) => {
-                    if (y > 250) {
-                        doc.addPage();
-                        y = 20;
-                    }
-                    
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(12);
-                    doc.text(`${index + 1}. ${caja.nombre || 'Sin nombre'}`, 20, y);
-                    y += 8;
-                    
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(10);
-                    
-                    doc.text(`   Fecha: ${this.formatearFecha(caja.fecha)}`, 25, y);
-                    y += 6;
-                    doc.text(`   Empleado: ${this.getEmpleadoName(caja)}`, 25, y);
-                    y += 6;
-                    doc.text(`   Apertura: ${this.formatearHora(caja.horaApertura)}`, 25, y);
-                    y += 6;
-                    doc.text(`   Cierre: ${this.formatearHora(caja.horaCierre)}`, 25, y);
-                    y += 6;
-                    doc.text(`   Monto Inicial: ${this.formatearNumero(caja.montoInicial || 0)}`, 25, y);
-                    y += 6;
-                    doc.text(`   Monto Final: ${this.formatearNumero(caja.montoFinal || 0)}`, 25, y);
-                    y += 6;
-                    doc.text(`   Estado: ${caja.estado.toUpperCase()}`, 25, y);
-                    y += 10;
+                doc.setFont('helvetica', 'normal');
+                const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
                 });
+                doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                doc.text(`Total de cajas: ${this.cajasFiltradas.length}`, 20, 62);
                 
-                const pageCount = doc.internal.getNumberOfPages();
-                for (let i = 1; i <= pageCount; i++) {
-                    doc.setPage(i);
-                    doc.setDrawColor(0, 0, 0);
-                    doc.line(20, 280, 190, 280);
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFontSize(8);
-                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
-                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                // Tabla de cajas
+                if (this.cajasFiltradas.length > 0) {
+                    const headers = [['NOMBRE', 'FECHA', 'EMPLEADO', 'APERTURA', 'CIERRE', 'M.\nINICIAL', 'M.\nFINAL', 'T.\nSERVICIOS', 'T.\nPRODUCTOS', 'T.\nDESCUENTOS', 'ESTADO']];
+                    const data = this.cajasFiltradas.map((caja) => [
+                        caja.nombre || 'Sin nombre',
+                        this.formatearFecha(caja.fecha),
+                        this.getEmpleadoName(caja),
+                        this.formatearHora(caja.horaApertura),
+                        this.formatearHora(caja.horaCierre),
+                        this.formatearNumero(caja.montoInicial || 0),
+                        this.formatearNumero(caja.montoFinal || 0),
+                        this.formatearNumero(caja.totalServicios || 0),
+                        this.formatearNumero(caja.totalProductos || 0),
+                        this.formatearNumero(caja.totalDescuentos || 0),
+                        caja.estado.toUpperCase()
+                    ]);
+                    
+                    const tableConfig = {
+                        head: headers,
+                        body: data,
+                        startY: 75,
+                        tableWidth: 'wrap',
+                        styles: { 
+                            fontSize: 6,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            cellPadding: 2,
+                            lineColor: [0, 0, 0],
+                            lineWidth: 0.1,
+                            overflow: 'linebreak'
+                        },
+                        headStyles: { 
+                            fontSize: 7,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'center',
+                            cellPadding: 3
+                        },
+                        bodyStyles: {
+                            fontSize: 6,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica'
+                        },
+                        alternateRowStyles: {
+                            fillColor: [255, 255, 255]
+                        },
+                        columnStyles: {
+                            0: { cellWidth: 'auto' },
+                            1: { cellWidth: 'auto', halign: 'center' },
+                            2: { cellWidth: 'auto' },
+                            3: { cellWidth: 'auto', halign: 'center' },
+                            4: { cellWidth: 'auto', halign: 'center' },
+                            5: { cellWidth: 'auto', halign: 'right' },
+                            6: { cellWidth: 'auto', halign: 'right' },
+                            7: { cellWidth: 'auto', halign: 'right' },
+                            8: { cellWidth: 'auto', halign: 'right' },
+                            9: { cellWidth: 'auto', halign: 'right' },
+                            10: { cellWidth: 'auto', halign: 'center' }
+                        },
+                        margin: { left: 10, right: 10, bottom: 40 }
+                    };
+                    
+                    doc.autoTable(tableConfig);
                 }
+                
+                // Footer profesional
+                const pageHeight = doc.internal.pageSize.height;
+                doc.setLineWidth(0.5);
+                doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Página 1 de 1', 20, pageHeight - 15);
+                doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
                 
                 const fecha = new Date().toISOString().split('T')[0];
                 doc.save(`reporte-cajas-${fecha}.pdf`);
@@ -567,45 +721,101 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <style>
-                    .filters-container { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
-                    .filter-field { display: flex; flex-direction: column; min-width: 200px; }
-                    .filter-field label { margin-bottom: 5px; font-weight: bold; }
-                    .badge-abierto { background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-                    .badge-cerrado { background: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-                    .btn-secondary { background: #6c757d !important; color: white !important; }
-                    .btn-secondary:hover { background: #5a6268 !important; }
-                </style>
                 <h1 class="page-title">Gestión de Cajas</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
-
-                    <div class="filters-container" style="display: flex; gap: 25px; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; width: fit-content;">
-                        <div class="filter-group" style="min-width: 400px;">
+                    
+                    <div class="filters-container" style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap; width: fit-content; padding: 15px; margin: 15px 0;">
+                        <div class="filter-group" style="flex: none; width: auto;">
                             <label>Buscar Caja:</label>
-                            <input type="text" v-model="filtroBusqueda" @input="filtrarCajas" placeholder="Buscar por nombre, empleado, apertura, cierre, monto o estado..." class="search-bar" style="width: 400px;"/>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarCajas" placeholder="Buscar por nombre, empleado, monto, estado..." class="search-bar" style="width: 300px;"/>
                         </div>
-                        <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
-                        <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nueva Caja</button>
-                        <button @click="exportarPDF()" class="btn btn-small"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+                        <div class="filter-group" style="flex: none; width: auto;">
+                            <label>Fecha Inicio:</label>
+                            <input type="date" v-model="fechaInicio" @change="filtrarCajas" style="padding: 8px; border: 2px solid #ddd; border-radius: 5px;"/>
+                        </div>
+                        <div class="filter-group" style="flex: none; width: auto;">
+                            <label>Fecha Fin:</label>
+                            <input type="date" v-model="fechaFin" @change="filtrarCajas" style="padding: 8px; border: 2px solid #ddd; border-radius: 5px;"/>
+                        </div>
+                        <div class="filter-group" style="flex: none; width: auto;">
+                            <label>Hora Apertura:</label>
+                            <input type="time" v-model="horaAperturaFiltro" @change="filtrarCajas" style="padding: 8px; border: 2px solid #ddd; border-radius: 5px;"/>
+                        </div>
+                        <div class="filter-group" style="flex: none; width: auto;">
+                            <label>Hora Cierre:</label>
+                            <input type="time" v-model="horaCierreFiltro" @change="filtrarCajas" style="padding: 8px; border: 2px solid #ddd; border-radius: 5px;"/>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: end;">
+                            <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
+                            <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nueva Caja</button>
+                            <button @click="exportarPDF()" class="btn btn-small">
+                                <i class="fas fa-file-pdf"></i> Exportar PDF
+                            </button>
+                        </div>
                     </div>
                     
-                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 1000px;">
+                    <div v-if="formularioVisible" class="form-container">
                         <h3>{{ nuevaCaja.id ? 'Modificar Caja - ' + cajaSeleccionada : 'Nueva Caja' }}</h3>
-                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 15px;">
-                            <div><label>Nombre: *</label><input type="text" v-model="nuevaCaja.nombre" placeholder="Nombre de la caja" required/></div>
-                            <div><label>Fecha: *</label><input type="date" v-model="nuevaCaja.fecha" :readonly="nuevaCaja.id" required/></div>
-                            <div><label>Hora Apertura:</label><input type="time" v-model="nuevaCaja.horaApertura" step="1"/></div>
-                            <div><label>Hora Cierre:</label><input type="time" v-model="nuevaCaja.horaCierre" step="1"/></div>
-                            <div><label>Monto Inicial: *</label><input type="number" v-model="nuevaCaja.montoInicial" placeholder="0" :readonly="nuevaCaja.id" required/></div>
-                            <div><label>Monto Final:</label><input type="number" v-model="nuevaCaja.montoFinal" placeholder="0" readonly/></div>
-                            <div><label>Empleado:</label><select v-model="nuevaCaja.empleadoId" :disabled="nuevaCaja.id"><option value="" disabled>Seleccionar Empleado</option><option v-for="empleado in empleados" :key="empleado.id" :value="empleado.id">{{ empleado.nombreCompleto }}</option></select></div>
-                            <div><label>Estado:</label><select v-model="nuevaCaja.estado" @change="onEstadoChange" required><option value="abierto">Abierto</option><option value="cerrado">Cerrado</option></select></div>
-                            <div><label>Total Servicios:</label><input type="number" v-model="nuevaCaja.totalServicios" placeholder="0" readonly/></div>
-                            <div><label>Total Productos:</label><input type="number" v-model="nuevaCaja.totalProductos" placeholder="0" readonly/></div>
-                            <div><label>Total Descuentos:</label><input type="number" v-model="nuevaCaja.totalDescuentos" placeholder="0" readonly/></div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label>Nombre: *</label>
+                                <input type="text" v-model="nuevaCaja.nombre" placeholder="Nombre de la caja" required/>
+                            </div>
+                            <div class="form-col">
+                                <label>Fecha: *</label>
+                                <input type="date" v-model="nuevaCaja.fecha" :readonly="nuevaCaja.id" required/>
+                            </div>
+                            <div class="form-col">
+                                <label>Hora Apertura:</label>
+                                <input type="time" v-model="nuevaCaja.horaApertura" step="1"/>
+                            </div>
                         </div>
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label>Hora Cierre:</label>
+                                <input type="time" v-model="nuevaCaja.horaCierre" step="1"/>
+                            </div>
+                            <div class="form-col">
+                                <label>Monto Inicial: *</label>
+                                <input type="number" v-model="nuevaCaja.montoInicial" placeholder="0" :readonly="nuevaCaja.id" required/>
+                            </div>
+                            <div class="form-col">
+                                <label>Monto Final:</label>
+                                <input type="number" v-model="nuevaCaja.montoFinal" placeholder="0" readonly/>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label>Empleado:</label>
+                                <select v-model="nuevaCaja.empleadoId" :disabled="nuevaCaja.id">
+                                    <option value="" disabled>Seleccionar Empleado</option>
+                                    <option v-for="empleado in empleados" :key="empleado.id" :value="empleado.id">{{ empleado.nombreCompleto }}</option>
+                                </select>
+                            </div>
+                            <div class="form-col">
+                                <label>Estado:</label>
+                                <select v-model="nuevaCaja.estado" @change="onEstadoChange" required>
+                                    <option value="abierto">Abierto</option>
+                                    <option value="cerrado">Cerrado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label>Total Servicios:</label>
+                                <input type="number" v-model="nuevaCaja.totalServicios" placeholder="0" readonly/>
+                            </div>
+                            <div class="form-col">
+                                <label>Total Productos:</label>
+                                <input type="number" v-model="nuevaCaja.totalProductos" placeholder="0" readonly/>
+                            </div>
+                            <div class="form-col">
+                                <label>Total Descuentos:</label>
+                                <input type="number" v-model="nuevaCaja.totalDescuentos" placeholder="0" readonly/>
+                            </div>
+                        </div>
+                        <div class="form-buttons">
                             <button @click="nuevaCaja.id ? modificarCaja() : agregarCaja()" class="btn">
                                 {{ nuevaCaja.id ? 'Modificar' : 'Agregar' }}
                             </button>
@@ -621,11 +831,11 @@ new Vue({
                                 <th>Empleado</th>
                                 <th>Apertura</th>
                                 <th>Cierre</th>
-                                <th>M. Inicial</th>
-                                <th>M. Final</th>
-                                <th>T. Servicios</th>
-                                <th>T. Productos</th>
-                                <th>T. Descuentos</th>
+                                <th>M.<br>Inicial</th>
+                                <th>M.<br>Final</th>
+                                <th>T.<br>Servicios</th>
+                                <th>T.<br>Productos</th>
+                                <th>T.<br>Descuentos</th>
                                 <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
@@ -658,20 +868,20 @@ new Vue({
                     </div>
                     
                     <div class="total">
-                        <strong>Total Servicios: {{ formatearNumero(totalServicios) }} | Total Productos: {{ formatearNumero(totalProductos) }}</strong>
+                        <strong>Total Servicios: {{ formatearNumero(totalServicios) }} | Total Productos: {{ formatearNumero(totalProductos) }} | Total Descuentos: {{ formatearNumero(totalDescuentos) }}</strong>
                     </div>
                     
                     <div v-if="historialVisible" class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
                         <div class="modal-content" style="background: white; padding: 20px; border-radius: 10px; max-width: 800px; max-height: 80vh; overflow-y: auto; width: 90%;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                <h3>Historial de {{ historialCaja.nombre }}</h3>
+                                <h3>Historial de {{ historialCaja ? historialCaja.nombre : '' }}</h3>
                                 <div>
                                     <button @click="exportarHistorialPDF()" class="btn btn-small"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
                                     <button @click="cerrarHistorial()" class="btn btn-secondary btn-small">Cerrar</button>
                                 </div>
                             </div>
                             
-                            <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                            <div v-if="historialCaja" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
                                 <h4>Información de la Caja</h4>
                                 <p><strong>Fecha:</strong> {{ formatearFecha(historialCaja.fecha) }}</p>
                                 <p><strong>Empleado:</strong> {{ getEmpleadoName(historialCaja) }}</p>
@@ -690,6 +900,9 @@ new Vue({
                                             <th style="border: 1px solid #ddd; padding: 8px;">Cliente</th>
                                             <th style="border: 1px solid #ddd; padding: 8px;">Monto</th>
                                             <th style="border: 1px solid #ddd; padding: 8px;">Método</th>
+                                            <th style="border: 1px solid #ddd; padding: 8px;">Servicios</th>
+                                            <th style="border: 1px solid #ddd; padding: 8px;">Productos</th>
+                                            <th style="border: 1px solid #ddd; padding: 8px;">Descuentos</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -698,6 +911,9 @@ new Vue({
                                             <td style="border: 1px solid #ddd; padding: 8px;">{{ venta.cliente ? venta.cliente.nombreCompleto : 'N/A' }}</td>
                                             <td style="border: 1px solid #ddd; padding: 8px;">{{ formatearNumero(venta.montoTotal) }}</td>
                                             <td style="border: 1px solid #ddd; padding: 8px;">{{ venta.metodoPago || 'N/A' }}</td>
+                                            <td style="border: 1px solid #ddd; padding: 8px;">{{ formatearNumero(venta.totalServicios || 0) }}</td>
+                                            <td style="border: 1px solid #ddd; padding: 8px;">{{ formatearNumero(venta.totalProductos || 0) }}</td>
+                                            <td style="border: 1px solid #ddd; padding: 8px;">{{ formatearNumero(venta.descuentoAplicado || 0) }}</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -713,6 +929,90 @@ new Vue({
     `
 });
 
-
-
-
+// CSS styling to match clientes page
+const style = document.createElement('style');
+style.textContent = `
+    .filters-container {
+        display: flex;
+        gap: 15px;
+        align-items: end;
+        margin-bottom: 20px;
+        padding: 15px;
+        background: rgba(252, 228, 236, 0.9);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1);
+        border: 1px solid rgba(179, 229, 252, 0.3);
+        flex-wrap: wrap;
+        width: fit-content;
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        min-width: fit-content;
+    }
+    .filter-group label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #5d4037;
+    }
+    .search-bar {
+        padding: 8px 12px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+        width: 300px;
+    }
+    .search-bar:focus {
+        border-color: #5d4037;
+        outline: none;
+    }
+    .badge-abierto {
+        background: #28a745;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    .badge-cerrado {
+        background: #dc3545;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    table th {
+        background: linear-gradient(135deg, #ad1457, #c2185b);
+        color: white;
+        font-weight: 600;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        font-size: 14px;
+        padding: 15px 12px;
+        text-align: left;
+        border-bottom: 1px solid rgba(248, 187, 208, 0.3);
+    }
+    table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #e0e0e0;
+        font-size: 13px;
+    }
+    table tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+    table tbody tr:nth-child(even) {
+        background-color: #fafafa;
+    }
+`;
+document.head.appendChild(style);

@@ -167,65 +167,106 @@ new Vue({
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
+                // Header profesional
+                doc.setLineWidth(2);
+                doc.line(20, 25, 190, 25);
+                
                 doc.setTextColor(0, 0, 0);
-                doc.setFontSize(20);
+                doc.setFontSize(24);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Peluquería LUNA', 20, 20);
+                doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
+                
+                doc.setLineWidth(0.5);
+                doc.line(20, 28, 190, 28);
                 
                 doc.setFontSize(16);
-                doc.text('Reporte de Ventas', 20, 35);
+                doc.setFont('helvetica', 'normal');
+                doc.text('REPORTE DE VENTAS', 105, 40, { align: 'center' });
                 
+                // Información del reporte
                 doc.setFontSize(10);
-                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
-                doc.text(`Total de ventas: ${this.ventasFiltradas.length}`, 150, 25);
-                
-                doc.setDrawColor(0, 0, 0);
-                doc.setLineWidth(1);
-                doc.line(20, 45, 190, 45);
-                
-                let y = 60;
-                
-                this.ventasFiltradas.forEach((venta, index) => {
-                    if (y > 250) {
-                        doc.addPage();
-                        y = 20;
-                    }
-                    
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(12);
-                    doc.text(`${index + 1}. Venta ID: ${venta.id}`, 20, y);
-                    y += 8;
-                    
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(10);
-                    
-                    doc.text(`   Cliente: ${this.getClienteName(venta)}`, 25, y);
-                    y += 6;
-                    doc.text(`   Empleado: ${this.getEmpleadoName(venta)}`, 25, y);
-                    y += 6;
-                    doc.text(`   Fecha: ${this.formatearFecha(venta.fechaVenta)}`, 25, y);
-                    y += 6;
-                    doc.text(`   Monto: ${this.formatearNumero(venta.montoTotal)}`, 25, y);
-                    y += 6;
-                    doc.text(`   Método de Pago: ${venta.metodoPago || 'N/A'}`, 25, y);
-                    y += 10;
+                doc.setFont('helvetica', 'normal');
+                const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
                 });
+                doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                doc.text(`Total de ventas: ${this.ventasFiltradas.length}`, 20, 62);
                 
-                y += 10;
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(14);
-                doc.text(`TOTAL: ${this.formatearNumero(this.totalVentas)}`, 20, y);
-                
-                const pageCount = doc.internal.getNumberOfPages();
-                for (let i = 1; i <= pageCount; i++) {
-                    doc.setPage(i);
-                    doc.setDrawColor(0, 0, 0);
-                    doc.line(20, 280, 190, 280);
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFontSize(8);
-                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
-                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                // Tabla de ventas
+                if (this.ventasFiltradas.length > 0) {
+                    const headers = [['CLIENTE', 'EMPLEADO', 'FECHA', 'MONTO', 'MÉTODO PAGO']];
+                    const data = this.ventasFiltradas.map((venta) => [
+                        this.getClienteName(venta),
+                        this.getEmpleadoName(venta),
+                        this.formatearFecha(venta.fechaVenta),
+                        this.formatearNumero(venta.montoTotal),
+                        venta.metodoPago || 'N/A'
+                    ]);
+                    
+                    const tableConfig = {
+                        head: headers,
+                        body: data,
+                        startY: 75,
+                        styles: { 
+                            fontSize: 9,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            cellPadding: 4,
+                            lineColor: [0, 0, 0],
+                            lineWidth: 0.1
+                        },
+                        headStyles: { 
+                            fontSize: 10,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'center',
+                            cellPadding: 5
+                        },
+                        bodyStyles: {
+                            fontSize: 9,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica'
+                        },
+                        alternateRowStyles: {
+                            fillColor: [255, 255, 255]
+                        },
+                        columnStyles: {
+                            0: { cellWidth: 'auto' },
+                            1: { cellWidth: 'auto' },
+                            2: { cellWidth: 'auto', halign: 'center' },
+                            3: { cellWidth: 'auto', halign: 'right' },
+                            4: { cellWidth: 'auto', halign: 'center' }
+                        },
+                        margin: { bottom: 40 },
+                        foot: [['', '', '', 'TOTAL FINAL:', this.formatearNumero(this.totalVentas)]],
+                        footStyles: { 
+                            fontSize: 10,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'right'
+                        }
+                    };
+                    
+                    doc.autoTable(tableConfig);
                 }
+                
+                // Footer profesional
+                const pageHeight = doc.internal.pageSize.height;
+                doc.setLineWidth(0.5);
+                doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Página 1 de 1', 20, pageHeight - 15);
+                doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
                 
                 const fecha = new Date().toISOString().split('T')[0];
                 doc.save(`reporte-ventas-${fecha}.pdf`);
@@ -262,24 +303,20 @@ new Vue({
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Cliente</th>
                                 <th>Empleado</th>
                                 <th>Fecha</th>
                                 <th>Monto Total</th>
                                 <th>Método Pago</th>
-
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="venta in ventasPaginadas" :key="venta.id">
-                                <td>{{ venta.id }}</td>
                                 <td>{{ getClienteName(venta) }}</td>
                                 <td>{{ getEmpleadoName(venta) }}</td>
                                 <td>{{ formatearFecha(venta.fechaVenta) }}</td>
                                 <td>{{ formatearNumero(venta.montoTotal) }}</td>
                                 <td>{{ venta.metodoPago }}</td>
-
                             </tr>
                         </tbody>
                     </table>
