@@ -159,23 +159,34 @@ new Vue({
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
+                // Header profesional
+                doc.setLineWidth(2);
+                doc.line(20, 25, 190, 25);
+                
                 doc.setTextColor(0, 0, 0);
-                doc.setFontSize(20);
+                doc.setFontSize(24);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Peluquería LUNA', 20, 20);
+                doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
+                
+                doc.setLineWidth(0.5);
+                doc.line(20, 28, 190, 28);
                 
                 doc.setFontSize(16);
-                doc.text('Calendario de Turnos', 20, 35);
+                doc.setFont('helvetica', 'normal');
+                doc.text('CALENDARIO DE TURNOS', 105, 40, { align: 'center' });
                 
+                // Información del reporte
                 doc.setFontSize(10);
-                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
-                doc.text(`Total: ${this.turnosFiltrados.length} turnos`, 150, 25);
+                doc.setFont('helvetica', 'normal');
+                const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                doc.text(`Total de turnos: ${this.turnosFiltrados.length}`, 20, 62);
                 
-                doc.setDrawColor(0, 0, 0);
-                doc.setLineWidth(1);
-                doc.line(20, 45, 190, 45);
-                
-                const headers = [['Cliente', 'Servicio', 'Empleado', 'Fecha', 'Hora', 'Estado']];
+                const headers = [['CLIENTE', 'SERVICIO', 'EMPLEADO', 'FECHA', 'HORA', 'ESTADO']];
                 const data = this.turnosFiltrados.map(turno => [
                     turno.cliente ? turno.cliente.nombreCompleto : 'Sin cliente',
                     turno.servicio ? turno.servicio.nombre : 'Sin servicio',
@@ -188,18 +199,56 @@ new Vue({
                 doc.autoTable({
                     head: headers,
                     body: data,
-                    startY: 50,
+                    startY: 68,
                     styles: { 
                         fontSize: 8,
                         textColor: [0, 0, 0],
-                        fillColor: [255, 255, 255]
+                        fillColor: [255, 255, 255],
+                        font: 'helvetica',
+                        cellPadding: 2,
+                        lineColor: [0, 0, 0],
+                        lineWidth: 0.1,
+                        overflow: 'linebreak'
                     },
                     headStyles: { 
+                        fontSize: 8,
                         fillColor: [255, 255, 255],
                         textColor: [0, 0, 0],
-                        fontStyle: 'bold'
-                    }
+                        fontStyle: 'bold',
+                        font: 'helvetica',
+                        halign: 'center',
+                        cellPadding: 3
+                    },
+                    bodyStyles: {
+                        fontSize: 8,
+                        textColor: [0, 0, 0],
+                        fillColor: [255, 255, 255],
+                        font: 'helvetica',
+                        overflow: 'linebreak'
+                    },
+                    alternateRowStyles: {
+                        fillColor: [255, 255, 255]
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 'auto', overflow: 'linebreak' },
+                        1: { cellWidth: 'auto', overflow: 'linebreak' },
+                        2: { cellWidth: 'auto', overflow: 'linebreak' },
+                        3: { cellWidth: 'auto', halign: 'center' },
+                        4: { cellWidth: 'auto', halign: 'center' },
+                        5: { cellWidth: 'auto', halign: 'center' }
+                    },
+                    margin: { bottom: 40 }
                 });
+                
+                // Footer profesional
+                const pageHeight = doc.internal.pageSize.height;
+                doc.setLineWidth(0.5);
+                doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Página 1 de 1', 20, pageHeight - 15);
+                doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
                 
                 const fecha = new Date().toISOString().split('T')[0];
                 doc.save(`calendario-turnos-${fecha}.pdf`);

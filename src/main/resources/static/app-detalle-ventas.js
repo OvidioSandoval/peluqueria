@@ -160,31 +160,45 @@ new Vue({
         
         exportarPDF() {
             try {
-                const doc = new window.jspdf.jsPDF();
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Header profesional
+                doc.setLineWidth(2);
+                doc.line(20, 25, 190, 25);
                 
                 doc.setTextColor(0, 0, 0);
-                doc.setFontSize(20);
+                doc.setFontSize(24);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Peluquería LUNA', 20, 20);
+                doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
+                
+                doc.setLineWidth(0.5);
+                doc.line(20, 28, 190, 28);
                 
                 doc.setFontSize(16);
-                doc.setTextColor(0, 0, 0);
-                doc.text('Detalle de Ventas', 20, 35);
+                doc.setFont('helvetica', 'normal');
+                doc.text('DETALLE DE VENTAS', 105, 40, { align: 'center' });
                 
+                // Información del reporte
                 doc.setFontSize(10);
-                doc.setTextColor(0, 0, 0);
-                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
-                doc.text(`Total registros: ${this.detallesFiltrados.length}`, 150, 25);
+                doc.setFont('helvetica', 'normal');
+                const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                doc.text(`Total de registros: ${this.detallesFiltrados.length}`, 20, 62);
                 
-                const headers = [['Venta', 'Fecha', 'Servicio/Producto', 'Cantidad', 'Precio', 'Desc.%', 'Total']];
+                const headers = [['VENTA', 'FECHA', 'SERVICIO/PRODUCTO', 'CANTIDAD', 'PRECIO', 'DESC.%', 'TOTAL']];
                 const data = this.detallesFiltrados.map(detalle => [
                     detalle.venta ? 'Venta #' + detalle.venta.id : 'N/A',
-                    detalle.venta ? this.formatearFecha(detalle.venta.fechaVenta) : 'N/A',
+                    detalle.venta && detalle.venta.fechaVenta ? this.formatearFecha(detalle.venta.fechaVenta) : 'N/A',
                     detalle.servicio ? detalle.servicio.nombre : (detalle.producto ? detalle.producto.nombre : 'N/A'),
                     this.formatearNumero(detalle.cantidad),
-                    '$' + this.formatearNumero(detalle.precioUnitarioBruto),
+                    this.formatearNumero(detalle.precioUnitarioBruto),
                     detalle.descuento + '%',
-                    '$' + this.formatearNumero(detalle.precioTotal)
+                    this.formatearNumero(detalle.precioTotal)
                 ]);
                 
                 const totalGeneral = this.detallesFiltrados.reduce((sum, detalle) => sum + (detalle.precioTotal || 0), 0);
@@ -192,31 +206,66 @@ new Vue({
                 doc.autoTable({
                     head: headers,
                     body: data,
-                    startY: 45,
+                    startY: 68,
+                    tableWidth: 'wrap',
                     styles: { 
                         fontSize: 8,
                         textColor: [0, 0, 0],
-                        fillColor: [255, 255, 255]
+                        fillColor: [255, 255, 255],
+                        font: 'helvetica',
+                        cellPadding: 3,
+                        lineColor: [0, 0, 0],
+                        lineWidth: 0.1,
+                        overflow: 'linebreak'
                     },
                     headStyles: { 
+                        fontSize: 9,
                         fillColor: [255, 255, 255],
                         textColor: [0, 0, 0],
-                        fontStyle: 'bold'
+                        fontStyle: 'bold',
+                        font: 'helvetica',
+                        halign: 'center',
+                        cellPadding: 4
                     },
                     bodyStyles: {
+                        fontSize: 8,
                         textColor: [0, 0, 0],
-                        fillColor: [255, 255, 255]
+                        fillColor: [255, 255, 255],
+                        font: 'helvetica'
                     },
                     alternateRowStyles: {
                         fillColor: [255, 255, 255]
                     },
-                    foot: [['', '', '', '', '', 'TOTAL:', '$' + this.formatearNumero(totalGeneral)]],
+                    columnStyles: {
+                        0: { cellWidth: 'auto', halign: 'center' },
+                        1: { cellWidth: 'auto', halign: 'center' },
+                        2: { cellWidth: 'auto' },
+                        3: { cellWidth: 'auto', halign: 'center' },
+                        4: { cellWidth: 'auto', halign: 'right' },
+                        5: { cellWidth: 'auto', halign: 'center' },
+                        6: { cellWidth: 'auto', halign: 'right' }
+                    },
+                    foot: [['', '', '', '', '', 'TOTAL:', this.formatearNumero(totalGeneral)]],
                     footStyles: { 
+                        fontSize: 10,
                         fillColor: [255, 255, 255],
                         textColor: [0, 0, 0],
-                        fontStyle: 'bold'
-                    }
+                        fontStyle: 'bold',
+                        font: 'helvetica',
+                        halign: 'right'
+                    },
+                    margin: { left: 10, right: 10, bottom: 40 }
                 });
+                
+                // Footer profesional
+                const pageHeight = doc.internal.pageSize.height;
+                doc.setLineWidth(0.5);
+                doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Página 1 de 1', 20, pageHeight - 15);
+                doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
                 
                 const fecha = new Date().toISOString().split('T')[0];
                 doc.save(`detalle-ventas-${fecha}.pdf`);

@@ -135,59 +135,104 @@ new Vue({
         
         exportarPDF() {
             try {
-                const doc = new window.jspdf.jsPDF();
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Header profesional
+                doc.setLineWidth(2);
+                doc.line(20, 25, 190, 25);
                 
                 doc.setTextColor(0, 0, 0);
-                doc.setFontSize(20);
+                doc.setFontSize(24);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Peluquería LUNA', 20, 20);
+                doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
+                
+                doc.setLineWidth(0.5);
+                doc.line(20, 28, 190, 28);
                 
                 doc.setFontSize(16);
-                doc.setTextColor(0, 0, 0);
-                doc.text('Reporte de Compras', 20, 35);
+                doc.setFont('helvetica', 'normal');
+                doc.text('REPORTE DE COMPRAS', 105, 40, { align: 'center' });
                 
+                // Información del reporte
                 doc.setFontSize(10);
-                doc.setTextColor(0, 0, 0);
-                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
-                doc.text(`Total compras: ${this.comprasFiltradas.length}`, 150, 25);
+                doc.setFont('helvetica', 'normal');
+                const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                doc.text(`Total de compras: ${this.comprasFiltradas.length}`, 20, 62);
                 
-                const headers = [['Producto', 'Proveedor', 'Cantidad', 'Total', 'Fecha']];
+                const headers = [['PRODUCTO', 'PROVEEDOR', 'CANTIDAD', 'TOTAL', 'FECHA']];
                 const data = this.comprasFiltradas.map(compra => [
                     compra.producto ? compra.producto.nombre : 'N/A',
                     compra.proveedor ? compra.proveedor.descripcion : 'N/A',
                     this.formatearNumero(compra.cantidad),
-                     this.formatearNumero(compra.total),
+                    this.formatearNumero(compra.total),
                     this.formatearFecha(compra.fechaCompra)
                 ]);
                 
                 doc.autoTable({
                     head: headers,
                     body: data,
-                    startY: 45,
+                    startY: 68,
                     styles: { 
-                        fontSize: 8,
+                        fontSize: 9,
                         textColor: [0, 0, 0],
-                        fillColor: [255, 255, 255]
+                        fillColor: [255, 255, 255],
+                        font: 'helvetica',
+                        cellPadding: 4,
+                        lineColor: [0, 0, 0],
+                        lineWidth: 0.1
                     },
                     headStyles: { 
+                        fontSize: 10,
                         fillColor: [255, 255, 255],
                         textColor: [0, 0, 0],
-                        fontStyle: 'bold'
+                        fontStyle: 'bold',
+                        font: 'helvetica',
+                        halign: 'center',
+                        cellPadding: 5
                     },
                     bodyStyles: {
+                        fontSize: 9,
                         textColor: [0, 0, 0],
-                        fillColor: [255, 255, 255]
+                        fillColor: [255, 255, 255],
+                        font: 'helvetica'
                     },
                     alternateRowStyles: {
                         fillColor: [255, 255, 255]
                     },
-                    foot: [['', '', '', 'TOTAL:' + this.formatearNumero(this.totalCompras)]],
+                    columnStyles: {
+                        0: { cellWidth: 'auto' },
+                        1: { cellWidth: 'auto' },
+                        2: { cellWidth: 'auto', halign: 'center' },
+                        3: { cellWidth: 'auto', halign: 'right' },
+                        4: { cellWidth: 'auto', halign: 'center' }
+                    },
+                    foot: [['', '', '', 'TOTAL:', this.formatearNumero(this.totalCompras)]],
                     footStyles: { 
+                        fontSize: 10,
                         fillColor: [255, 255, 255],
                         textColor: [0, 0, 0],
-                        fontStyle: 'bold'
-                    }
+                        fontStyle: 'bold',
+                        font: 'helvetica',
+                        halign: 'right'
+                    },
+                    margin: { bottom: 40 }
                 });
+                
+                // Footer profesional
+                const pageHeight = doc.internal.pageSize.height;
+                doc.setLineWidth(0.5);
+                doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Página 1 de 1', 20, pageHeight - 15);
+                doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
                 
                 const fecha = new Date().toISOString().split('T')[0];
                 doc.save(`reporte-compras-${fecha}.pdf`);

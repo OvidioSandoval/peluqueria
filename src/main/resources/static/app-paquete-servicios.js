@@ -173,19 +173,27 @@ new Vue({
                         <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nuevo Paquete</button>
                     </div>
                     
-                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 500px;">
+                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 100%;">
                         <h3>{{ nuevoPaquete.id ? 'Modificar Paquete - ' + paqueteSeleccionado : 'Nuevo Paquete' }}</h3>
-                        <label>Descripción: *</label>
-                        <textarea v-model="nuevoPaquete.descripcion" placeholder="Ingrese la descripción del paquete" required rows="3" style="resize: vertical;"></textarea>
-                        <label>Precio Total: *</label>
-                        <input type="number" v-model="nuevoPaquete.precioTotal" placeholder="Ingrese el precio total" required/>
-                        <label>Descuento Aplicado:</label>
-                        <input type="number" v-model="nuevoPaquete.descuentoAplicado" placeholder="Ingrese el descuento aplicado"/>
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
-                            <button @click="nuevoPaquete.id ? modificarPaquete() : agregarPaquete()" class="btn">
-                                {{ nuevoPaquete.id ? 'Modificar' : 'Agregar' }}
-                            </button>
-                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
+                        <div style="display: flex; gap: 20px; align-items: end; flex-wrap: wrap;">
+                            <div style="flex: 2; min-width: 300px;">
+                                <label>Descripción: *</label>
+                                <textarea v-model="nuevoPaquete.descripcion" placeholder="Ingrese la descripción del paquete" required rows="2" style="resize: vertical; width: 100%;"></textarea>
+                            </div>
+                            <div style="flex: 1; min-width: 150px;">
+                                <label>Precio Total: *</label>
+                                <input type="number" v-model="nuevoPaquete.precioTotal" placeholder="Precio total" required style="width: 100%;"/>
+                            </div>
+                            <div style="flex: 1; min-width: 150px;">
+                                <label>Descuento Aplicado:</label>
+                                <input type="number" v-model="nuevoPaquete.descuentoAplicado" placeholder="Descuento" style="width: 100%;"/>
+                            </div>
+                            <div style="display: flex; gap: 10px; align-items: end;">
+                                <button @click="nuevoPaquete.id ? modificarPaquete() : agregarPaquete()" class="btn">
+                                    {{ nuevoPaquete.id ? 'Modificar' : 'Agregar' }}
+                                </button>
+                                <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
+                            </div>
                         </div>
                     </div>
                     

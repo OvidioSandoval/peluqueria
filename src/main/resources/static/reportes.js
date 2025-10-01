@@ -123,45 +123,108 @@ new Vue({
         },
 
         exportarPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            doc.setTextColor(0, 0, 0);
-            doc.setFontSize(20);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Peluquería LUNA', 20, 20);
-            
-            doc.setFontSize(16);
-            doc.text(this.getTituloReporte(), 20, 35);
-            
-            doc.setFontSize(10);
-            doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
-            
-            doc.setDrawColor(0, 0, 0);
-            doc.setLineWidth(1);
-            doc.line(20, 45, 190, 45);
-            
-            const headers = this.getHeadersParaPDF();
-            const data = this.datosReporteFiltrados.map(item => this.getRowDataParaPDF(item));
-            
-            doc.autoTable({
-                head: [headers],
-                body: data,
-                startY: 50,
-                styles: { 
-                    fontSize: 8,
-                    textColor: [0, 0, 0],
-                    fillColor: [255, 255, 255]
-                },
-                headStyles: { 
-                    fillColor: [255, 255, 255],
-                    textColor: [0, 0, 0],
-                    fontStyle: 'bold'
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                const datosParaExportar = this.datosReporteFiltrados;
+                const itemsPorPagina = 15;
+                const totalPaginas = Math.ceil(datosParaExportar.length / itemsPorPagina);
+                
+                for (let pagina = 0; pagina < totalPaginas; pagina++) {
+                    if (pagina > 0) doc.addPage();
+                    
+                    // Header profesional
+                    doc.setLineWidth(2);
+                    doc.line(20, 25, 190, 25);
+                    
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(24);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
+                    
+                    doc.setLineWidth(0.5);
+                    doc.line(20, 28, 190, 28);
+                    
+                    doc.setFontSize(16);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(this.getTituloReporte().toUpperCase(), 105, 40, { align: 'center' });
+                    
+                    // Información del reporte
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                    doc.text(`Total de registros: ${datosParaExportar.length}`, 20, 62);
+                    
+                    const inicio = pagina * itemsPorPagina;
+                    const fin = Math.min(inicio + itemsPorPagina, datosParaExportar.length);
+                    const datosPagina = datosParaExportar.slice(inicio, fin);
+                    
+                    const headers = [this.getHeadersParaPDF()];
+                    const data = datosPagina.map(item => this.getRowDataParaPDF(item));
+                    
+                    const tableConfig = {
+                        head: headers,
+                        body: data,
+                        startY: 68,
+                        styles: { 
+                            fontSize: 8,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            cellPadding: 2,
+                            lineColor: [0, 0, 0],
+                            lineWidth: 0.1,
+                            overflow: 'linebreak'
+                        },
+                        headStyles: { 
+                            fontSize: 8,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'center',
+                            cellPadding: 3
+                        },
+                        bodyStyles: {
+                            fontSize: 8,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            overflow: 'linebreak'
+                        },
+                        alternateRowStyles: {
+                            fillColor: [255, 255, 255]
+                        },
+                        columnStyles: this.getColumnStyles(),
+                        margin: { bottom: 40 }
+                    };
+                    
+                    doc.autoTable(tableConfig);
+                    
+                    // Footer profesional
+                    const pageHeight = doc.internal.pageSize.height;
+                    doc.setLineWidth(0.5);
+                    doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                    
+                    doc.setFontSize(8);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`Página ${pagina + 1} de ${totalPaginas}`, 20, pageHeight - 15);
+                    doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
                 }
-            });
-            
-            const fecha = new Date().toISOString().split('T')[0];
-            doc.save(`reporte-${this.reporteActivo}-${fecha}.pdf`);
+                
+                const fecha = new Date().toISOString().split('T')[0];
+                doc.save(`reporte-${this.reporteActivo}-${fecha}.pdf`);
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                NotificationSystem.error('Error al generar el PDF: ' + error.message);
+            }
         },
 
         getTituloReporte() {
@@ -211,6 +274,44 @@ new Vue({
 
         formatearFecha(fecha) {
             return fecha ? new Date(fecha).toLocaleDateString('es-ES') : '';
+        },
+        
+        getColumnStyles() {
+            switch(this.reporteActivo) {
+                case 'servicios':
+                    return {
+                        0: { cellWidth: 'auto', overflow: 'linebreak' },
+                        1: { cellWidth: 'auto', halign: 'center' },
+                        2: { cellWidth: 'auto', halign: 'right' }
+                    };
+                case 'clientes':
+                    return {
+                        0: { cellWidth: 'auto', overflow: 'linebreak' },
+                        1: { cellWidth: 'auto', overflow: 'linebreak' },
+                        2: { cellWidth: 'auto', overflow: 'linebreak' },
+                        3: { cellWidth: 'auto', halign: 'center' },
+                        4: { cellWidth: 'auto', halign: 'right' },
+                        5: { cellWidth: 'auto', halign: 'center' }
+                    };
+                case 'productos':
+                    return {
+                        0: { cellWidth: 'auto', overflow: 'linebreak' },
+                        1: { cellWidth: 'auto', halign: 'center' },
+                        2: { cellWidth: 'auto', halign: 'center' },
+                        3: { cellWidth: 'auto', halign: 'right' }
+                    };
+                case 'descuentos':
+                    return {
+                        0: { cellWidth: 'auto', halign: 'center' },
+                        1: { cellWidth: 'auto', overflow: 'linebreak' },
+                        2: { cellWidth: 'auto', halign: 'right' },
+                        3: { cellWidth: 'auto', halign: 'center' }
+                    };
+                default:
+                    return {
+                        0: { cellWidth: 'auto', overflow: 'linebreak' }
+                    };
+            }
         }
     },
     template: `

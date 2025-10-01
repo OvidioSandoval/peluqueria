@@ -251,25 +251,39 @@ new Vue({
         
         exportarPDF() {
             try {
-                const doc = new window.jspdf.jsPDF();
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Header profesional
+                doc.setLineWidth(2);
+                doc.line(20, 25, 190, 25);
                 
                 doc.setTextColor(0, 0, 0);
-                doc.setFontSize(20);
+                doc.setFontSize(24);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Peluquería LUNA', 20, 20);
+                doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
+                
+                doc.setLineWidth(0.5);
+                doc.line(20, 28, 190, 28);
                 
                 doc.setFontSize(16);
-                doc.setTextColor(0, 0, 0);
-                doc.text('Reporte de Movimientos', 20, 35);
+                doc.setFont('helvetica', 'normal');
+                doc.text('REPORTE DE MOVIMIENTOS', 105, 40, { align: 'center' });
                 
+                // Información del reporte
                 doc.setFontSize(10);
-                doc.setTextColor(0, 0, 0);
-                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
-                doc.text(`Total movimientos: ${this.movimientosFiltrados.length}`, 150, 25);
+                doc.setFont('helvetica', 'normal');
+                const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                doc.text(`Total de movimientos: ${this.movimientosFiltrados.length}`, 20, 62);
                 
-                const headers = [['Monto', 'Caja', 'ID Asociado', 'Tipo']];
+                const headers = [['MONTO', 'CAJA', 'ID ASOCIADO', 'TIPO']];
                 const data = this.movimientosFiltrados.map(movimiento => [
-                    '$' + this.formatearNumero(movimiento.monto),
+                    this.formatearNumero(movimiento.monto),
                     movimiento.caja ? movimiento.caja.nombre || 'Caja ' + movimiento.caja.id : '-',
                     movimiento.idAsociado || '-',
                     movimiento.tipo
@@ -278,34 +292,64 @@ new Vue({
                 doc.autoTable({
                     head: headers,
                     body: data,
-                    startY: 45,
+                    startY: 68,
                     styles: { 
-                        fontSize: 8,
+                        fontSize: 9,
                         textColor: [0, 0, 0],
-                        fillColor: [255, 255, 255]
+                        fillColor: [255, 255, 255],
+                        font: 'helvetica',
+                        cellPadding: 4,
+                        lineColor: [0, 0, 0],
+                        lineWidth: 0.1
                     },
                     headStyles: { 
+                        fontSize: 10,
                         fillColor: [255, 255, 255],
                         textColor: [0, 0, 0],
-                        fontStyle: 'bold'
+                        fontStyle: 'bold',
+                        font: 'helvetica',
+                        halign: 'center',
+                        cellPadding: 5
                     },
                     bodyStyles: {
+                        fontSize: 9,
                         textColor: [0, 0, 0],
-                        fillColor: [255, 255, 255]
+                        fillColor: [255, 255, 255],
+                        font: 'helvetica'
                     },
                     alternateRowStyles: {
                         fillColor: [255, 255, 255]
                     },
+                    columnStyles: {
+                        0: { cellWidth: 'auto', halign: 'right' },
+                        1: { cellWidth: 'auto' },
+                        2: { cellWidth: 'auto', halign: 'center' },
+                        3: { cellWidth: 'auto', halign: 'center' }
+                    },
                     foot: [
-                        ['Ingresos: $' + this.formatearNumero(this.totalIngresos), 'Egresos: $' + this.formatearNumero(this.totalEgresos), '', ''],
-                        ['Ventas: $' + this.formatearNumero(this.totalVentas), 'Compras: $' + this.formatearNumero(this.totalCompras), '', '']
+                        ['Ingresos: ' + this.formatearNumero(this.totalIngresos), 'Egresos: ' + this.formatearNumero(this.totalEgresos), '', ''],
+                        ['Ventas: ' + this.formatearNumero(this.totalVentas), 'Compras: ' + this.formatearNumero(this.totalCompras), '', '']
                     ],
                     footStyles: { 
+                        fontSize: 10,
                         fillColor: [255, 255, 255],
                         textColor: [0, 0, 0],
-                        fontStyle: 'bold'
-                    }
+                        fontStyle: 'bold',
+                        font: 'helvetica',
+                        halign: 'left'
+                    },
+                    margin: { bottom: 40 }
                 });
+                
+                // Footer profesional
+                const pageHeight = doc.internal.pageSize.height;
+                doc.setLineWidth(0.5);
+                doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Página 1 de 1', 20, pageHeight - 15);
+                doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
                 
                 const fecha = new Date().toISOString().split('T')[0];
                 doc.save(`movimientos-${fecha}.pdf`);
