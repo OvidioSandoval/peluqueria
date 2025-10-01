@@ -180,4 +180,10 @@ public class FrontController {
         LOGGER.info("IN: mostrarCalendarioTurno");
         return "empleado-principal";
     }
+
+    @GetMapping("/web/registro-cliente")
+    public String mostrarRegistroCliente(Model model) {
+        LOGGER.info("IN: mostrarRegistroCliente");
+        return "registro-cliente";
+    }
 }

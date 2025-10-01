@@ -591,263 +591,263 @@ new Vue({
         }
     },
     template: `
-        <v-app>
-            <v-main>
-                <v-container fluid class="pa-2">
-                    <v-row class="mb-2">
-                        <v-col cols="12" class="pb-2">
-                            <h1 class="page-title">Gestión de Clientes</h1>
-                        </v-col>
-                    </v-row>
+        <div class="glass-container">
+            <div id="app">
+                <h1 class="page-title">Gestión de Clientes</h1>
+                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
+                <main style="padding: 20px;">
+                    <div class="filters-container" style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap; width: fit-content; padding: 15px; margin: 15px 0;">
+                        <div class="filter-group" style="flex: none; width: auto;">
+                            <label>Buscar Cliente:</label>
+                            <input type="text" v-model="busqueda" @input="filtrarClientes" placeholder="Buscar por nombre, RUC, teléfono o email..." class="search-bar" style="width: 300px;"/>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: end;">
+                            <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
+                            <button @click="toggleFrecuentes" class="btn btn-small">
+                                {{ mostrarFrecuentes ? 'Ocultar' : 'Ver' }} Frecuentes
+                            </button>
+                        </div>
+                    </div>
                     
-                    <v-row class="mb-2">
-                        <v-col cols="12" class="py-2">
-                            <v-btn @click="window.history.back()" color="secondary">
-                                <i class="fas fa-arrow-left"></i> Volver
-                            </v-btn>
-                        </v-col>
-                    </v-row>
+                    <div v-if="mostrarFrecuentes" class="form-container" style="margin: 20px 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3>Clientes Frecuentes</h3>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <button @click="exportarClientesFrecuentes" class="btn btn-small">
+                                    <i class="fas fa-file-pdf"></i> Exportar
+                                </button>
+                                <button @click="mostrarFrecuentes = false" class="btn btn-small btn-danger">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div v-if="cargandoFrecuentes" style="text-align: center; padding: 20px;">
+                            <i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i>
+                            <p>Cargando...</p>
+                        </div>
+                        <table v-else>
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Visitas</th>
+                                    <th>Total Gastado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="item in clientesFrecuentes" :key="item.cliente.id">
+                                    <td>{{ item.cliente.nombreCompleto }}</td>
+                                    <td>{{ item.cantidadVisitas }}</td>
+                                    <td>{{ formatearNumero(item.montoTotal) }}</td>
+                                    <td>
+                                        <button @click="seleccionarCliente(item.cliente)" class="btn-small">Ver Historial</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                     
-                    <!-- Búsqueda Unificada -->
-                    <v-row class="mb-2">
-                        <v-col cols="12" class="py-2">
-                            <v-card>
-                                <v-card-title class="pb-2">
-                                    <v-icon left>mdi-magnify</v-icon>
-                                    Buscar Cliente
-                                </v-card-title>
-                                <v-card-text class="pa-3">
-                                    <div class="d-flex align-center" style="width: fit-content;">
-                                        <v-text-field
-                                            v-model="busqueda"
-                                            @input="filtrarClientes"
-                                            label="Buscar por nombre, RUC, teléfono o email"
-                                            prepend-icon="mdi-magnify"
-                                            clearable
-                                            outlined
-                                            dense
-                                            hide-details
-                                            placeholder="Ingrese cualquier dato del cliente..."
-                                            class="mr-3"
-                                            style="width: 300px;"
-                                        ></v-text-field>
-                                        <v-btn @click="limpiarFiltros" color="btn btn-secondary btn-small" outlined small class="mr-2">
-                                            Limpiar
-                                        </v-btn>
-                                        <v-btn @click="toggleFrecuentes" color="primary" small>
-                                            {{ mostrarFrecuentes ? 'Ocultar' : 'Ver' }} Frecuentes
-                                        </v-btn>
-                                    </div>
-                                </v-card-text>
-                            </v-card>
-                        </v-col>
-                    </v-row>
+                    <div class="form-container" style="margin: 20px 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3>Lista de Clientes</h3>
+                            <button @click="exportarListaClientes" class="btn btn-small" :disabled="generandoPDF">
+                                <i class="fas fa-file-pdf"></i> Exportar PDF
+                            </button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Teléfono</th>
+                                    <th>RUC</th>
+                                    <th>Email</th>
+                                    <th>Edad</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="cliente in clientesPaginados" :key="cliente.id">
+                                    <td>{{ cliente.nombreCompleto }}</td>
+                                    <td>{{ cliente.telefono || 'N/A' }}</td>
+                                    <td>{{ cliente.ruc || 'N/A' }}</td>
+                                    <td>{{ cliente.correo || 'N/A' }}</td>
+                                    <td>{{ calcularEdad(cliente.fechaNacimiento) }}</td>
+                                    <td>
+                                        <button @click="seleccionarCliente(cliente)" class="btn-small">Ver Historial</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div class="pagination">
+                            <button @click="cambiarPagina(paginaActual - 1)" :disabled="paginaActual === 1">Anterior</button>
+                            <span>Página {{ paginaActual }} de {{ totalPaginas }}</span>
+                            <button @click="cambiarPagina(paginaActual + 1)" :disabled="paginaActual === totalPaginas">Siguiente</button>
+                        </div>
+                    </div>
                     
-                    <v-row v-if="mostrarFrecuentes" class="mb-2">
-                        <v-col cols="12" class="py-2">
-                            <v-card>
-                                <v-card-title>
-                                    Clientes Frecuentes
-                                    <v-spacer></v-spacer>
-                                    <v-btn @click="exportarClientesFrecuentes" color="success" small class="mr-2">
-                                        <v-icon left small>mdi-file-pdf</v-icon>
-                                        Exportar
-                                    </v-btn>
-                                    <v-btn @click="mostrarFrecuentes = false" small icon style="background-color: transparent !important;">
-                                        <i class="fas fa-times" style="color: red !important; font-size: 16px;"></i>
-                                    </v-btn>
-                                </v-card-title>
-                                <v-card-text>
-                                    <v-progress-circular v-if="cargandoFrecuentes" indeterminate></v-progress-circular>
-                                    <v-list v-else>
-                                        <v-list-item v-for="item in clientesFrecuentes" :key="item.cliente.id">
-                                            <v-list-item-content>
-                                                <v-list-item-title>{{ item.cliente.nombreCompleto }}</v-list-item-title>
-                                                <v-list-item-subtitle>{{ item.cantidadVisitas }} visitas - {{ formatearNumero(item.montoTotal) }}</v-list-item-subtitle>
-                                            </v-list-item-content>
-                                            <v-list-item-action>
-                                                <v-btn small @click="seleccionarCliente(item.cliente)">Ver Historial</v-btn>
-                                            </v-list-item-action>
-                                        </v-list-item>
-                                    </v-list>
-                                </v-card-text>
-                            </v-card>
-                        </v-col>
-                    </v-row>
-                    
-                    <v-row class="mb-2">
-                        <v-col cols="12" class="py-2">
-                            <v-card>
-                                <v-card-title>
-                                    Lista de Clientes
-                                    <v-spacer></v-spacer>
-                                    <v-btn @click="exportarListaClientes" color="success" small :loading="generandoPDF">
-                                        <v-icon left small>mdi-file-pdf</v-icon>
-                                        Exportar PDF
-                                    </v-btn>
-                                </v-card-title>
-                                <v-card-text>
-                                    <v-data-table
-                                        :headers="[
-                                            { text: 'Nombre', value: 'nombreCompleto' },
-                                            { text: 'Teléfono', value: 'telefono' },
-                                            { text: 'RUC', value: 'ruc' },
-                                            { text: 'Email', value: 'correo' },
-                                            { text: 'Edad', value: 'edad' },
-                                            { text: 'Acciones', value: 'acciones', sortable: false }
-                                        ]"
-                                        :items="clientesPaginados"
-                                        :items-per-page="itemsPorPagina"
-                                        hide-default-footer
-                                    >
-                                        <template v-slot:item.telefono="{ item }">
-                                            {{ item.telefono || 'N/A' }}
-                                        </template>
-                                        <template v-slot:item.ruc="{ item }">
-                                            {{ item.ruc || 'N/A' }}
-                                        </template>
-                                        <template v-slot:item.correo="{ item }">
-                                            {{ item.correo || 'N/A' }}
-                                        </template>
-                                        <template v-slot:item.edad="{ item }">
-                                            {{ calcularEdad(item.fechaNacimiento) }}
-                                        </template>
-                                        <template v-slot:item.acciones="{ item }">
-                                            <v-btn small color="primary" @click="seleccionarCliente(item)">Ver Historial</v-btn>
-                                        </template>
-                                    </v-data-table>
-                                    
-                                    <div class="pagination">
-                                        <button @click="cambiarPagina(paginaActual - 1)" :disabled="paginaActual === 1">Anterior</button>
-                                        <span>Página {{ paginaActual }} de {{ totalPaginas }}</span>
-                                        <button @click="cambiarPagina(paginaActual + 1)" :disabled="paginaActual === totalPaginas">Siguiente</button>
-                                    </div>
-                                </v-card-text>
-                            </v-card>
-                        </v-col>
-                    </v-row>
-                    
-                    <v-dialog v-model="mostrarHistorial" max-width="1200px">
-                        <v-card>
-                            <v-card-title>
-                                <span class="headline">Información del Cliente</span>
-                                <v-spacer></v-spacer>
-                                <v-btn @click="exportarHistorialCliente" color="success" class="mr-2" small>
-                                    <v-icon left small>mdi-file-pdf</v-icon>
-                                    Exportar Historial
-                                </v-btn>
-                                <v-btn icon @click="cerrarHistorial" style="color: red !important;">
-                                    <i class="fas fa-times" style="color: red;"></i>
-                                </v-btn>
-                            </v-card-title>
+                    <div v-if="mostrarHistorial" class="turno-detail-modal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; overflow-y: auto;">
+                        <div class="modal-content" style="background: rgba(252, 228, 236, 0.95); backdrop-filter: blur(10px); border-radius: 20px; padding: 25px; max-width: 1200px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.2); border: 1px solid rgba(179, 229, 252, 0.3);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h3 style="margin: 0; color: #66bb6a;"><i class="fas fa-user"></i> Información del Cliente</h3>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <button @click="exportarHistorialCliente" class="btn btn-small">
+                                        <i class="fas fa-file-pdf"></i> Exportar Historial
+                                    </button>
+                                    <button @click="cerrarHistorial" style="background: none; border: none; color: #f44336; font-size: 1.5rem; cursor: pointer; padding: 5px;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
                             
-                            <v-card-text v-if="clienteSeleccionado">
-                                <v-row>
-                                    <v-col cols="12" md="6">
-                                        <v-card outlined>
-                                            <v-card-title class="subtitle-1">Datos Personales</v-card-title>
-                                            <v-card-text>
-                                                <v-list dense>
-                                                    <v-list-item>
-                                                        <v-list-item-content>
-                                                            <v-list-item-title>Nombre Completo</v-list-item-title>
-                                                            <v-list-item-subtitle>{{ clienteSeleccionado.nombreCompleto }}</v-list-item-subtitle>
-                                                        </v-list-item-content>
-                                                    </v-list-item>
-                                                    <v-list-item>
-                                                        <v-list-item-content>
-                                                            <v-list-item-title>Teléfono</v-list-item-title>
-                                                            <v-list-item-subtitle>{{ clienteSeleccionado.telefono || 'No registrado' }}</v-list-item-subtitle>
-                                                        </v-list-item-content>
-                                                    </v-list-item>
-                                                    <v-list-item>
-                                                        <v-list-item-content>
-                                                            <v-list-item-title>RUC</v-list-item-title>
-                                                            <v-list-item-subtitle>{{ clienteSeleccionado.ruc || 'No registrado' }}</v-list-item-subtitle>
-                                                        </v-list-item-content>
-                                                    </v-list-item>
-                                                    <v-list-item>
-                                                        <v-list-item-content>
-                                                            <v-list-item-title>Email</v-list-item-title>
-                                                            <v-list-item-subtitle>{{ clienteSeleccionado.correo || 'No registrado' }}</v-list-item-subtitle>
-                                                        </v-list-item-content>
-                                                    </v-list-item>
-                                                    <v-list-item>
-                                                        <v-list-item-content>
-                                                            <v-list-item-title>Redes Sociales</v-list-item-title>
-                                                            <v-list-item-subtitle>{{ clienteSeleccionado.redesSociales || 'No registrado' }}</v-list-item-subtitle>
-                                                        </v-list-item-content>
-                                                    </v-list-item>
-                                                    <v-list-item>
-                                                        <v-list-item-content>
-                                                            <v-list-item-title>Fecha de Nacimiento</v-list-item-title>
-                                                            <v-list-item-subtitle>{{ formatearFecha(clienteSeleccionado.fechaNacimiento) || 'No registrado' }}</v-list-item-subtitle>
-                                                        </v-list-item-content>
-                                                    </v-list-item>
-                                                    <v-list-item>
-                                                        <v-list-item-content>
-                                                            <v-list-item-title>Edad</v-list-item-title>
-                                                            <v-list-item-subtitle>{{ calcularEdad(clienteSeleccionado.fechaNacimiento) }}</v-list-item-subtitle>
-                                                        </v-list-item-content>
-                                                    </v-list-item>
-                                                    <v-list-item>
-                                                        <v-list-item-content>
-                                                            <v-list-item-title>Cliente desde</v-list-item-title>
-                                                            <v-list-item-subtitle>{{ formatearFecha(clienteSeleccionado.fechaCreacion) }}</v-list-item-subtitle>
-                                                        </v-list-item-content>
-                                                    </v-list-item>
-                                                </v-list>
-                                            </v-card-text>
-                                        </v-card>
-                                    </v-col>
+                            <div v-if="clienteSeleccionado" style="padding: 20px;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                                    <div class="form-container" style="padding: 15px;">
+                                        <h4>Datos Personales</h4>
+                                        <div><strong>Nombre Completo:</strong> {{ clienteSeleccionado.nombreCompleto }}</div>
+                                        <div><strong>Teléfono:</strong> {{ clienteSeleccionado.telefono || 'No registrado' }}</div>
+                                        <div><strong>RUC:</strong> {{ clienteSeleccionado.ruc || 'No registrado' }}</div>
+                                        <div><strong>Email:</strong> {{ clienteSeleccionado.correo || 'No registrado' }}</div>
+                                        <div><strong>Redes Sociales:</strong> {{ clienteSeleccionado.redesSociales || 'No registrado' }}</div>
+                                        <div><strong>Fecha de Nacimiento:</strong> {{ formatearFecha(clienteSeleccionado.fechaNacimiento) || 'No registrado' }}</div>
+                                        <div><strong>Edad:</strong> {{ calcularEdad(clienteSeleccionado.fechaNacimiento) }}</div>
+                                        <div><strong>Cliente desde:</strong> {{ formatearFecha(clienteSeleccionado.fechaCreacion) }}</div>
+                                    </div>
                                     
-                                    <v-col cols="12" md="6">
-                                        <v-card outlined>
-                                            <v-card-title class="subtitle-1">Historial de Servicios</v-card-title>
-                                            <v-card-text>
-                                                <v-progress-circular v-if="cargandoHistorial" indeterminate></v-progress-circular>
-                                                <div v-else-if="historialServicios.length === 0" class="text-center">
-                                                    <p>No hay servicios registrados para este cliente</p>
-                                                </div>
-                                                <div v-else>
-                                                    <table>
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Fecha</th>
-                                                                <th>Servicio</th>
-                                                                <th>Precio</th>
-                                                                <th>Método Pago</th>
-                                                                <th>Colaborador</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr v-for="servicio in historialServicios.slice((paginaHistorial - 1) * 5, paginaHistorial * 5)" :key="servicio.fecha + servicio.tipoServicio">
-                                                                <td>{{ formatearFecha(servicio.fecha) }}</td>
-                                                                <td>{{ servicio.tipoServicio }}</td>
-                                                                <td>{{ formatearNumero(servicio.precioCobrado) }}</td>
-                                                                <td>
-                                                                    <span :style="{color: getColorMetodoPago(servicio.metodoPago), fontWeight: 'bold'}">{{ servicio.metodoPago }}</span>
-                                                                </td>
-                                                                <td>{{ servicio.colaborador }}</td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                    <div class="pagination" style="margin-top: 15px;">
-                                                        <button @click="cambiarPaginaHistorial(paginaHistorial - 1)" :disabled="paginaHistorial === 1">Anterior</button>
-                                                        <span>Página {{ paginaHistorial }} de {{ Math.ceil(historialServicios.length / 5) }}</span>
-                                                        <button @click="cambiarPaginaHistorial(paginaHistorial + 1)" :disabled="paginaHistorial === Math.ceil(historialServicios.length / 5)">Siguiente</button>
-                                                    </div>
-                                                </div>
-
-                                            </v-card-text>
-                                        </v-card>
-                                    </v-col>
-                                </v-row>
-                            </v-card-text>
-                        </v-card>
-                    </v-dialog>
-                </v-container>
-            </v-main>
-        </v-app>
+                                    <div class="form-container" style="padding: 15px;">
+                                        <h4>Historial de Servicios</h4>
+                                        <div v-if="cargandoHistorial" style="text-align: center; padding: 40px;">
+                                            <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: #66bb6a;"></i>
+                                            <div style="margin-top: 20px; color: #66bb6a;">Cargando historial...</div>
+                                        </div>
+                                        <div v-else-if="historialServicios.length === 0" style="text-align: center; padding: 40px; color: #66bb6a;">
+                                            <i class="fas fa-info-circle" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                                            <div>No hay servicios registrados para este cliente</div>
+                                        </div>
+                                        <div v-else>
+                                            <table style="margin-top: 15px;">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Fecha</th>
+                                                        <th>Servicio</th>
+                                                        <th>Precio</th>
+                                                        <th>Método Pago</th>
+                                                        <th>Colaborador</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr v-for="servicio in historialServicios.slice((paginaHistorial - 1) * 5, paginaHistorial * 5)" :key="servicio.fecha + servicio.tipoServicio">
+                                                        <td>{{ formatearFecha(servicio.fecha) }}</td>
+                                                        <td>{{ servicio.tipoServicio }}</td>
+                                                        <td>{{ formatearNumero(servicio.precioCobrado) }}</td>
+                                                        <td>
+                                                            <span :style="{color: getColorMetodoPago(servicio.metodoPago), fontWeight: 'bold'}">{{ servicio.metodoPago }}</span>
+                                                        </td>
+                                                        <td>{{ servicio.colaborador }}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <div class="pagination" style="margin-top: 15px;">
+                                                <button @click="cambiarPaginaHistorial(paginaHistorial - 1)" :disabled="paginaHistorial === 1">Anterior</button>
+                                                <span>Página {{ paginaHistorial }} de {{ Math.ceil(historialServicios.length / 5) }}</span>
+                                                <button @click="cambiarPaginaHistorial(paginaHistorial + 1)" :disabled="paginaHistorial === Math.ceil(historialServicios.length / 5)">Siguiente</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
     `
 });
+
+// Adding CSS styling to match app-clientes page
+const style = document.createElement('style');
+style.textContent = `
+    .filters-container {
+        display: flex;
+        gap: 15px;
+        align-items: end;
+        margin-bottom: 20px;
+        padding: 15px;
+        background: rgba(252, 228, 236, 0.9);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1);
+        border: 1px solid rgba(179, 229, 252, 0.3);
+        flex-wrap: wrap;
+        width: fit-content;
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        min-width: fit-content;
+    }
+    .filter-group label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #5d4037;
+    }
+    .search-bar {
+        padding: 8px 12px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+        width: 300px;
+    }
+    .search-bar:focus {
+        border-color: #5d4037;
+        outline: none;
+    }
+`;
+document.head.appendChild(style);
+
+// Confirmation dialog styling
+const confirmStyle = document.createElement('style');
+confirmStyle.textContent = `
+    .swal2-popup {
+        background: #ffffff !important;
+        color: #000000 !important;
+        border: 2px solid #333 !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+        z-index: 99999 !important;
+        width: auto !important;
+        max-width: 500px !important;
+        padding: 20px !important;
+    }
+    .swal2-title {
+        color: #000000 !important;
+        font-weight: bold !important;
+        font-size: 18px !important;
+        text-shadow: none !important;
+    }
+    .swal2-html-container {
+        color: #000000 !important;
+        font-weight: bold !important;
+    }
+    .swal2-content {
+        color: #000000 !important;
+        font-size: 16px !important;
+        font-weight: 500 !important;
+    }
+    .swal2-confirm {
+        background: #dc3545 !important;
+        color: #ffffff !important;
+        border: none !important;
+        font-weight: bold !important;
+    }
+    .swal2-cancel {
+        background: #6c757d !important;
+        color: #ffffff !important;
+        border: none !important;
+        font-weight: bold !important;
+    }
+    .swal2-container {
+        z-index: 99999 !important;
+    }
+`;
+document.head.appendChild(confirmStyle);

@@ -254,34 +254,110 @@ new Vue({
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
+                // Header profesional
+                doc.setLineWidth(2);
+                doc.line(20, 25, 190, 25);
+                
                 doc.setTextColor(0, 0, 0);
-                doc.setFontSize(20);
+                doc.setFontSize(24);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Peluquería LUNA', 20, 20);
+                doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
+                
+                doc.setLineWidth(0.5);
+                doc.line(20, 28, 190, 28);
                 
                 doc.setFontSize(16);
-                doc.text(`Resumen Mensual - ${this.getNombreMesActual()} ${new Date().getFullYear()}`, 20, 35);
-                
-                doc.setFontSize(10);
-                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
-                
-                doc.setDrawColor(0, 0, 0);
-                doc.setLineWidth(1);
-                doc.line(20, 45, 190, 45);
-                
-                let y = 60;
-                doc.setFontSize(14);
-                doc.setFont('helvetica', 'bold');
-                doc.text('RESUMEN GENERAL', 20, y);
-                y += 15;
-                
-                doc.setFontSize(12);
                 doc.setFont('helvetica', 'normal');
-                doc.text(`Total a Pagar: ${this.formatearNumero(this.resumenMensual.totalAPagar)}`, 20, y);
-                y += 10;
-                doc.text(`Total Pagado: ${this.formatearNumero(this.resumenMensual.totalPagado)}`, 20, y);
-                y += 10;
-                doc.text(`Diferencia a Pagar: ${this.formatearNumero(this.resumenMensual.totalDiferencia)}`, 20, y);
+                doc.text(`RESUMEN MENSUAL - ${this.getNombreMesActual().toUpperCase()} ${new Date().getFullYear()}`, 105, 40, { align: 'center' });
+                
+                // Información del reporte
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                doc.text(`Total de empleados: ${this.resumenMensual.empleados.length}`, 20, 62);
+                
+                // Tabla de empleados
+                const headers = [['EMPLEADO', 'ÁREA', 'SUELDO BASE', 'COMISIÓN', 'TOTAL A PAGAR', 'PAGADO', 'DIFERENCIA']];
+                const data = this.resumenMensual.empleados.map(empleado => [
+                    empleado.nombreCompleto,
+                    empleado.area ? empleado.area.nombre : 'Sin área',
+                    this.formatearNumero(empleado.sueldoBase),
+                    this.formatearNumero(empleado.comisionTotal),
+                    this.formatearNumero(empleado.sueldoTotal),
+                    this.formatearNumero(empleado.totalPagado || 0),
+                    this.formatearNumero(empleado.diferencia)
+                ]);
+                
+                const tableConfig = {
+                    head: headers,
+                    body: data,
+                    startY: 68,
+                    styles: { 
+                        fontSize: 8,
+                        textColor: [0, 0, 0],
+                        fillColor: [255, 255, 255],
+                        font: 'helvetica',
+                        cellPadding: 2,
+                        lineColor: [0, 0, 0],
+                        lineWidth: 0.1,
+                        overflow: 'linebreak'
+                    },
+                    headStyles: { 
+                        fontSize: 8,
+                        fillColor: [255, 255, 255],
+                        textColor: [0, 0, 0],
+                        fontStyle: 'bold',
+                        font: 'helvetica',
+                        halign: 'center',
+                        cellPadding: 3
+                    },
+                    bodyStyles: {
+                        fontSize: 8,
+                        textColor: [0, 0, 0],
+                        fillColor: [255, 255, 255],
+                        font: 'helvetica',
+                        overflow: 'linebreak'
+                    },
+                    alternateRowStyles: {
+                        fillColor: [255, 255, 255]
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 'auto', overflow: 'linebreak' },
+                        1: { cellWidth: 'auto', overflow: 'linebreak' },
+                        2: { cellWidth: 'auto', halign: 'right' },
+                        3: { cellWidth: 'auto', halign: 'right' },
+                        4: { cellWidth: 'auto', halign: 'right' },
+                        5: { cellWidth: 'auto', halign: 'right' },
+                        6: { cellWidth: 'auto', halign: 'right' }
+                    },
+                    foot: [['', '', '', '', this.formatearNumero(this.resumenMensual.totalAPagar), this.formatearNumero(this.resumenMensual.totalPagado), this.formatearNumero(this.resumenMensual.totalDiferencia)]],
+                    footStyles: { 
+                        fontSize: 9,
+                        fillColor: [255, 255, 255],
+                        textColor: [0, 0, 0],
+                        fontStyle: 'bold',
+                        font: 'helvetica',
+                        halign: 'right'
+                    },
+                    margin: { bottom: 40 }
+                };
+                
+                doc.autoTable(tableConfig);
+                
+                // Footer profesional
+                const pageHeight = doc.internal.pageSize.height;
+                doc.setLineWidth(0.5);
+                doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Página 1 de 1', 20, pageHeight - 15);
+                doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
                 
                 const fecha = new Date().toISOString().split('T')[0];
                 doc.save(`resumen-mensual-${this.getNombreMesActual()}-${fecha}.pdf`);
@@ -303,32 +379,224 @@ new Vue({
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
-                doc.setTextColor(0, 0, 0);
-                doc.setFontSize(20);
-                doc.setFont('helvetica', 'bold');
-                doc.text('Peluquería LUNA', 20, 20);
+                const serviciosParaExportar = this.detalleEmpleado.serviciosRealizados || [];
+                const itemsPorPagina = 15;
+                const totalPaginas = Math.max(1, Math.ceil(serviciosParaExportar.length / itemsPorPagina));
                 
-                doc.setFontSize(16);
-                doc.text(`Detalle Empleado - ${this.empleadoSeleccionado.nombreCompleto}`, 20, 35);
-                
-                doc.setFontSize(10);
-                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
-                
-                doc.setDrawColor(0, 0, 0);
-                doc.setLineWidth(1);
-                doc.line(20, 45, 190, 45);
-                
-                let y = 60;
-                doc.setFontSize(12);
-                doc.text(`Área: ${this.empleadoSeleccionado.area ? this.empleadoSeleccionado.area.nombre : 'N/A'}`, 20, y);
-                y += 8;
-                doc.text(`Sueldo Base: ${this.formatearNumero(this.detalleEmpleado.sueldoBase)}`, 20, y);
-                y += 8;
-                doc.text(`Comisión Total: ${this.formatearNumero(this.detalleEmpleado.comisionTotal)}`, 20, y);
-                y += 8;
-                doc.text(`Total a Cobrar: ${this.formatearNumero(this.detalleEmpleado.sueldoTotal)}`, 20, y);
-                y += 8;
-                doc.text(`Servicios Realizados: ${this.detalleEmpleado.totalServicios}`, 20, y);
+                for (let pagina = 0; pagina < totalPaginas; pagina++) {
+                    if (pagina > 0) doc.addPage();
+                    
+                    // Header profesional
+                    doc.setLineWidth(2);
+                    doc.line(20, 25, 190, 25);
+                    
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(24);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
+                    
+                    doc.setLineWidth(0.5);
+                    doc.line(20, 28, 190, 28);
+                    
+                    doc.setFontSize(16);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`DETALLE EMPLEADO - ${this.empleadoSeleccionado.nombreCompleto.toUpperCase()}`, 105, 40, { align: 'center' });
+                    
+                    // Información del reporte
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                    doc.text(`Empleado: ${this.empleadoSeleccionado.nombreCompleto}`, 20, 62);
+                    
+                    if (pagina === 0) {
+                        // Información del empleado solo en primera página
+                        const infoHeaders = [['CONCEPTO', 'VALOR']];
+                        const infoData = [
+                            ['Área', this.empleadoSeleccionado.area ? this.empleadoSeleccionado.area.nombre : 'N/A'],
+                            ['Sueldo Base', this.formatearNumero(this.detalleEmpleado.sueldoBase)],
+                            ['Comisión (%)', this.empleadoSeleccionado.comisionPorcentaje + '%'],
+                            ['Comisión Total', this.formatearNumero(this.detalleEmpleado.comisionTotal)],
+                            ['Total a Cobrar', this.formatearNumero(this.detalleEmpleado.sueldoTotal)],
+                            ['Total Pagado', this.formatearNumero(this.detalleEmpleado.pagado)],
+                            ['Diferencia', this.formatearNumero(this.detalleEmpleado.diferencia)],
+                            ['Servicios Realizados', this.detalleEmpleado.totalServicios.toString()],
+                            ['Ingresos Generados', this.formatearNumero(this.detalleEmpleado.ingresosGenerados)]
+                        ];
+                        
+                        doc.autoTable({
+                            head: infoHeaders,
+                            body: infoData,
+                            startY: 68,
+                            styles: { 
+                                fontSize: 8,
+                                textColor: [0, 0, 0],
+                                fillColor: [255, 255, 255],
+                                font: 'helvetica',
+                                cellPadding: 2,
+                                lineColor: [0, 0, 0],
+                                lineWidth: 0.1,
+                                overflow: 'linebreak'
+                            },
+                            headStyles: { 
+                                fontSize: 8,
+                                fillColor: [255, 255, 255],
+                                textColor: [0, 0, 0],
+                                fontStyle: 'bold',
+                                font: 'helvetica',
+                                halign: 'center',
+                                cellPadding: 3
+                            },
+                            bodyStyles: {
+                                fontSize: 8,
+                                textColor: [0, 0, 0],
+                                fillColor: [255, 255, 255],
+                                font: 'helvetica',
+                                overflow: 'linebreak'
+                            },
+                            alternateRowStyles: {
+                                fillColor: [255, 255, 255]
+                            },
+                            columnStyles: {
+                                0: { cellWidth: 'auto', overflow: 'linebreak' },
+                                1: { cellWidth: 'auto', halign: 'right' }
+                            },
+                            margin: { bottom: 40 }
+                        });
+                        
+                        // Tabla de servicios si existen
+                        if (serviciosParaExportar.length > 0) {
+                            const finalY = doc.lastAutoTable.finalY + 10;
+                            
+                            const inicio = pagina * itemsPorPagina;
+                            const fin = Math.min(inicio + itemsPorPagina, serviciosParaExportar.length);
+                            const serviciosPagina = serviciosParaExportar.slice(inicio, fin);
+                            
+                            const serviciosHeaders = [['SERVICIO', 'PRECIO', 'CANTIDAD', 'TOTAL', 'FECHA']];
+                            const serviciosData = serviciosPagina.map(servicio => [
+                                servicio.nombre,
+                                this.formatearNumero(servicio.precio),
+                                servicio.cantidad.toString(),
+                                this.formatearNumero(servicio.total),
+                                this.formatearFecha(servicio.fecha)
+                            ]);
+                            
+                            doc.autoTable({
+                                head: serviciosHeaders,
+                                body: serviciosData,
+                                startY: finalY,
+                                styles: { 
+                                    fontSize: 8,
+                                    textColor: [0, 0, 0],
+                                    fillColor: [255, 255, 255],
+                                    font: 'helvetica',
+                                    cellPadding: 2,
+                                    lineColor: [0, 0, 0],
+                                    lineWidth: 0.1,
+                                    overflow: 'linebreak'
+                                },
+                                headStyles: { 
+                                    fontSize: 8,
+                                    fillColor: [255, 255, 255],
+                                    textColor: [0, 0, 0],
+                                    fontStyle: 'bold',
+                                    font: 'helvetica',
+                                    halign: 'center',
+                                    cellPadding: 3
+                                },
+                                bodyStyles: {
+                                    fontSize: 8,
+                                    textColor: [0, 0, 0],
+                                    fillColor: [255, 255, 255],
+                                    font: 'helvetica',
+                                    overflow: 'linebreak'
+                                },
+                                alternateRowStyles: {
+                                    fillColor: [255, 255, 255]
+                                },
+                                columnStyles: {
+                                    0: { cellWidth: 'auto', overflow: 'linebreak' },
+                                    1: { cellWidth: 'auto', halign: 'right' },
+                                    2: { cellWidth: 'auto', halign: 'center' },
+                                    3: { cellWidth: 'auto', halign: 'right' },
+                                    4: { cellWidth: 'auto', halign: 'center' }
+                                },
+                                margin: { bottom: 40 }
+                            });
+                        }
+                    } else {
+                        // Páginas adicionales solo con servicios
+                        const inicio = pagina * itemsPorPagina;
+                        const fin = Math.min(inicio + itemsPorPagina, serviciosParaExportar.length);
+                        const serviciosPagina = serviciosParaExportar.slice(inicio, fin);
+                        
+                        const serviciosHeaders = [['SERVICIO', 'PRECIO', 'CANTIDAD', 'TOTAL', 'FECHA']];
+                        const serviciosData = serviciosPagina.map(servicio => [
+                            servicio.nombre,
+                            this.formatearNumero(servicio.precio),
+                            servicio.cantidad.toString(),
+                            this.formatearNumero(servicio.total),
+                            this.formatearFecha(servicio.fecha)
+                        ]);
+                        
+                        doc.autoTable({
+                            head: serviciosHeaders,
+                            body: serviciosData,
+                            startY: 68,
+                            styles: { 
+                                fontSize: 8,
+                                textColor: [0, 0, 0],
+                                fillColor: [255, 255, 255],
+                                font: 'helvetica',
+                                cellPadding: 2,
+                                lineColor: [0, 0, 0],
+                                lineWidth: 0.1,
+                                overflow: 'linebreak'
+                            },
+                            headStyles: { 
+                                fontSize: 8,
+                                fillColor: [255, 255, 255],
+                                textColor: [0, 0, 0],
+                                fontStyle: 'bold',
+                                font: 'helvetica',
+                                halign: 'center',
+                                cellPadding: 3
+                            },
+                            bodyStyles: {
+                                fontSize: 8,
+                                textColor: [0, 0, 0],
+                                fillColor: [255, 255, 255],
+                                font: 'helvetica',
+                                overflow: 'linebreak'
+                            },
+                            alternateRowStyles: {
+                                fillColor: [255, 255, 255]
+                            },
+                            columnStyles: {
+                                0: { cellWidth: 'auto', overflow: 'linebreak' },
+                                1: { cellWidth: 'auto', halign: 'right' },
+                                2: { cellWidth: 'auto', halign: 'center' },
+                                3: { cellWidth: 'auto', halign: 'right' },
+                                4: { cellWidth: 'auto', halign: 'center' }
+                            },
+                            margin: { bottom: 40 }
+                        });
+                    }
+                    
+                    // Footer profesional
+                    const pageHeight = doc.internal.pageSize.height;
+                    doc.setLineWidth(0.5);
+                    doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                    
+                    doc.setFontSize(8);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`Página ${pagina + 1} de ${totalPaginas}`, 20, pageHeight - 15);
+                    doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
+                }
                 
                 const fecha = new Date().toISOString().split('T')[0];
                 doc.save(`detalle-${this.empleadoSeleccionado.nombreCompleto.replace(/\s+/g, '-')}-${fecha}.pdf`);
@@ -354,69 +622,111 @@ new Vue({
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
-                // Título
-                doc.setTextColor(218, 165, 32);
-                doc.setFontSize(20);
-                doc.setFont('helvetica', 'bold');
-                doc.text('Peluquería LUNA', 20, 20);
+                const empleadosParaExportar = this.empleadosFiltrados;
+                const itemsPorPagina = 15;
+                const totalPaginas = Math.ceil(empleadosParaExportar.length / itemsPorPagina);
                 
-                doc.setTextColor(139, 69, 19);
-                doc.setFontSize(16);
-                doc.text(`Reporte de Empleados - ${this.getNombreMesActual()} ${new Date().getFullYear()}`, 20, 35);
-                
-                // Fecha
-                doc.setFontSize(10);
-                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 150, 15);
-                
-                // Línea decorativa
-                doc.setDrawColor(218, 165, 32);
-                doc.setLineWidth(1);
-                doc.line(20, 45, 190, 45);
-                
-                let y = 60;
-                
-                // Detalle por empleado filtrado
-                doc.setFont('helvetica', 'bold');
-                doc.text('DETALLE POR EMPLEADO', 20, y);
-                y += 15;
-                
-                this.empleadosFiltrados.forEach((empleado, index) => {
-                    if (y > 250) {
-                        doc.addPage();
-                        y = 20;
-                    }
+                for (let pagina = 0; pagina < totalPaginas; pagina++) {
+                    if (pagina > 0) doc.addPage();
                     
-                    doc.setTextColor(218, 165, 32);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(`${index + 1}. ${empleado.nombreCompleto}`, 20, y);
-                    y += 8;
+                    // Header profesional
+                    doc.setLineWidth(2);
+                    doc.line(20, 25, 190, 25);
                     
                     doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(24);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
+                    
+                    doc.setLineWidth(0.5);
+                    doc.line(20, 28, 190, 28);
+                    
+                    doc.setFontSize(16);
                     doc.setFont('helvetica', 'normal');
-                    doc.text(`   Área: ${empleado.area ? empleado.area.nombre : 'N/A'}`, 25, y);
-                    y += 6;
-                    doc.text(`   Sueldo Base: ${this.formatearNumero(empleado.sueldoBase)}`, 25, y);
-                    y += 6;
-                    doc.text(`   Comisión (${empleado.comisionPorcentaje}%): ${this.formatearNumero(empleado.comisionTotal)}`, 25, y);
-                    y += 6;
-                    doc.text(`   Total a Cobrar: ${this.formatearNumero(empleado.sueldoTotal)}`, 25, y);
-                    y += 6;
-                    doc.text(`   Ya Pagado: ${this.formatearNumero(empleado.totalPagado || 0)}`, 25, y);
-                    y += 6;
-                    doc.text(`   Diferencia: ${this.formatearNumero(empleado.diferencia)}`, 25, y);
-                    y += 12;
-                });
-                
-                // Footer
-                const pageCount = doc.internal.getNumberOfPages();
-                for (let i = 1; i <= pageCount; i++) {
-                    doc.setPage(i);
-                    doc.setDrawColor(218, 165, 32);
-                    doc.line(20, 280, 190, 280);
-                    doc.setTextColor(139, 69, 19);
+                    doc.text(`REPORTE DE EMPLEADOS - ${this.getNombreMesActual().toUpperCase()} ${new Date().getFullYear()}`, 105, 40, { align: 'center' });
+                    
+                    // Información del reporte
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                    doc.text(`Total de empleados: ${empleadosParaExportar.length}`, 20, 62);
+                    
+                    const inicio = pagina * itemsPorPagina;
+                    const fin = Math.min(inicio + itemsPorPagina, empleadosParaExportar.length);
+                    const empleadosPagina = empleadosParaExportar.slice(inicio, fin);
+                    
+                    const headers = [['NOMBRE', 'ÁREA', 'SUELDO BASE', 'COMISIÓN %', 'SUELDO NETO', 'TOTAL PAGADO', 'DIFERENCIA']];
+                    const data = empleadosPagina.map((empleado) => [
+                        empleado.nombreCompleto || '',
+                        empleado.area ? empleado.area.nombre : 'Sin área',
+                        this.formatearNumero(empleado.sueldoBase),
+                        empleado.comisionPorcentaje + '%',
+                        this.formatearNumero(this.calcularSueldoNeto(empleado)),
+                        this.formatearNumero(empleado.totalPagado || 0),
+                        this.formatearNumero(this.calcularSueldoTotal(empleado))
+                    ]);
+                    
+                    const tableConfig = {
+                        head: headers,
+                        body: data,
+                        startY: 68,
+                        styles: { 
+                            fontSize: 8,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            cellPadding: 2,
+                            lineColor: [0, 0, 0],
+                            lineWidth: 0.1,
+                            overflow: 'linebreak'
+                        },
+                        headStyles: { 
+                            fontSize: 8,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'center',
+                            cellPadding: 3
+                        },
+                        bodyStyles: {
+                            fontSize: 8,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            overflow: 'linebreak'
+                        },
+                        alternateRowStyles: {
+                            fillColor: [255, 255, 255]
+                        },
+                        columnStyles: {
+                            0: { cellWidth: 'auto', overflow: 'linebreak' },
+                            1: { cellWidth: 'auto', overflow: 'linebreak' },
+                            2: { cellWidth: 'auto', halign: 'right' },
+                            3: { cellWidth: 'auto', halign: 'center' },
+                            4: { cellWidth: 'auto', halign: 'right' },
+                            5: { cellWidth: 'auto', halign: 'right' },
+                            6: { cellWidth: 'auto', halign: 'right' }
+                        },
+                        margin: { bottom: 40 }
+                    };
+                    
+                    doc.autoTable(tableConfig);
+                    
+                    // Footer profesional
+                    const pageHeight = doc.internal.pageSize.height;
+                    doc.setLineWidth(0.5);
+                    doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                    
                     doc.setFontSize(8);
-                    doc.text('Peluquería LUNA - Sistema de Gestión', 20, 290);
-                    doc.text(`Página ${i} de ${pageCount}`, 170, 290);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`Página ${pagina + 1} de ${totalPaginas}`, 20, pageHeight - 15);
+                    doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
                 }
                 
                 const fecha = new Date().toISOString().split('T')[0];

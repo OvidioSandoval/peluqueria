@@ -14,6 +14,9 @@ new Vue({
             productosBajoStock: [],
 
             historialDescuentos: [],
+            ventasCliente: [],
+            clientes: [],
+            clienteSeleccionado: null,
             filtros: {
                 nombre: '',
                 fecha: '',
@@ -34,6 +37,7 @@ new Vue({
                 case 'productos': datos = this.productosBajoStock; break;
 
                 case 'descuentos': datos = this.historialDescuentos; break;
+                case 'ventas-cliente': datos = this.ventasCliente; break;
             }
             
             if (!this.filtros.busqueda && !this.filtros.fecha) {
@@ -70,6 +74,14 @@ new Vue({
                                            (item.ventaId || '').toString().includes(busqueda) ||
                                            (item.descuento || 0).toString().includes(busqueda);
                             break;
+                        case 'ventas-cliente':
+                            cumpleBusqueda = (item.cliente || '').toLowerCase().includes(busqueda) ||
+                                           (item.empleado || '').toLowerCase().includes(busqueda) ||
+                                           (item.total || 0).toString().includes(busqueda) ||
+                                           (item.metodoPago || '').toLowerCase().includes(busqueda) ||
+                                           (item.productos || '').toLowerCase().includes(busqueda) ||
+                                           (item.servicios || '').toLowerCase().includes(busqueda);
+                            break;
                     }
                 }
                 
@@ -90,8 +102,9 @@ new Vue({
                     this.cargarServiciosMasSolicitados(),
                     this.cargarClientesMasFrecuentes(),
                     this.cargarProductosBajoStock(),
-
-                    this.cargarHistorialDescuentos()
+                    this.cargarHistorialDescuentos(),
+                    this.cargarClientes(),
+                    this.cargarVentasCliente()
                 ]);
             } catch (error) {
                 NotificationSystem.error('Error al cargar reportes');
@@ -120,6 +133,38 @@ new Vue({
         async cargarHistorialDescuentos() {
             const response = await fetch(`${config.apiBaseUrl}/reportes/historial-descuentos`);
             this.historialDescuentos = await response.json();
+        },
+
+        async cargarClientes() {
+            const response = await fetch(`${config.apiBaseUrl}/clientes`);
+            this.clientes = await response.json();
+        },
+
+        async cargarVentasCliente() {
+            const ventasResponse = await fetch(`${config.apiBaseUrl}/ventas`);
+            const detalleVentasResponse = await fetch(`${config.apiBaseUrl}/detalle-ventas`);
+            const ventas = await ventasResponse.json();
+            const detalleVentas = await detalleVentasResponse.json();
+            
+            this.ventasCliente = ventas
+                .filter(venta => venta.cliente)
+                .map(venta => {
+                    const detalles = detalleVentas.filter(detalle => detalle.venta && detalle.venta.id === venta.id);
+                    const productos = detalles.filter(d => d.producto).map(d => d.producto.nombre).join(', ');
+                    const servicios = detalles.filter(d => d.servicio).map(d => d.servicio.nombre).join(', ');
+                    
+                    return {
+                        id: venta.id,
+                        fecha: venta.fechaVenta,
+                        cliente: venta.cliente.nombreCompleto,
+                        empleado: venta.empleado ? venta.empleado.nombreCompleto : 'N/A',
+                        total: venta.total,
+                        metodoPago: venta.metodoPago || 'N/A',
+                        descuento: venta.descuento || 0,
+                        productos: productos || 'N/A',
+                        servicios: servicios || 'N/A'
+                    };
+                });
         },
 
         exportarPDF() {
@@ -232,8 +277,8 @@ new Vue({
                 servicios: 'Servicios Más Solicitados',
                 clientes: 'Clientes Más Frecuentes',
                 productos: 'Productos con Bajo Stock',
-
-                descuentos: 'Historial de Descuentos'
+                descuentos: 'Historial de Descuentos',
+                'ventas-cliente': 'Ventas de Clientes'
             };
             return titulos[this.reporteActivo];
         },
@@ -247,7 +292,9 @@ new Vue({
                 case 'productos':
                     return ['Producto', 'Stock Actual', 'Stock Mínimo', 'Precio'];
                 case 'descuentos':
-                    return ['Venta ID', 'Cliente', 'Descuento', 'Fecha'];
+                    return ['Cliente', 'Descuento', 'Fecha'];
+                case 'ventas-cliente':
+                    return ['Fecha', 'Cliente', 'Empleado', 'Total', 'Productos', 'Servicios'];
                 default:
                     return ['Datos'];
             }
@@ -262,7 +309,9 @@ new Vue({
                 case 'productos':
                     return [item.nombre, item.stock || 0, item.stockMinimo || 0, this.formatearNumero(item.precio || 0)];
                 case 'descuentos':
-                    return [item.ventaId, item.cliente, this.formatearNumero(item.descuento || 0), this.formatearFecha(item.fecha)];
+                    return [item.cliente, this.formatearNumero(item.descuento || 0), this.formatearFecha(item.fecha)];
+                case 'ventas-cliente':
+                    return [this.formatearFecha(item.fecha), item.cliente, item.empleado, this.formatearNumero(item.total), item.productos, item.servicios];
                 default:
                     return [JSON.stringify(item)];
             }
@@ -302,10 +351,18 @@ new Vue({
                     };
                 case 'descuentos':
                     return {
+                        0: { cellWidth: 'auto', overflow: 'linebreak' },
+                        1: { cellWidth: 'auto', halign: 'right' },
+                        2: { cellWidth: 'auto', halign: 'center' }
+                    };
+                case 'ventas-cliente':
+                    return {
                         0: { cellWidth: 'auto', halign: 'center' },
                         1: { cellWidth: 'auto', overflow: 'linebreak' },
-                        2: { cellWidth: 'auto', halign: 'right' },
-                        3: { cellWidth: 'auto', halign: 'center' }
+                        2: { cellWidth: 'auto', overflow: 'linebreak' },
+                        3: { cellWidth: 'auto', halign: 'right' },
+                        4: { cellWidth: 'auto', overflow: 'linebreak' },
+                        5: { cellWidth: 'auto', overflow: 'linebreak' }
                     };
                 default:
                     return {
@@ -334,6 +391,9 @@ new Vue({
                 <button @click="reporteActivo = 'descuentos'" :class="{'active': reporteActivo === 'descuentos'}" class="btn btn-small" style="min-width: fit-content; padding: 8px 12px; font-size: 0.85rem;">
                     <i class="fas fa-percent"></i> Descuentos
                 </button>
+                <button @click="reporteActivo = 'ventas-cliente'" :class="{'active': reporteActivo === 'ventas-cliente'}" class="btn btn-small" style="min-width: fit-content; padding: 8px 12px; font-size: 0.85rem;">
+                    <i class="fas fa-shopping-cart"></i> Ventas Cliente
+                </button>
                 <button @click="window.location.href = '/web/empleado-principal'" class="btn btn-small" style="min-width: fit-content; padding: 8px 12px; font-size: 0.85rem;">
                     <i class="fas fa-users"></i> Empleados
                 </button>
@@ -348,6 +408,7 @@ new Vue({
                     <label>Fecha:</label>
                     <input v-model="filtros.fecha" type="date" class="search-bar" style="width: 140px;"/>
                 </div>
+
                 <button @click="exportarPDF()" class="btn btn-small">
                     <i class="fas fa-file-pdf"></i> Exportar PDF
                 </button>
@@ -435,7 +496,6 @@ new Vue({
                     <table>
                         <thead>
                             <tr>
-                                <th>Venta ID</th>
                                 <th>Cliente</th>
                                 <th>Descuento</th>
                                 <th>Fecha</th>
@@ -443,10 +503,36 @@ new Vue({
                         </thead>
                         <tbody>
                             <tr v-for="descuento in datosReporteFiltrados" :key="descuento.id">
-                                <td>{{ descuento.ventaId }}</td>
                                 <td>{{ descuento.cliente }}</td>
                                 <td>{{ formatearNumero(descuento.descuento || 0) }}</td>
                                 <td>{{ formatearFecha(descuento.fecha) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Ventas por Cliente -->
+                <div v-if="reporteActivo === 'ventas-cliente'">
+                    <h3>Ventas de Clientes</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Cliente</th>
+                                <th>Empleado</th>
+                                <th>Total</th>
+                                <th>Productos</th>
+                                <th>Servicios</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="venta in datosReporteFiltrados" :key="venta.id">
+                                <td>{{ formatearFecha(venta.fecha) }}</td>
+                                <td>{{ venta.cliente }}</td>
+                                <td>{{ venta.empleado }}</td>
+                                <td><strong>{{ formatearNumero(venta.total) }}</strong></td>
+                                <td>{{ venta.productos }}</td>
+                                <td>{{ venta.servicios }}</td>
                             </tr>
                         </tbody>
                     </table>
