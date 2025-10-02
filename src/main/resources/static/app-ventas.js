@@ -108,20 +108,30 @@ new Vue({
         },
         formatearFecha(fecha) {
             if (!fecha) return '';
-            if (Array.isArray(fecha)) {
-                const [year, month, day] = fecha;
-                return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
-            }
-            try {
-                const date = new Date(fecha);
-                if (isNaN(date.getTime())) return fecha;
+            
+            // Manejar timestamp en segundos (Java Instant)
+            if (typeof fecha === 'number') {
+                const date = new Date(fecha * 1000); // Convertir segundos a milisegundos
                 const day = String(date.getDate()).padStart(2, '0');
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const year = date.getFullYear();
                 return `${day}/${month}/${year}`;
-            } catch (error) {
-                return fecha;
             }
+            
+            // Manejar arrays [year, month, day]
+            if (Array.isArray(fecha)) {
+                const [year, month, day] = fecha;
+                return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+            }
+            
+            // Si es string ISO
+            if (typeof fecha === 'string' && fecha.includes('T')) {
+                const fechaSolo = fecha.split('T')[0];
+                const [year, month, day] = fechaSolo.split('-');
+                return `${day}/${month}/${year}`;
+            }
+            
+            return String(fecha);
         },
         formatearFechaParaFiltro(fecha) {
             if (!fecha) return '';
@@ -129,7 +139,9 @@ new Vue({
                 const [year, month, day] = fecha;
                 return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             }
-            return typeof fecha === 'string' ? fecha : new Date(fecha).toISOString().split('T')[0];
+            const date = new Date(fecha);
+            if (isNaN(date.getTime())) return '';
+            return date.toISOString().split('T')[0];
         },
         startAutoRefresh() {
             this.intervalId = setInterval(() => {

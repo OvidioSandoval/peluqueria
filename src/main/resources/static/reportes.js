@@ -158,9 +158,9 @@ new Vue({
                         fecha: venta.fechaVenta,
                         cliente: venta.cliente.nombreCompleto,
                         empleado: venta.empleado ? venta.empleado.nombreCompleto : 'N/A',
-                        total: venta.total,
+                        total: venta.montoTotal,
                         metodoPago: venta.metodoPago || 'N/A',
-                        descuento: venta.descuento || 0,
+                        descuento: venta.descuentoAplicado || 0,
                         productos: productos || 'N/A',
                         servicios: servicios || 'N/A'
                     };
@@ -322,7 +322,31 @@ new Vue({
         },
 
         formatearFecha(fecha) {
-            return fecha ? new Date(fecha).toLocaleDateString('es-ES') : '';
+            if (!fecha) return '';
+            
+            // Manejar timestamp en segundos (Java Instant)
+            if (typeof fecha === 'number') {
+                const date = new Date(fecha * 1000); // Convertir segundos a milisegundos
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}/${month}/${year}`;
+            }
+            
+            // Manejar arrays [year, month, day]
+            if (Array.isArray(fecha)) {
+                const [year, month, day] = fecha;
+                return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+            }
+            
+            // Si es string ISO
+            if (typeof fecha === 'string' && fecha.includes('T')) {
+                const fechaSolo = fecha.split('T')[0];
+                const [year, month, day] = fechaSolo.split('-');
+                return `${day}/${month}/${year}`;
+            }
+            
+            return new Date(fecha).toLocaleDateString('es-ES');
         },
         
         getColumnStyles() {

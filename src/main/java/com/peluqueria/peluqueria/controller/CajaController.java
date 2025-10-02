@@ -61,4 +61,17 @@ public class CajaController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @GetMapping("/hay-cajas-abiertas")
+    public ResponseEntity<Boolean> hayCajasAbiertas() {
+        LOGGER.info("IN: Verificando si hay cajas abiertas");
+        try {
+            boolean resultado = cajaService.hayCajasAbiertas();
+            LOGGER.info("OUT: [{}]", resultado);
+            return ResponseEntity.ok(resultado);
+        } catch (Exception e) {
+            LOGGER.error("", e);
+            return ResponseEntity.status(500).body(false);
+        }
+    }
 }

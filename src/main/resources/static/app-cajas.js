@@ -41,11 +41,13 @@ new Vue({
             historialVisible: false,
             historialCaja: null,
             historialVentas: [],
+            hayCajasAbiertas: false,
         };
     },
     mounted() {
         this.fetchCajas();
         this.fetchEmpleados();
+        this.verificarCajasAbiertas();
         this.startAutoRefresh();
     },
     computed: {
@@ -89,6 +91,7 @@ new Vue({
                     empleado: caja.empleado || null
                 }));
                 this.filtrarCajas();
+                this.verificarCajasAbiertas();
             } catch (error) {
                 console.error('Error al cargar cajas:', error);
                 NotificationSystem.error(`Error al cargar las cajas: ${error.message}`);
@@ -100,6 +103,17 @@ new Vue({
                 this.empleados = await response.json();
             } catch (error) {
                 console.error('Error al cargar empleados:', error);
+            }
+        },
+        async verificarCajasAbiertas() {
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/cajas/hay-cajas-abiertas`);
+                if (response.ok) {
+                    this.hayCajasAbiertas = await response.json();
+                }
+            } catch (error) {
+                console.error('Error al verificar cajas abiertas:', error);
+                this.hayCajasAbiertas = false;
             }
         },
         filtrarCajas() {
@@ -854,7 +868,7 @@ new Vue({
                                 <td>{{ formatearNumero(caja.totalDescuentos || 0) }}</td>
                                 <td><span :class="{'badge-abierto': caja.estado === 'abierto', 'badge-cerrado': caja.estado === 'cerrado'}">{{ caja.estado.toUpperCase() }}</span></td>
                                 <td>
-                                    <button v-if="caja.estado === 'abierto'" @click="cerrarCaja(caja)" class="btn-small">Cerrar Caja</button>
+                                    <button v-if="caja.estado && caja.estado.toLowerCase().trim() === 'abierto'" @click="cerrarCaja(caja)" class="btn-small">Cerrar Caja</button>
                                     <button @click="verHistorial(caja)" class="btn-small btn-secondary">Ver Historial</button>
                                 </td>
                             </tr>
@@ -969,20 +983,22 @@ style.textContent = `
         outline: none;
     }
     .badge-abierto {
-        background: #28a745;
+        background: linear-gradient(135deg, #81c784, #66bb6a);
         color: white;
-        padding: 4px 8px;
-        border-radius: 4px;
+        padding: 8px 15px;
+        border-radius: 20px;
         font-size: 12px;
         font-weight: bold;
+        box-shadow: 0 2px 8px rgba(102, 187, 106, 0.3);
     }
     .badge-cerrado {
-        background: #dc3545;
+        background: linear-gradient(135deg, #ef5350, #e53935);
         color: white;
-        padding: 4px 8px;
-        border-radius: 4px;
+        padding: 8px 15px;
+        border-radius: 20px;
         font-size: 12px;
         font-weight: bold;
+        box-shadow: 0 2px 8px rgba(239, 83, 80, 0.3);
     }
     table {
         width: 100%;
@@ -1013,6 +1029,35 @@ style.textContent = `
     }
     table tbody tr:nth-child(even) {
         background-color: #fafafa;
+    }
+    .btn-small {
+        background: linear-gradient(135deg, #b3e5fc, #81d4fa);
+        color: #0277bd;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        margin: 2px;
+        text-decoration: none;
+        display: inline-block;
+        box-shadow: 0 3px 10px rgba(129, 212, 250, 0.3);
+        font-size: 0.9rem;
+    }
+    .btn-small:hover {
+        background: linear-gradient(135deg, #81d4fa, #4fc3f7);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(79, 195, 247, 0.4);
+    }
+    .btn-small.btn-secondary {
+        background: linear-gradient(135deg, #e1bee7, #ce93d8);
+        color: #7b1fa2;
+    }
+    .btn-small.btn-secondary:hover {
+        background: linear-gradient(135deg, #ce93d8, #ba68c8);
+        color: white;
     }
 `;
 document.head.appendChild(style);

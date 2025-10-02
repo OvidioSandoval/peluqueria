@@ -110,4 +110,15 @@ public class CajaService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    public boolean hayCajasAbiertas() {
+        try {
+            boolean resultado = cajaRepository.existeCajaAbierta();
+            LOGGER.info("OUT: Hay cajas abiertas: [{}]", resultado);
+            return resultado;
+        } catch (Exception e) {
+            LOGGER.error("Error al verificar cajas abiertas", e);
+            return false;
+        }
+    }
 }
