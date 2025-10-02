@@ -22,9 +22,6 @@ public class PaquetesContieneServicio {
     @JoinColumn(name = "servicio_id", nullable = false)
     private com.peluqueria.peluqueria.model.Servicio servicio;
 
-    @Column(name = "cantidad", nullable = false)
-    private Integer cantidad;
-
     public Integer getId() {
         return id;
     }
@@ -47,14 +44,6 @@ public class PaquetesContieneServicio {
 
     public void setServicio(com.peluqueria.peluqueria.model.Servicio servicio) {
         this.servicio = servicio;
-    }
-
-    public Integer getCantidad() {
-        return cantidad;
-    }
-
-    public void setCantidad(Integer cantidad) {
-        this.cantidad = cantidad;
     }
 
 }

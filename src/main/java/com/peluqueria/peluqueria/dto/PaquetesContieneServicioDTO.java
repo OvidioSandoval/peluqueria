@@ -6,18 +6,17 @@ public class PaquetesContieneServicioDTO {
     private String paqueteDescripcion;
     private Integer servicioId;
     private String servicioNombre;
-    private Integer cantidad;
+
 
     public PaquetesContieneServicioDTO() {}
 
     public PaquetesContieneServicioDTO(Integer id, Integer paqueteId, String paqueteDescripcion, 
-                                      Integer servicioId, String servicioNombre, Integer cantidad) {
+                                      Integer servicioId, String servicioNombre) {
         this.id = id;
         this.paqueteId = paqueteId;
         this.paqueteDescripcion = paqueteDescripcion;
         this.servicioId = servicioId;
         this.servicioNombre = servicioNombre;
-        this.cantidad = cantidad;
     }
 
     public Integer getId() { return id; }
@@ -35,6 +34,5 @@ public class PaquetesContieneServicioDTO {
     public String getServicioNombre() { return servicioNombre; }
     public void setServicioNombre(String servicioNombre) { this.servicioNombre = servicioNombre; }
 
-    public Integer getCantidad() { return cantidad; }
-    public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
+
 }

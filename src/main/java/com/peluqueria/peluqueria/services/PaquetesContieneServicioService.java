@@ -92,7 +92,6 @@ public class PaquetesContieneServicioService {
                 PaquetesContieneServicio actualPaquete = paqueteExistente.get();
                 actualPaquete.setPaquete(paqueteServicio.getPaquete());
                 actualPaquete.setServicio(paqueteServicio.getServicio());
-                actualPaquete.setCantidad(paqueteServicio.getCantidad());
                 PaquetesContieneServicio actualPaqueteSalvo = paquetesContieneServicioRepository.save(actualPaquete);
                 PaquetesContieneServicioDTO dto = convertToDTO(actualPaqueteSalvo);
                 LOGGER.info("OUT:[{}]", dto);
@@ -113,7 +112,6 @@ public class PaquetesContieneServicioService {
             PaquetesContieneServicio guardarPaquete = new PaquetesContieneServicio();
             guardarPaquete.setPaquete(paqueteServicio.getPaquete());
             guardarPaquete.setServicio(paqueteServicio.getServicio());
-            guardarPaquete.setCantidad(paqueteServicio.getCantidad());
             PaquetesContieneServicio guardarPaqueteSalvo = paquetesContieneServicioRepository.save(guardarPaquete);
             PaquetesContieneServicioDTO dto = convertToDTO(guardarPaqueteSalvo);
             LOGGER.info("OUT:[{}] Paquete-servicio guardado", dto);
@@ -130,8 +128,7 @@ public class PaquetesContieneServicioService {
             entity.getPaquete() != null ? entity.getPaquete().getId() : null,
             entity.getPaquete() != null ? entity.getPaquete().getDescripcion() : null,
             entity.getServicio() != null ? entity.getServicio().getId() : null,
-            entity.getServicio() != null ? entity.getServicio().getNombre() : null,
-            entity.getCantidad()
+            entity.getServicio() != null ? entity.getServicio().getNombre() : null
         );
     }
 }

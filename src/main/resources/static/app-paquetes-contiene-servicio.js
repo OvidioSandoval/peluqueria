@@ -21,8 +21,7 @@ new Vue({
             nuevaRelacion: { 
                 id: null, 
                 paqueteId: null,
-                servicioId: null,
-                cantidad: 1
+                servicioId: null
             },
             relacionSeleccionada: '',
             intervalId: null,
@@ -94,8 +93,7 @@ new Vue({
             try {
                 const relacionData = {
                     paquete: { id: this.nuevaRelacion.paqueteId },
-                    servicio: { id: this.nuevaRelacion.servicioId },
-                    cantidad: parseInt(this.nuevaRelacion.cantidad)
+                    servicio: { id: this.nuevaRelacion.servicioId }
                 };
                 const response = await fetch(`${config.apiBaseUrl}/paquetes-servicios/agregar_paquete_servicio`, {
                     method: 'POST',
@@ -124,8 +122,7 @@ new Vue({
             try {
                 const relacionData = {
                     paquete: { id: this.nuevaRelacion.paqueteId },
-                    servicio: { id: this.nuevaRelacion.servicioId },
-                    cantidad: parseInt(this.nuevaRelacion.cantidad)
+                    servicio: { id: this.nuevaRelacion.servicioId }
                 };
                 const response = await fetch(`${config.apiBaseUrl}/paquetes-servicios/actualizar_paquete_servicio/${this.nuevaRelacion.id}`, {
                     method: 'PUT',
@@ -167,8 +164,7 @@ new Vue({
             this.nuevaRelacion = { 
                 id: null, 
                 paqueteId: null,
-                servicioId: null,
-                cantidad: 1
+                servicioId: null
             };
             this.relacionSeleccionada = '';
         },
@@ -176,8 +172,7 @@ new Vue({
             this.nuevaRelacion = { 
                 id: relacion.id,
                 paqueteId: relacion.paqueteId,
-                servicioId: relacion.servicioId,
-                cantidad: relacion.cantidad
+                servicioId: relacion.servicioId
             };
             this.formularioVisible = true;
             this.relacionSeleccionada = `${relacion.paqueteDescripcion} - ${relacion.servicioNombre}`;
@@ -249,10 +244,7 @@ new Vue({
                                     </option>
                                 </select>
                             </div>
-                            <div style="flex: 0 0 150px;">
-                                <label>Cantidad: *</label>
-                                <input type="number" v-model="nuevaRelacion.cantidad" placeholder="Cantidad" min="1" required/>
-                            </div>
+
                         </div>
                         <div style="display: flex; gap: 10px; margin-top: 15px;">
                             <button @click="nuevaRelacion.id ? modificarRelacion() : agregarRelacion()" class="btn">
@@ -268,7 +260,6 @@ new Vue({
                                 <th>ID</th>
                                 <th>Paquete</th>
                                 <th>Servicio</th>
-                                <th>Cantidad</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -277,7 +268,6 @@ new Vue({
                                 <td>{{ relacion.id }}</td>
                                 <td>{{ getPaqueteDescripcion(relacion) }}</td>
                                 <td>{{ getServicioName(relacion) }}</td>
-                                <td>{{ formatearNumero(relacion.cantidad) }}</td>
                                 <td>
                                     <button @click="cargarRelacion(relacion)" class="btn-small">Editar</button>
                                     <button @click="eliminarRelacion(relacion)" class="btn-small btn-danger">Eliminar</button>
