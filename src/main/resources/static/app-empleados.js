@@ -409,6 +409,10 @@ new Vue({
                 console.error('Error al generar PDF:', error);
                 NotificationSystem.error('Error al generar el PDF: ' + error.message);
             }
+        },
+        
+        goBack() {
+            window.history.back();
         }
 
     },
@@ -416,7 +420,7 @@ new Vue({
         <div class="glass-container">
             <div>
                 <h1 class="page-title">Gestión de Empleados</h1>
-                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
+                <button @click="goBack" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
                     <div class="filters-container" style="display: flex; gap: 30px; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; width: fit-content;">
                         <div class="filter-group" style="margin-right: 25px;">

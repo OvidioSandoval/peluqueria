@@ -73,13 +73,16 @@ new Vue({
             return texto.split(' ').map(palabra => 
                 palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase()
             ).join(' ');
+        },
+        goBack() {
+            window.history.back();
         }
     },
     template: `
         <div class="glass-container">
             <div id="app">
                 <h1 class="page-title">Registrar Nuevo Cliente</h1>
-                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
+                <button @click="goBack" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
                     <div class="form-container">
                         <h3>Nuevo Cliente</h3>
@@ -113,7 +116,7 @@ new Vue({
                         </div>
                         <div class="form-buttons">
                             <button @click="agregarCliente()" class="btn">Agregar Cliente</button>
-                            <button @click="window.history.back()" class="btn btn-secondary">Cancelar</button>
+                            <button @click="goBack" class="btn btn-secondary">Cancelar</button>
                         </div>
                     </div>
                 </main>

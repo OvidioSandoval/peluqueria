@@ -186,4 +186,10 @@ public class FrontController {
         LOGGER.info("IN: mostrarRegistroCliente");
         return "registro-cliente";
     }
+
+    @GetMapping("/web/registro-empleado")
+    public String mostrarRegistroEmpleado(Model model) {
+        LOGGER.info("IN: mostrarRegistroEmpleado");
+        return "registro-empleado";
+    }
 }
