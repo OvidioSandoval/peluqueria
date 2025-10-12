@@ -139,7 +139,7 @@ new Vue({
                     <div class="form-container" style="width: fit-content; max-width: 500px;">
                         <h3>{{ modoEdicion ? 'Modificar Área - ' + nuevaArea.nombre : 'Nueva Área' }}</h3>
                         <label>Nombre: *</label>
-                        <input type="text" v-model="nuevaArea.nombre" @input="verificarAreaExistente" placeholder="Ingrese el nombre del área" required/>
+                        <input type="text" v-model="nuevaArea.nombre" @input="verificarAreaExistente" placeholder="Ingrese el nombre del área" required style="border: 2px solid #87CEEB;"/>
                         <div style="display: flex; gap: 10px; margin-top: 15px;">
                             <button @click="modoEdicion ? modificarArea() : agregarArea()" class="btn" :disabled="cargando">
                                 {{ cargando ? 'Guardando...' : (modoEdicion ? 'Modificar' : 'Agregar') }}

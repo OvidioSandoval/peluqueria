@@ -203,37 +203,37 @@ new Vue({
                         <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: end;">
                             <div style="flex: 1; min-width: 200px;">
                                 <label>Nombre: *</label>
-                                <input type="text" v-model="nuevoProducto.nombre" @blur="verificarProductoExistente" placeholder="Nombre del producto" required/>
+                                <input type="text" v-model="nuevoProducto.nombre" @blur="verificarProductoExistente" placeholder="Nombre del producto" required style="border: 2px solid #87CEEB;"/>
                             </div>
                             <div style="flex: 1; min-width: 150px;">
                                 <label>Precio Compra: *</label>
-                                <input type="number" v-model="nuevoProducto.precioCompra" placeholder="Precio compra" required/>
+                                <input type="number" v-model="nuevoProducto.precioCompra" placeholder="Precio compra" required style="border: 2px solid #87CEEB;"/>
                             </div>
                             <div style="flex: 1; min-width: 150px;">
                                 <label>Precio Venta: *</label>
-                                <input type="number" v-model="nuevoProducto.precioVenta" placeholder="Precio venta" required/>
+                                <input type="number" v-model="nuevoProducto.precioVenta" placeholder="Precio venta" required style="border: 2px solid #87CEEB;"/>
                             </div>
                             <div style="flex: 1; min-width: 120px;">
                                 <label>Stock Inicial: *</label>
-                                <input type="number" v-model="nuevoProducto.cantidadStockInicial" placeholder="Stock inicial" required/>
+                                <input type="number" v-model="nuevoProducto.cantidadStockInicial" placeholder="Stock inicial" required style="border: 2px solid #87CEEB;"/>
                             </div>
                             <div style="flex: 1; min-width: 120px;">
                                 <label>Stock Óptimo: *</label>
-                                <input type="number" v-model="nuevoProducto.cantidadOptimaStock" placeholder="Stock óptimo" required/>
+                                <input type="number" v-model="nuevoProducto.cantidadOptimaStock" placeholder="Stock óptimo" required style="border: 2px solid #87CEEB;"/>
                             </div>
                             <div style="flex: 1; min-width: 120px;">
                                 <label>Stock Mínimo: *</label>
-                                <input type="number" v-model="nuevoProducto.minimoStock" placeholder="Stock mínimo" required/>
+                                <input type="number" v-model="nuevoProducto.minimoStock" placeholder="Stock mínimo" required style="border: 2px solid #87CEEB;"/>
                             </div>
                             <div v-if="nuevoProducto.enPromocion" style="flex: 1; min-width: 150px;">
                                 <label>Precio Promoción:</label>
-                                <input type="number" v-model="nuevoProducto.precioPromocion" placeholder="Precio promoción"/>
+                                <input type="number" v-model="nuevoProducto.precioPromocion" placeholder="Precio promoción" style="border: 2px solid #87CEEB;"/>
                             </div>
                         </div>
                         <div style="margin-top: 15px; display: flex; gap: 20px; align-items: flex-start;">
                             <div>
                                 <label>Descripción:</label>
-                                <textarea v-model="nuevoProducto.descripcion" placeholder="Descripción del producto" rows="2" style="resize: vertical; width: 150px; height: 150px;"></textarea>
+                                <textarea v-model="nuevoProducto.descripcion" placeholder="Descripción del producto" rows="2" style="resize: vertical; width: 150px; height: 150px; border: 2px solid #87CEEB;"></textarea>
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 25px;">
                                 <label style="display: flex; align-items: center; gap: 5px; margin: 0;">

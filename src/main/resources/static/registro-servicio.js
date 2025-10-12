@@ -220,16 +220,16 @@ new Vue({
                         <div class="form-row">
                             <div class="form-col">
                                 <label>Nombre: *</label>
-                                <input type="text" v-model="nuevoServicio.nombre" @input="verificarServicioExistente" placeholder="Ingrese el nombre del servicio" required/>
+                                <input type="text" v-model="nuevoServicio.nombre" @input="verificarServicioExistente" placeholder="Ingrese el nombre del servicio" required style="border: 2px solid #87CEEB;"/>
                             </div>
                             <div class="form-col">
                                 <label>Precio Base: *</label>
-                                <input type="number" v-model="nuevoServicio.precioBase" placeholder="Ingrese el precio base" required/>
+                                <input type="number" v-model="nuevoServicio.precioBase" placeholder="Ingrese el precio base" required style="border: 2px solid #87CEEB;"/>
                             </div>
                             <div class="form-col">
                                 <label>Categoría:</label>
                                 <div style="display: flex; gap: 10px; align-items: end;">
-                                    <select v-model="nuevoServicio.categoriaId" style="flex: 1;">
+                                    <select v-model="nuevoServicio.categoriaId" style="flex: 1; border: 2px solid #87CEEB;">
                                         <option value="" disabled selected>Selecciona una categoría</option>
                                         <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
                                             {{ categoria.descripcion }}
@@ -242,7 +242,7 @@ new Vue({
                         <div class="form-row" style="gap: 20px;">
                             <div class="form-col" style="flex: none; width: 150px;">
                                 <label>Descripción:</label>
-                                <textarea v-model="nuevoServicio.descripcion" placeholder="Descripción del servicio" rows="2" style="resize: vertical; width: 150px;"></textarea>
+                                <textarea v-model="nuevoServicio.descripcion" placeholder="Descripción del servicio" rows="2" style="resize: vertical; width: 150px; border: 2px solid #87CEEB;"></textarea>
                             </div>
                             <div class="form-col" style="flex: none; width: auto; display: flex; align-items: flex-end; padding-bottom: 10px;">
                                 <label style="display: flex; align-items: center; gap: 8px; margin: 0; white-space: nowrap;">
@@ -255,7 +255,7 @@ new Vue({
                         <div v-if="mostrarFormCategoria" class="form-container" style="margin-top: 20px; padding: 15px; border: 2px dashed #ccc;">
                             <h4>Nueva Categoría</h4>
                             <label>Descripción: *</label>
-                            <textarea v-model="nuevaCategoria.descripcion" placeholder="Ingrese la descripción de la categoría" required rows="2" style="resize: vertical; width: 100%;"></textarea>
+                            <textarea v-model="nuevaCategoria.descripcion" placeholder="Ingrese la descripción de la categoría" required rows="2" style="resize: vertical; width: 100%; border: 2px solid #87CEEB;"></textarea>
                             <div style="display: flex; gap: 10px; margin-top: 10px;">
                                 <button @click="agregarCategoria()" class="btn btn-small">Agregar Categoría</button>
                                 <button @click="toggleFormCategoria()" class="btn btn-secondary btn-small">Cancelar</button>

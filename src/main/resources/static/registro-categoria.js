@@ -135,7 +135,7 @@ new Vue({
                                     placeholder="Ingrese la descripción de la categoría" 
                                     required 
                                     rows="3" 
-                                    style="resize: vertical; width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;"
+                                    style="resize: vertical; width: 100%; padding: 10px; border: 2px solid #87CEEB; border-radius: 5px;"
                                 ></textarea>
                             </div>
                         </div>

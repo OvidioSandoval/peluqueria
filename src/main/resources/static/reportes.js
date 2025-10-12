@@ -421,6 +421,9 @@ new Vue({
                 <button @click="window.location.href = '/web/empleado-principal'" class="btn btn-small" style="min-width: fit-content; padding: 8px 12px; font-size: 0.85rem;">
                     <i class="fas fa-users"></i> Empleados
                 </button>
+                <button @click="window.location.href = '/web/gastos'" class="btn btn-small" style="min-width: fit-content; padding: 8px 12px; font-size: 0.85rem;">
+                    <i class="fas fa-money-bill-wave"></i> Gastos
+                </button>
             </div>
 
             <div class="filters-container" style="display: flex; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; gap: 15px; width: fit-content;">

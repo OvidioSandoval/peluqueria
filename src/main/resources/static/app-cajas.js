@@ -799,9 +799,12 @@ new Vue({
                         <div class="modal-content" style="background: white; padding: 20px; border-radius: 10px; max-width: 800px; max-height: 80vh; overflow-y: auto; width: 90%;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                                 <h3>Historial de {{ historialCaja ? historialCaja.nombre : '' }}</h3>
-                                <button @click="cerrarHistorial()" style="background: none; border: none; color: #f44336; font-size: 1.5rem; cursor: pointer; padding: 5px;">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <button @click="exportarHistorialPDF()" class="btn btn-small"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+                                    <button @click="cerrarHistorial()" style="background: none; border: none; color: #f44336; font-size: 1.5rem; cursor: pointer; padding: 5px;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
                             </div>
                             
                             <div v-if="historialCaja" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">

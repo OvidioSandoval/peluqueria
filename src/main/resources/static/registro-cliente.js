@@ -169,29 +169,29 @@ new Vue({
                         <div class="form-row">
                             <div class="form-col">
                                 <label>Nombre Completo: *</label>
-                                <input type="text" v-model="nuevoCliente.nombreCompleto" @blur="verificarClienteExistente" placeholder="Ingrese el nombre completo" required/>
+                                <input type="text" v-model="nuevoCliente.nombreCompleto" @blur="verificarClienteExistente" placeholder="Ingrese el nombre completo" required style="border: 2px solid #87CEEB;"/>
                             </div>
                             <div class="form-col">
                                 <label>Teléfono:</label>
-                                <input type="tel" v-model="nuevoCliente.telefono" placeholder="Ej: 0981234567" maxlength="10"/>
+                                <input type="tel" v-model="nuevoCliente.telefono" placeholder="Ej: 0981234567" maxlength="10" style="border: 2px solid #87CEEB;"/>
                             </div>
                             <div class="form-col">
                                 <label>RUC:</label>
-                                <input type="text" v-model="nuevoCliente.ruc" placeholder="Ingrese el RUC" maxlength="20"/>
+                                <input type="text" v-model="nuevoCliente.ruc" placeholder="Ingrese el RUC" maxlength="20" style="border: 2px solid #87CEEB;"/>
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-col">
                                 <label>Correo Electrónico:</label>
-                                <input type="email" v-model="nuevoCliente.correo" placeholder="ejemplo@correo.com"/>
+                                <input type="email" v-model="nuevoCliente.correo" placeholder="ejemplo@correo.com" style="border: 2px solid #87CEEB;"/>
                             </div>
                             <div class="form-col">
                                 <label>Fecha de Nacimiento:</label>
-                                <input type="date" v-model="nuevoCliente.fechaNacimiento"/>
+                                <input type="date" v-model="nuevoCliente.fechaNacimiento" style="border: 2px solid #87CEEB;"/>
                             </div>
                             <div class="form-col">
                                 <label>Redes Sociales:</label>
-                                <textarea v-model="nuevoCliente.redesSociales" placeholder="Facebook, Instagram, etc." rows="2" style="resize: vertical;"></textarea>
+                                <textarea v-model="nuevoCliente.redesSociales" placeholder="Facebook, Instagram, etc." rows="2" style="resize: vertical; border: 2px solid #87CEEB;"></textarea>
                             </div>
                         </div>
                         <div class="form-buttons">

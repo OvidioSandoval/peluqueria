@@ -235,53 +235,53 @@ new Vue({
                         <div class="form-row">
                             <div class="form-col">
                                 <label>Nombre Completo: *</label>
-                                <input type="text" v-model="nuevoEmpleado.nombreCompleto" @blur="verificarEmpleadoExistente" placeholder="Ingrese el nombre completo" required/>
+                                <input type="text" v-model="nuevoEmpleado.nombreCompleto" @blur="verificarEmpleadoExistente" placeholder="Ingrese el nombre completo" required style="border: 2px solid #87CEEB;"/>
                             </div>
                             <div class="form-col">
                                 <label>Correo Electrónico:</label>
-                                <input type="email" v-model="nuevoEmpleado.correo" placeholder="ejemplo@correo.com"/>
+                                <input type="email" v-model="nuevoEmpleado.correo" placeholder="ejemplo@correo.com" style="border: 2px solid #87CEEB;"/>
                             </div>
                             <div class="form-col">
                                 <label>Teléfono:</label>
-                                <input type="tel" v-model="nuevoEmpleado.telefono" placeholder="Ej: 0981234567" maxlength="10"/>
+                                <input type="tel" v-model="nuevoEmpleado.telefono" placeholder="Ej: 0981234567" maxlength="10" style="border: 2px solid #87CEEB;"/>
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-col">
                                 <label>Área: *</label>
                                 <div style="display: flex; gap: 10px; align-items: end;">
-                                    <select v-model="nuevoEmpleado.area" required style="flex: 1;">
+                                    <select v-model="nuevoEmpleado.area" required style="flex: 1; border: 2px solid #87CEEB;">
                                         <option value="" disabled>Seleccionar Área</option>
                                         <option v-for="area in areas" :key="area.id" :value="area">{{ area.nombre }}</option>
                                     </select>
                                     <button type="button" @click="mostrarNuevaArea = !mostrarNuevaArea" class="btn btn-small">+</button>
                                 </div>
                                 <div v-if="mostrarNuevaArea" style="margin-top: 10px; display: flex; gap: 10px;">
-                                    <input type="text" v-model="nuevaArea" placeholder="Nombre del área" style="flex: 1;"/>
+                                    <input type="text" v-model="nuevaArea" placeholder="Nombre del área" style="flex: 1; border: 2px solid #87CEEB;"/>
                                     <button type="button" @click="agregarArea()" class="btn btn-small">Agregar</button>
                                     <button type="button" @click="mostrarNuevaArea = false; nuevaArea = ''" class="btn btn-small btn-secondary">Cancelar</button>
                                 </div>
                             </div>
                             <div class="form-col">
                                 <label>Sueldo Base:</label>
-                                <input type="number" v-model="nuevoEmpleado.sueldoBase" placeholder="Sueldo base" min="0"/>
+                                <input type="number" v-model="nuevoEmpleado.sueldoBase" placeholder="Sueldo base" min="0" style="border: 2px solid #87CEEB;"/>
                             </div>
                             <div class="form-col">
                                 <label>Comisión %:</label>
-                                <input type="number" v-model="nuevoEmpleado.comisionPorcentaje" placeholder="Comisión %" min="0" max="100"/>
+                                <input type="number" v-model="nuevoEmpleado.comisionPorcentaje" placeholder="Comisión %" min="0" max="100" style="border: 2px solid #87CEEB;"/>
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-col">
                                 <label>Total Pagado:</label>
-                                <input type="number" v-model="nuevoEmpleado.totalPagado" placeholder="Total pagado" min="0"/>
+                                <input type="number" v-model="nuevoEmpleado.totalPagado" placeholder="Total pagado" min="0" style="border: 2px solid #87CEEB;"/>
                             </div>
                             <div class="form-col">
                                 <label>Fecha de Ingreso:</label>
-                                <input type="date" v-model="nuevoEmpleado.fechaIngreso"/>
+                                <input type="date" v-model="nuevoEmpleado.fechaIngreso" style="border: 2px solid #87CEEB;"/>
                             </div>
                             <div class="form-col">
-                                <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px;">
+                                <label style="display: flex; align-items: center; gap: 5px; margin-top: 25px;">
                                     <input type="checkbox" v-model="nuevoEmpleado.activo"/>
                                     Empleado Activo
                                 </label>

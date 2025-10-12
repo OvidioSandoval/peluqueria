@@ -146,6 +146,122 @@ new Vue({
             this.mostrarSalir = false;
             window.location.href = '/home';
         },
+        
+        exportarPDF() {
+            try {
+                if (!window.jspdf) {
+                    NotificationSystem.error('Error: Librería PDF no cargada');
+                    return;
+                }
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                const relacionesParaExportar = this.relacionesFiltradas;
+                const itemsPorPagina = 25;
+                const totalPaginas = Math.ceil(relacionesParaExportar.length / itemsPorPagina);
+                
+                for (let pagina = 0; pagina < totalPaginas; pagina++) {
+                    if (pagina > 0) doc.addPage();
+                    
+                    // Header profesional
+                    doc.setLineWidth(2);
+                    doc.line(20, 25, 190, 25);
+                    
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(24);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
+                    
+                    doc.setLineWidth(0.5);
+                    doc.line(20, 28, 190, 28);
+                    
+                    doc.setFontSize(16);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('LISTA DE PAQUETES - SERVICIOS', 105, 40, { align: 'center' });
+                    
+                    // Información del reporte
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                    doc.text(`Total de registros: ${relacionesParaExportar.length}`, 20, 62);
+                    if (this.filtroPaquete.trim()) {
+                        doc.text(`Filtro aplicado: "${this.filtroPaquete}"`, 20, 69);
+                    }
+                    
+                    const inicio = pagina * itemsPorPagina;
+                    const fin = Math.min(inicio + itemsPorPagina, relacionesParaExportar.length);
+                    const relacionesPagina = relacionesParaExportar.slice(inicio, fin);
+                    
+                    const headers = [['PAQUETE', 'SERVICIO']];
+                    const data = relacionesPagina.map((relacion) => [
+                        this.getPaqueteDescripcion(relacion),
+                        this.getServicioName(relacion)
+                    ]);
+                    
+                    doc.autoTable({
+                        head: headers,
+                        body: data,
+                        startY: this.filtroPaquete.trim() ? 75 : 68,
+                        styles: { 
+                            fontSize: 9,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            cellPadding: 4,
+                            lineColor: [0, 0, 0],
+                            lineWidth: 0.1
+                        },
+                        headStyles: { 
+                            fontSize: 10,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'center',
+                            cellPadding: 5
+                        },
+                        bodyStyles: {
+                            fontSize: 9,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica'
+                        },
+                        alternateRowStyles: {
+                            fillColor: [255, 255, 255]
+                        },
+                        columnStyles: {
+                            0: { cellWidth: 90 },
+                            1: { cellWidth: 90 }
+                        },
+                        margin: { bottom: 40 }
+                    });
+                    
+                    // Footer profesional
+                    const pageHeight = doc.internal.pageSize.height;
+                    doc.setLineWidth(0.5);
+                    doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                    
+                    doc.setFontSize(8);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`Página ${pagina + 1} de ${totalPaginas}`, 20, pageHeight - 15);
+                    doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
+                }
+                
+                const fecha = new Date().toISOString().split('T')[0];
+                const filtroTexto = this.filtroPaquete.trim() ? '-filtrado' : '';
+                doc.save(`lista-paquetes-servicios${filtroTexto}-${fecha}.pdf`);
+                NotificationSystem.success('Lista de paquetes-servicios exportada exitosamente');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                NotificationSystem.error('Error al generar el PDF. Asegúrate de que la librería esté cargada.');
+            }
+        },
     },
     template: `
         <div class="glass-container">
@@ -158,6 +274,11 @@ new Vue({
                         <div>
                             <label>Buscar por paquete o servicio:</label>
                             <input type="text" v-model="filtroPaquete" @input="filtrarRelaciones" placeholder="Buscar paquete o servicio..." style="width: 250px;"/>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: end;">
+                            <button @click="exportarPDF" class="btn btn-small">
+                                <i class="fas fa-file-pdf"></i> Exportar PDF
+                            </button>
                         </div>
                     </div>
                     

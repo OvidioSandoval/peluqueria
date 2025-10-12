@@ -744,7 +744,7 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 class="page-title">Panel de Empleados - {{ getNombreMesActual() }} {{ new Date().getFullYear() }}</h1>
+                <h1 class="page-title">Gestión de Pago de Empleados - {{ getNombreMesActual() }} {{ new Date().getFullYear() }}</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
                     

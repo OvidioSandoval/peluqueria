@@ -77,6 +77,7 @@ new Vue({
             }
             
             this.detallesFiltrados = filtrados;
+            this.paginaActual = 1;
         },
 
         cambiarPagina(pagina) {
@@ -104,10 +105,7 @@ new Vue({
             return producto ? producto.nombre : '-';
         },
         
-        limpiarFiltros() {
-            this.filtroBusqueda = '';
-            this.filtrarDetalles();
-        },
+
         
         exportarPDF() {
             try {
@@ -234,7 +232,7 @@ new Vue({
                             <label>Buscar Detalle:</label>
                             <input type="text" v-model="filtroBusqueda" @input="filtrarDetalles" placeholder="Buscar por producto o compra..." class="search-bar" style="width: 320px;"/>
                         </div>
-                        <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
+
                         <button @click="exportarPDF" class="btn btn-small">
                             <i class="fas fa-file-pdf"></i> Exportar PDF
                         </button>
