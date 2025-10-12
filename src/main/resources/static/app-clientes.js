@@ -71,10 +71,6 @@ new Vue({
             }
             this.paginaActual = 1;
         },
-        limpiarFiltros() {
-            this.filtroBusqueda = '';
-            this.filtrarClientes();
-        },
         async agregarCliente() {
             if (!this.nuevoCliente.nombreCompleto.trim()) {
                 NotificationSystem.error('El nombre completo es obligatorio');
@@ -369,7 +365,6 @@ new Vue({
                             <input type="text" v-model="filtroBusqueda" @input="filtrarClientes" placeholder="Buscar por nombre, teléfono, RUC o email..." class="search-bar" style="width: 300px;"/>
                         </div>
                         <div style="display: flex; gap: 10px; align-items: end;">
-                            <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
                             <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nuevo Cliente</button>
                             <button @click="exportarPDF" class="btn btn-small">
                                 <i class="fas fa-file-pdf"></i> Exportar PDF

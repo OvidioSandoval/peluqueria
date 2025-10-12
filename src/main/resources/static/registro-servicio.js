@@ -1,0 +1,190 @@
+import config from './config.js';
+import NotificationSystem from './notification-system.js';
+
+new Vue({
+    vuetify: new Vuetify({
+        locale: {
+            current: 'es',
+        },
+    }),
+    el: '#app',
+    data() {
+        return {
+            categorias: [],
+            nuevoServicio: { 
+                nombre: '',
+                descripcion: '',
+                precioBase: 0,
+                activo: true,
+                categoriaId: null
+            },
+            cargando: false,
+            mostrarFormCategoria: false,
+            nuevaCategoria: {
+                descripcion: ''
+            }
+        };
+    },
+    mounted() {
+        this.fetchCategorias();
+    },
+    methods: {
+        async fetchCategorias() {
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/categoria-servicios`);
+                this.categorias = await response.json();
+            } catch (error) {
+                console.error('Error al cargar categorías:', error);
+                NotificationSystem.error('Error al cargar categorías');
+            }
+        },
+        async agregarServicio() {
+            if (!this.nuevoServicio.nombre.trim()) {
+                NotificationSystem.error('El nombre es requerido');
+                return;
+            }
+            if (!this.nuevoServicio.precioBase || this.nuevoServicio.precioBase <= 0) {
+                NotificationSystem.error('El precio base debe ser mayor a 0');
+                return;
+            }
+            try {
+                this.cargando = true;
+                const servicioData = {
+                    nombre: this.capitalizarTexto(this.nuevoServicio.nombre.trim()),
+                    descripcion: this.capitalizarTexto(this.nuevoServicio.descripcion ? this.nuevoServicio.descripcion.trim() : ''),
+                    precioBase: parseInt(this.nuevoServicio.precioBase),
+                    activo: this.nuevoServicio.activo,
+                    categoria: { id: this.nuevoServicio.categoriaId }
+                };
+                const response = await fetch(`${config.apiBaseUrl}/servicios/agregar_servicio`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(servicioData)
+                });
+                if (response.ok) {
+                    NotificationSystem.success('Servicio agregado exitosamente');
+                    this.limpiarFormulario();
+                } else {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error al agregar servicio:', error);
+                NotificationSystem.error(`Error al agregar servicio: ${error.message}`);
+            } finally {
+                this.cargando = false;
+            }
+        },
+        limpiarFormulario() {
+            this.nuevoServicio = { 
+                nombre: '',
+                descripcion: '',
+                precioBase: 0,
+                activo: true,
+                categoriaId: null
+            };
+        },
+        capitalizarTexto(texto) {
+            if (!texto) return '';
+            return texto.split(' ').map(palabra => 
+                palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase()
+            ).join(' ');
+        },
+        async agregarCategoria() {
+            if (!this.nuevaCategoria.descripcion.trim()) {
+                NotificationSystem.error('La descripción es requerida');
+                return;
+            }
+            try {
+                const categoriaData = {
+                    descripcion: this.capitalizarTexto(this.nuevaCategoria.descripcion.trim())
+                };
+                const response = await fetch(`${config.apiBaseUrl}/categoria-servicios/agregar_categoria`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(categoriaData)
+                });
+                if (response.ok) {
+                    const nuevaCat = await response.json();
+                    await this.fetchCategorias();
+                    this.nuevoServicio.categoriaId = nuevaCat.id;
+                    this.mostrarFormCategoria = false;
+                    this.nuevaCategoria.descripcion = '';
+                    NotificationSystem.success('Categoría agregada exitosamente');
+                } else {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error al agregar categoría:', error);
+                NotificationSystem.error(`Error al agregar categoría: ${error.message}`);
+            }
+        },
+        toggleFormCategoria() {
+            this.mostrarFormCategoria = !this.mostrarFormCategoria;
+            this.nuevaCategoria.descripcion = '';
+        }
+    },
+    template: `
+        <div class="glass-container">
+            <div id="app">
+                <h1 class="page-title">Registro de Servicio</h1>
+                <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
+                <main style="padding: 20px;">
+                    <div class="form-container">
+                        <h3>Nuevo Servicio</h3>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label>Nombre: *</label>
+                                <input type="text" v-model="nuevoServicio.nombre" placeholder="Ingrese el nombre del servicio" required/>
+                            </div>
+                            <div class="form-col">
+                                <label>Precio Base: *</label>
+                                <input type="number" v-model="nuevoServicio.precioBase" placeholder="Ingrese el precio base" required/>
+                            </div>
+                            <div class="form-col">
+                                <label>Categoría:</label>
+                                <div style="display: flex; gap: 10px; align-items: end;">
+                                    <select v-model="nuevoServicio.categoriaId" style="flex: 1;">
+                                        <option value="" disabled selected>Selecciona una categoría</option>
+                                        <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
+                                            {{ categoria.descripcion }}
+                                        </option>
+                                    </select>
+                                    <button @click="toggleFormCategoria()" class="btn btn-small" type="button">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row" style="gap: 20px;">
+                            <div class="form-col" style="flex: none; width: 150px;">
+                                <label>Descripción:</label>
+                                <textarea v-model="nuevoServicio.descripcion" placeholder="Descripción del servicio" rows="2" style="resize: vertical; width: 150px;"></textarea>
+                            </div>
+                            <div class="form-col" style="flex: none; width: auto; display: flex; align-items: flex-end; padding-bottom: 10px;">
+                                <label style="display: flex; align-items: center; gap: 8px; margin: 0; white-space: nowrap;">
+                                    <input type="checkbox" v-model="nuevoServicio.activo" style="margin: 0;"/>
+                                    Servicio Activo
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div v-if="mostrarFormCategoria" class="form-container" style="margin-top: 20px; padding: 15px; border: 2px dashed #ccc;">
+                            <h4>Nueva Categoría</h4>
+                            <label>Descripción: *</label>
+                            <textarea v-model="nuevaCategoria.descripcion" placeholder="Ingrese la descripción de la categoría" required rows="2" style="resize: vertical; width: 100%;"></textarea>
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <button @click="agregarCategoria()" class="btn btn-small">Agregar Categoría</button>
+                                <button @click="toggleFormCategoria()" class="btn btn-secondary btn-small">Cancelar</button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-buttons">
+                            <button @click="agregarServicio()" class="btn" :disabled="cargando">
+                                {{ cargando ? 'Guardando...' : 'Agregar' }}
+                            </button>
+                            <button @click="limpiarFormulario()" class="btn btn-secondary">Limpiar</button>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    `
+});
