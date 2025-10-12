@@ -115,11 +115,7 @@ new Vue({
             
             this.empleadosFiltrados = filtrados;
         },
-        limpiarFiltros() {
-            this.filtroBusqueda = '';
-            this.filtroArea = '';
-            this.filtrarEmpleados();
-        },
+
         
         validarEmail(email) {
             const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -431,7 +427,6 @@ new Vue({
                             <label>Filtrar por Área:</label>
                             <input type="text" v-model="filtroArea" @input="filtrarEmpleados" placeholder="Buscar por área..." class="search-bar" style="width: 200px;"/>
                         </div>
-                        <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
                         <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nuevo Empleado</button>
                         <button @click="exportarPDF" class="btn btn-small" v-if="!formularioVisible">
                             <i class="fas fa-file-pdf"></i> Exportar PDF

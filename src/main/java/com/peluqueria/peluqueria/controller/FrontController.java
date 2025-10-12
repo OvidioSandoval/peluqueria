@@ -198,4 +198,16 @@ public class FrontController {
         LOGGER.info("IN: mostrarRegistroServicio");
         return "registro-servicio";
     }
+
+    @GetMapping("/web/registro-producto")
+    public String mostrarRegistroProducto(Model model) {
+        LOGGER.info("IN: mostrarRegistroProducto");
+        return "registro-producto";
+    }
+
+    @GetMapping("/web/registro-area")
+    public String mostrarRegistroArea(Model model) {
+        LOGGER.info("IN: mostrarRegistroArea");
+        return "registro-area";
+    }
 }

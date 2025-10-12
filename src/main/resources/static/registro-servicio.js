@@ -11,7 +11,9 @@ new Vue({
     data() {
         return {
             categorias: [],
+            servicios: [],
             nuevoServicio: { 
+                id: null,
                 nombre: '',
                 descripcion: '',
                 precioBase: 0,
@@ -22,13 +24,56 @@ new Vue({
             mostrarFormCategoria: false,
             nuevaCategoria: {
                 descripcion: ''
-            }
+            },
+            modoEdicion: false,
+            servicioExistente: null
         };
     },
     mounted() {
         this.fetchCategorias();
+        this.fetchServicios();
     },
     methods: {
+        async fetchServicios() {
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/servicios`);
+                if (!response.ok) throw new Error('Error al cargar servicios');
+                this.servicios = await response.json();
+            } catch (error) {
+                console.error('Error:', error);
+                NotificationSystem.error('Error al cargar servicios');
+            }
+        },
+        verificarServicioExistente() {
+            if (!this.nuevoServicio.nombre.trim()) return;
+            
+            const nombreBuscar = this.nuevoServicio.nombre.trim().toLowerCase();
+            this.servicioExistente = this.servicios.find(s => 
+                s.nombre.toLowerCase() === nombreBuscar
+            );
+            
+            if (this.servicioExistente && !this.modoEdicion) {
+                NotificationSystem.error(`El servicio "${this.servicioExistente.nombre}" ya está guardado.`);
+                NotificationSystem.confirm(
+                    `¿Desea modificar los datos del servicio "${this.servicioExistente.nombre}"?`,
+                    () => {
+                        this.cargarServicioParaEdicion(this.servicioExistente);
+                    }
+                );
+            }
+        },
+        cargarServicioParaEdicion(servicio) {
+            this.nuevoServicio = { 
+                id: servicio.id,
+                nombre: servicio.nombre || '',
+                descripcion: servicio.descripcion || '',
+                precioBase: servicio.precioBase || 0,
+                activo: servicio.activo !== undefined ? servicio.activo : true,
+                categoriaId: servicio.categoria ? servicio.categoria.id : (servicio.categoriaId || null)
+            };
+            this.modoEdicion = true;
+            this.servicioExistente = servicio;
+        },
         async fetchCategorias() {
             try {
                 const response = await fetch(`${config.apiBaseUrl}/categoria-servicios`);
@@ -64,6 +109,7 @@ new Vue({
                 if (response.ok) {
                     NotificationSystem.success('Servicio agregado exitosamente');
                     this.limpiarFormulario();
+                    await this.fetchServicios();
                 } else {
                     throw new Error(`Error ${response.status}: ${response.statusText}`);
                 }
@@ -74,14 +120,54 @@ new Vue({
                 this.cargando = false;
             }
         },
+        async modificarServicio() {
+            if (!this.nuevoServicio.nombre.trim()) {
+                NotificationSystem.error('El nombre es requerido');
+                return;
+            }
+            if (!this.nuevoServicio.precioBase || this.nuevoServicio.precioBase <= 0) {
+                NotificationSystem.error('El precio base debe ser mayor a 0');
+                return;
+            }
+            try {
+                this.cargando = true;
+                const servicioData = {
+                    nombre: this.capitalizarTexto(this.nuevoServicio.nombre.trim()),
+                    descripcion: this.capitalizarTexto(this.nuevoServicio.descripcion ? this.nuevoServicio.descripcion.trim() : ''),
+                    precioBase: parseInt(this.nuevoServicio.precioBase),
+                    activo: this.nuevoServicio.activo,
+                    categoria: { id: this.nuevoServicio.categoriaId }
+                };
+                const response = await fetch(`${config.apiBaseUrl}/servicios/actualizar_servicio/${this.nuevoServicio.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(servicioData)
+                });
+                if (response.ok) {
+                    NotificationSystem.success('Servicio actualizado exitosamente');
+                    this.limpiarFormulario();
+                    await this.fetchServicios();
+                } else {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error al modificar servicio:', error);
+                NotificationSystem.error(`Error al modificar servicio: ${error.message}`);
+            } finally {
+                this.cargando = false;
+            }
+        },
         limpiarFormulario() {
             this.nuevoServicio = { 
+                id: null,
                 nombre: '',
                 descripcion: '',
                 precioBase: 0,
                 activo: true,
                 categoriaId: null
             };
+            this.modoEdicion = false;
+            this.servicioExistente = null;
         },
         capitalizarTexto(texto) {
             if (!texto) return '';
@@ -126,15 +212,15 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 class="page-title">Registro de Servicio</h1>
+                <h1 class="page-title">{{ modoEdicion ? 'Editar Servicio' : 'Registro de Servicio' }}</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
                     <div class="form-container">
-                        <h3>Nuevo Servicio</h3>
+                        <h3>{{ modoEdicion ? 'Modificar Servicio - ' + nuevoServicio.nombre : 'Nuevo Servicio' }}</h3>
                         <div class="form-row">
                             <div class="form-col">
                                 <label>Nombre: *</label>
-                                <input type="text" v-model="nuevoServicio.nombre" placeholder="Ingrese el nombre del servicio" required/>
+                                <input type="text" v-model="nuevoServicio.nombre" @input="verificarServicioExistente" placeholder="Ingrese el nombre del servicio" required/>
                             </div>
                             <div class="form-col">
                                 <label>Precio Base: *</label>
@@ -177,10 +263,12 @@ new Vue({
                         </div>
                         
                         <div class="form-buttons">
-                            <button @click="agregarServicio()" class="btn" :disabled="cargando">
-                                {{ cargando ? 'Guardando...' : 'Agregar' }}
+                            <button @click="modoEdicion ? modificarServicio() : agregarServicio()" class="btn" :disabled="cargando">
+                                {{ cargando ? 'Guardando...' : (modoEdicion ? 'Modificar' : 'Agregar') }}
                             </button>
-                            <button @click="limpiarFormulario()" class="btn btn-secondary">Limpiar</button>
+                            <button @click="modoEdicion ? limpiarFormulario() : window.history.back()" class="btn btn-secondary">
+                                {{ modoEdicion ? 'Cancelar Edición' : 'Cancelar' }}
+                            </button>
                         </div>
                     </div>
                 </main>

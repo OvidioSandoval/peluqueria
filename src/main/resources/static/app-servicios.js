@@ -90,10 +90,7 @@ new Vue({
                 );
             }
         },
-        limpiarFiltros() {
-            this.filtroBusqueda = '';
-            this.filtrarServicios();
-        },
+
         async agregarServicio() {
             if (!this.nuevoServicio.nombre.trim()) {
                 NotificationSystem.error('El nombre es requerido');
@@ -384,7 +381,6 @@ new Vue({
                             <label>Buscar Servicio:</label>
                             <input type="text" v-model="filtroBusqueda" @input="filtrarServicios" placeholder="Buscar servicio..." class="search-bar" style="width: 300px;"/>
                         </div>
-                        <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
                         <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nuevo Servicio</button>
                         <button @click="exportarPDF" class="btn btn-small" v-if="!formularioVisible">
                             <i class="fas fa-file-pdf"></i> Exportar PDF

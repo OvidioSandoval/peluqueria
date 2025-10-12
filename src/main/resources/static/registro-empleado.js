@@ -11,6 +11,7 @@ new Vue({
     data() {
         return {
             areas: [],
+            empleados: [],
             nuevaArea: '',
             mostrarNuevaArea: false,
             nuevoEmpleado: {
@@ -24,13 +25,48 @@ new Vue({
                 totalPagado: 0,
                 activo: true,
                 fechaIngreso: new Date().toISOString().split('T')[0]
-            }
+            },
+            modoEdicion: false,
+            empleadoExistente: null
         };
     },
     mounted() {
         this.fetchAreas();
+        this.fetchEmpleados();
     },
     methods: {
+        async fetchEmpleados() {
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/empleados`);
+                if (!response.ok) throw new Error('Error al cargar empleados');
+                this.empleados = await response.json();
+            } catch (error) {
+                console.error('Error:', error);
+                NotificationSystem.error('Error al cargar empleados');
+            }
+        },
+        verificarEmpleadoExistente() {
+            if (!this.nuevoEmpleado.nombreCompleto.trim()) return;
+            
+            const nombreBuscar = this.nuevoEmpleado.nombreCompleto.trim().toLowerCase();
+            this.empleadoExistente = this.empleados.find(e => 
+                e.nombreCompleto.toLowerCase() === nombreBuscar
+            );
+            
+            if (this.empleadoExistente && !this.modoEdicion) {
+                NotificationSystem.confirm(
+                    `El empleado "${this.empleadoExistente.nombreCompleto}" ya existe. ¿Desea modificarlo?`,
+                    () => {
+                        this.cargarEmpleadoParaEdicion(this.empleadoExistente);
+                    }
+                );
+            }
+        },
+        cargarEmpleadoParaEdicion(empleado) {
+            this.nuevoEmpleado = { ...empleado };
+            this.modoEdicion = true;
+            this.empleadoExistente = empleado;
+        },
         async fetchAreas() {
             try {
                 const response = await fetch(config.apiBaseUrl + '/areas');
@@ -82,6 +118,7 @@ new Vue({
                 if (response.ok) {
                     NotificationSystem.success('Empleado agregado exitosamente');
                     this.limpiarFormulario();
+                    await this.fetchEmpleados();
                 } else {
                     throw new Error('Error ' + response.status + ': ' + response.statusText);
                 }
@@ -91,6 +128,49 @@ new Vue({
             }
         },
         
+        async modificarEmpleado() {
+            if (!this.nuevoEmpleado.nombreCompleto.trim()) {
+                NotificationSystem.error('El nombre completo es obligatorio');
+                return;
+            }
+            if (!this.nuevoEmpleado.area) {
+                NotificationSystem.error('El área es obligatoria');
+                return;
+            }
+            if (this.nuevoEmpleado.correo && !this.validarEmail(this.nuevoEmpleado.correo)) {
+                NotificationSystem.error('El formato del correo electrónico no es válido');
+                return;
+            }
+            try {
+                const empleadoData = {
+                    nombreCompleto: this.capitalizarTexto(this.nuevoEmpleado.nombreCompleto),
+                    correo: this.nuevoEmpleado.correo,
+                    telefono: this.nuevoEmpleado.telefono,
+                    area: this.nuevoEmpleado.area,
+                    sueldoBase: parseInt(this.nuevoEmpleado.sueldoBase) || 0,
+                    comisionPorcentaje: parseInt(this.nuevoEmpleado.comisionPorcentaje) || 0,
+                    totalPagado: parseInt(this.nuevoEmpleado.totalPagado) || 0,
+                    activo: this.nuevoEmpleado.activo,
+                    fechaIngreso: this.nuevoEmpleado.fechaIngreso || new Date().toISOString().split('T')[0]
+                };
+                
+                const response = await fetch(`${config.apiBaseUrl}/empleados/actualizar_empleado/${this.nuevoEmpleado.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(empleadoData)
+                });
+                if (response.ok) {
+                    NotificationSystem.success('Empleado actualizado exitosamente');
+                    this.limpiarFormulario();
+                    await this.fetchEmpleados();
+                } else {
+                    throw new Error('Error ' + response.status + ': ' + response.statusText);
+                }
+            } catch (error) {
+                console.error('Error al modificar empleado:', error);
+                NotificationSystem.error('Error al modificar empleado: ' + error.message);
+            }
+        },
         limpiarFormulario() {
             this.nuevoEmpleado = {
                 id: null,
@@ -104,6 +184,8 @@ new Vue({
                 activo: true,
                 fechaIngreso: new Date().toISOString().split('T')[0]
             };
+            this.modoEdicion = false;
+            this.empleadoExistente = null;
         },
         
         capitalizarTexto(texto) {
@@ -149,11 +231,11 @@ new Vue({
                 <button @click="goBack" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
                     <div class="form-container">
-                        <h3>Nuevo Empleado</h3>
+                        <h3>{{ modoEdicion ? 'Modificar Empleado - ' + nuevoEmpleado.nombreCompleto : 'Nuevo Empleado' }}</h3>
                         <div class="form-row">
                             <div class="form-col">
                                 <label>Nombre Completo: *</label>
-                                <input type="text" v-model="nuevoEmpleado.nombreCompleto" placeholder="Ingrese el nombre completo" required/>
+                                <input type="text" v-model="nuevoEmpleado.nombreCompleto" @blur="verificarEmpleadoExistente" placeholder="Ingrese el nombre completo" required/>
                             </div>
                             <div class="form-col">
                                 <label>Correo Electrónico:</label>
@@ -206,8 +288,12 @@ new Vue({
                             </div>
                         </div>
                         <div class="form-buttons">
-                            <button @click="agregarEmpleado()" class="btn">Agregar Empleado</button>
-                            <button @click="goBack" class="btn btn-secondary">Cancelar</button>
+                            <button @click="modoEdicion ? modificarEmpleado() : agregarEmpleado()" class="btn">
+                                {{ modoEdicion ? 'Modificar' : 'Agregar' }} Empleado
+                            </button>
+                            <button @click="modoEdicion ? limpiarFormulario() : goBack()" class="btn btn-secondary">
+                                {{ modoEdicion ? 'Cancelar Edición' : 'Cancelar' }}
+                            </button>
                         </div>
                     </div>
                 </main>

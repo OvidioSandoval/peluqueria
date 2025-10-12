@@ -314,11 +314,7 @@ new Vue({
             if (stockActual <= producto.minimoStock + 2) return 'advertencia';
             return 'normal';
         },
-        limpiarFiltros() {
-            this.filtroBusqueda = '';
-            this.filtroStock = 'todos';
-            this.filtrarProductos();
-        },
+
         
         exportarPDF() {
             try {
@@ -580,7 +576,6 @@ new Vue({
                                 <option value="normal">Normal</option>
                             </select>
                         </div>
-                        <button @click="limpiarFiltros" class="btn btn-secondary btn-small" style="margin: 0 2px;">Limpiar</button>
                         <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible" style="margin: 0 2px;">Nuevo Producto</button>
                         <button @click="exportarPDF" class="btn btn-small" v-if="!formularioVisible" style="margin: 0 2px;">
                             <i class="fas fa-file-pdf"></i> Exportar
