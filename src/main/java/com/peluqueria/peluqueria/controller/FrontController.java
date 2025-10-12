@@ -210,4 +210,16 @@ public class FrontController {
         LOGGER.info("IN: mostrarRegistroArea");
         return "registro-area";
     }
+
+    @GetMapping("/web/registro-caja")
+    public String mostrarRegistroCaja(Model model) {
+        LOGGER.info("IN: mostrarRegistroCaja");
+        return "registro-caja";
+    }
+
+    @GetMapping("/web/registro-categoria")
+    public String mostrarRegistroCategoria(Model model) {
+        LOGGER.info("IN: mostrarRegistroCategoria");
+        return "registro-categoria";
+    }
 }

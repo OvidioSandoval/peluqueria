@@ -12,7 +12,7 @@ new Vue({
         return {
             categorias: [],
             categoriasFiltradas: [],
-
+            filtroBusqueda: '',
             paginaActual: 1,
             itemsPorPagina: 10,
             formularioVisible: false,
@@ -65,7 +65,17 @@ new Vue({
             }
         },
         filtrarCategorias() {
-            this.categoriasFiltradas = this.categorias;
+            let categoriasFiltradas = this.categorias;
+            
+            if (this.filtroBusqueda.trim() !== '') {
+                const busqueda = this.filtroBusqueda.toLowerCase();
+                categoriasFiltradas = categoriasFiltradas.filter(categoria =>
+                    categoria.descripcion.toLowerCase().includes(busqueda)
+                );
+            }
+            
+            this.categoriasFiltradas = categoriasFiltradas;
+            this.paginaActual = 1;
         },
         async agregarCategoria() {
             try {
@@ -185,11 +195,15 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 class="page-title">Gestión de Categorías</h1>
+                <h1 class="page-title">Gestión de Categoría de los Servicios</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
 
                     <div class="filters-container" style="display: flex; gap: 15px; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; width: fit-content;">
+                        <div class="filter-group" style="flex: none; width: auto;">
+                            <label>Buscar Categoría:</label>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarCategorias" placeholder="Buscar por descripción..." class="search-bar" style="width: 300px; padding: 8px 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px;"/>
+                        </div>
                         <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nueva Categoría</button>
                     </div>
                     
