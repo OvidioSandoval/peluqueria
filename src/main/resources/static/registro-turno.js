@@ -296,3 +296,7 @@ new Vue({
         </div>
     `
 });
+
+const style = document.createElement('style');
+style.textContent = 'input, textarea, select { border: 2px solid #87ceeb !important; }';
+document.head.appendChild(style);
