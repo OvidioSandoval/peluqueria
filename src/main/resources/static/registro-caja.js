@@ -164,8 +164,8 @@ new Vue({
                 <h1 class="page-title">{{ modoEdicion ? 'Modificar Caja' : 'Registro de Caja' }}</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
-                    <div class="form-container" style="max-width: 800px; margin: 0 auto; padding: 20px;">
-                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div class="form-container" style="max-width: 600px; margin: 0 auto; padding: 15px;">
+                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                             <div class="form-col">
                                 <label>Nombre de la Caja: *</label>
                                 <input 
@@ -174,7 +174,7 @@ new Vue({
                                     @input="verificarCajaExistente"
                                     placeholder="Ingrese el nombre de la caja" 
                                     required
-                                    style="border: 2px solid #87CEEB;"
+                                    style="border: 2px solid #87CEEB; background: #fcccce2;"
                                 />
                             </div>
                             <div class="form-col">
@@ -184,18 +184,18 @@ new Vue({
                                     v-model="caja.fecha" 
                                     @change="verificarCajaExistente"
                                     required
-                                    style="border: 2px solid #87CEEB;"
+                                    style="border: 2px solid #87CEEB; background: #fcccce2;"
                                 />
                             </div>
                         </div>
-                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                             <div class="form-col">
                                 <label>Hora de Apertura:</label>
                                 <input 
                                     type="time" 
                                     v-model="caja.horaApertura" 
                                     step="1"
-                                    style="border: 2px solid #87CEEB;"
+                                    style="border: 2px solid #87CEEB; background: #fcccce2;"
                                 />
                             </div>
                             <div class="form-col">
@@ -207,14 +207,14 @@ new Vue({
                                     min="0"
                                     step="0.01"
                                     required
-                                    style="border: 2px solid #87CEEB;"
+                                    style="border: 2px solid #87CEEB; background: #fcccce2;"
                                 />
                             </div>
                         </div>
-                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
                             <div class="form-col">
                                 <label>Empleado:</label>
-                                <select v-model="caja.empleadoId" style="border: 2px solid #87CEEB;">
+                                <select v-model="caja.empleadoId" style="border: 2px solid #87CEEB; background: #fcccce2;">
                                     <option value="" disabled>Seleccionar Empleado</option>
                                     <option v-for="empleado in empleados" :key="empleado.id" :value="empleado.id">
                                         {{ empleado.nombreCompleto }}
@@ -223,13 +223,13 @@ new Vue({
                             </div>
                             <div class="form-col">
                                 <label>Estado:</label>
-                                <select v-model="caja.estado" style="border: 2px solid #87CEEB;">
+                                <select v-model="caja.estado" style="border: 2px solid #87CEEB; background: #fcccce2;">
                                     <option value="Abierto">Abierto</option>
                                     <option value="Cerrado">Cerrado</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="form-buttons" style="text-align: center; margin-top: 20px;">
+                        <div class="form-buttons" style="text-align: center; margin-top: 15px;">
                             <button @click="registrarCaja" class="btn">
                                 {{ modoEdicion ? 'Modificar' : 'Registrar' }}
                             </button>

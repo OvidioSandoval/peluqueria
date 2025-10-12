@@ -396,22 +396,22 @@ new Vue({
         '<div><h1 class="page-title">Registro de Venta</h1>' +
         '<button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>' +
         '<main class="main-content">' +
-        '<div class="form-container">' +
-        '<h3 style="color: #5d4037; margin-bottom: 10px;"><i class="fas fa-user"></i> Información de la Venta</h3>' +
-        '<div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: end; width: 100%;">' +
-        '<div class="filter-group" style="flex: 0 0 auto; width: 200px;">' +
-        '<label>Cliente *</label><select v-model="venta.clienteId" required class="search-bar">' +
+        '<div class="form-container" style="padding: 10px;">' +
+        '<h3 style="color: #5d4037; margin-bottom: 8px; font-size: 16px;"><i class="fas fa-user"></i> Información de la Venta</h3>' +
+        '<div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: end; width: 100%;">' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 180px;">' +
+        '<label>Cliente *</label><select v-model="venta.clienteId" required class="search-bar" style="height: 32px; font-size: 12px;">' +
         '<option value="" disabled>Seleccionar Cliente</option>' +
         '<option v-for="cliente in clientes" :key="cliente.id" :value="cliente.id">{{ cliente.nombreCompleto }}</option></select></div>' +
-        '<div class="filter-group" style="flex: 0 0 auto; width: 200px;"><label>Empleado *</label>' +
-        '<select v-model="venta.empleadoId" required class="search-bar">' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 180px;"><label>Empleado *</label>' +
+        '<select v-model="venta.empleadoId" required class="search-bar" style="height: 32px; font-size: 12px;">' +
         '<option value="" disabled>Seleccionar Empleado</option>' +
         '<option v-for="empleado in empleados" :key="empleado.id" :value="empleado.id">{{ empleado.nombreCompleto }}</option></select></div>' +
-        '<div class="filter-group" style="flex: 0 0 auto; width: 120px;"><label>Método de Pago</label><select v-model="venta.metodoPago" class="filter-select">' +
-        '<option value="EFECTIVO">Efectivo</option><option value="TARJETA">Tarjeta</option><option value="TRANSFERENCIA">Transferencia</option></select></div>' +
-        '<div class="filter-group" style="flex: 0 0 auto; width: 100px;"><label>Descuento General</label><input type="number" v-model="venta.descuentoAplicado" min="0" class="search-bar"></div>' +
-        '<button @click="exportarPDF" class="btn btn-secondary" style="flex: 0 0 auto;"><i class="fas fa-file-pdf"></i> PDF</button></div>' +
-        '<div class="filter-group" style="flex: 0 0 auto; width: 300px; margin-top: 10px;"><label>Observaciones</label><textarea v-model="venta.observaciones" placeholder="Observaciones adicionales..." class="search-bar" style="resize: vertical; min-height: 40px; height: 40px;"></textarea></div></div>' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 100px;"><label>Método</label><select v-model="venta.metodoPago" class="filter-select" style="height: 32px; font-size: 12px;">' +
+        '<option value="EFECTIVO">Efectivo</option><option value="TARJETA">Tarjeta</option><option value="TRANSFERENCIA">Transfer.</option></select></div>' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 80px;"><label>Descuento</label><input type="number" v-model="venta.descuentoAplicado" min="0" class="search-bar" style="height: 32px; font-size: 12px;"></div>' +
+        '<button @click="exportarPDF" class="btn btn-secondary" style="flex: 0 0 auto; height: 32px; padding: 4px 8px; font-size: 12px;"><i class="fas fa-file-pdf"></i> PDF</button></div>' +
+        '<div class="filter-group" style="flex: 0 0 auto; width: 250px; margin-top: 8px;"><label>Observaciones</label><textarea v-model="venta.observaciones" placeholder="Observaciones..." class="search-bar" style="resize: vertical; min-height: 30px; height: 30px; font-size: 12px;"></textarea></div></div>' +
         '<div class="form-container">' +
         '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;"><h3 style="color: #5d4037; margin: 0;">' +
         '<i class="fas fa-list"></i> Servicios y Productos</h3><button @click="mostrarFormDetalle = !mostrarFormDetalle" class="btn btn-secondary"><i class="fas fa-plus"></i> Agregar Item</button></div>' +
@@ -435,5 +435,5 @@ new Vue({
 });
 
 const style = document.createElement('style');
-style.textContent = '.btn:disabled { opacity: 0.6; cursor: not-allowed; } .btn-small { padding: 4px 8px; font-size: 11px; min-width: 30px; } .btn-danger { background: #add8e6 !important; color: #dc3545 !important; border: 1px solid #87ceeb; } label { display: block; margin-bottom: 3px; font-weight: bold; color: #333; font-size: 13px; } .summary-card { background: white; padding: 12px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); } .summary-value { font-size: 18px; font-weight: bold; margin-bottom: 3px; } .summary-label { font-size: 11px; color: #666; } .form-container { margin-bottom: 15px; }';
+style.textContent = '.btn:disabled { opacity: 0.6; cursor: not-allowed; } .btn-small { padding: 4px 8px; font-size: 11px; min-width: 30px; } .btn-danger { background: #add8e6 !important; color: #dc3545 !important; border: 1px solid #87ceeb; } label { display: block; margin-bottom: 3px; font-weight: bold; color: #333; font-size: 13px; } .summary-card { background: white; padding: 12px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); } .summary-value { font-size: 18px; font-weight: bold; margin-bottom: 3px; } .summary-label { font-size: 11px; color: #666; } .form-container { margin-bottom: 15px; } .page-registro-venta input, .page-registro-venta textarea, .page-registro-venta select { background: #fcccce2 !important; } .page-registro-venta .fas.fa-list { font-size: 14px !important; } .page-registro-venta .fas.fa-shopping-cart { font-size: 24px !important; }';
 document.head.appendChild(style);
