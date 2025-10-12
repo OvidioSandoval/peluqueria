@@ -13,10 +13,8 @@ new Vue({
             cajas: [],
             cajasFiltradas: [],
             filtroBusqueda: '',
-            fechaInicio: new Date().toISOString().split('T')[0],
-            fechaFin: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            horaAperturaFiltro: '',
-            horaCierreFiltro: '',
+            fechaFiltro: new Date().toISOString().split('T')[0],
+            horaFiltro: '',
             paginaActual: 1,
             itemsPorPagina: 10,
             formularioVisible: false,
@@ -133,27 +131,17 @@ new Vue({
                 );
             }
             
-            // Filtro por rango de fechas
-            if (this.fechaInicio) {
-                cajasFiltradas = cajasFiltradas.filter(caja => caja.fecha >= this.fechaInicio);
-            }
-            if (this.fechaFin) {
-                cajasFiltradas = cajasFiltradas.filter(caja => caja.fecha <= this.fechaFin);
+            // Filtro por fecha
+            if (this.fechaFiltro) {
+                cajasFiltradas = cajasFiltradas.filter(caja => caja.fecha === this.fechaFiltro);
             }
             
-            // Filtro por hora de apertura
-            if (this.horaAperturaFiltro) {
+            // Filtro por hora (apertura o cierre)
+            if (this.horaFiltro) {
                 cajasFiltradas = cajasFiltradas.filter(caja => {
                     const horaApertura = this.formatearHora(caja.horaApertura);
-                    return horaApertura.includes(this.horaAperturaFiltro);
-                });
-            }
-            
-            // Filtro por hora de cierre
-            if (this.horaCierreFiltro) {
-                cajasFiltradas = cajasFiltradas.filter(caja => {
                     const horaCierre = this.formatearHora(caja.horaCierre);
-                    return horaCierre.includes(this.horaCierreFiltro);
+                    return horaApertura.includes(this.horaFiltro) || horaCierre.includes(this.horaFiltro);
                 });
             }
             
@@ -262,10 +250,8 @@ new Vue({
         },
         limpiarFiltros() {
             this.filtroBusqueda = '';
-            this.fechaInicio = '';
-            this.fechaFin = '';
-            this.horaAperturaFiltro = '';
-            this.horaCierreFiltro = '';
+            this.fechaFiltro = '';
+            this.horaFiltro = '';
             this.filtrarCajas();
         },
         async cerrarCaja(caja) {
@@ -745,20 +731,12 @@ new Vue({
                             <input type="text" v-model="filtroBusqueda" @input="filtrarCajas" placeholder="Buscar por nombre, empleado, monto, estado..." class="search-bar" style="width: 300px;"/>
                         </div>
                         <div class="filter-group" style="flex: none; width: auto;">
-                            <label>Fecha Inicio:</label>
-                            <input type="date" v-model="fechaInicio" @change="filtrarCajas" style="padding: 8px; border: 2px solid #ddd; border-radius: 5px;"/>
+                            <label>Fecha:</label>
+                            <input type="date" v-model="fechaFiltro" @change="filtrarCajas" style="padding: 8px; border: 2px solid #ddd; border-radius: 5px;"/>
                         </div>
                         <div class="filter-group" style="flex: none; width: auto;">
-                            <label>Fecha Fin:</label>
-                            <input type="date" v-model="fechaFin" @change="filtrarCajas" style="padding: 8px; border: 2px solid #ddd; border-radius: 5px;"/>
-                        </div>
-                        <div class="filter-group" style="flex: none; width: auto;">
-                            <label>Hora Apertura:</label>
-                            <input type="time" v-model="horaAperturaFiltro" @change="filtrarCajas" style="padding: 8px; border: 2px solid #ddd; border-radius: 5px;"/>
-                        </div>
-                        <div class="filter-group" style="flex: none; width: auto;">
-                            <label>Hora Cierre:</label>
-                            <input type="time" v-model="horaCierreFiltro" @change="filtrarCajas" style="padding: 8px; border: 2px solid #ddd; border-radius: 5px;"/>
+                            <label>Hora:</label>
+                            <input type="time" v-model="horaFiltro" @change="filtrarCajas" style="padding: 8px; border: 2px solid #ddd; border-radius: 5px;"/>
                         </div>
                         <div style="display: flex; gap: 10px; align-items: end;">
                             <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
@@ -821,10 +799,9 @@ new Vue({
                         <div class="modal-content" style="background: white; padding: 20px; border-radius: 10px; max-width: 800px; max-height: 80vh; overflow-y: auto; width: 90%;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                                 <h3>Historial de {{ historialCaja ? historialCaja.nombre : '' }}</h3>
-                                <div>
-                                    <button @click="exportarHistorialPDF()" class="btn btn-small"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
-                                    <button @click="cerrarHistorial()" class="btn btn-secondary btn-small">Cerrar</button>
-                                </div>
+                                <button @click="cerrarHistorial()" style="background: none; border: none; color: #f44336; font-size: 1.5rem; cursor: pointer; padding: 5px;">
+                                    <i class="fas fa-times"></i>
+                                </button>
                             </div>
                             
                             <div v-if="historialCaja" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
