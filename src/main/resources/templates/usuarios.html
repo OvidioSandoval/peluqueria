@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usuarios</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/style-content.css">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.css">
+</head>
+<body class="page-usuarios" style="padding-top: 80px; background: linear-gradient(135deg, #fce4ec, #f8bbd9); min-height: 100vh;">
+<div id="navbar"></div>
+<div id="sidebar"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.js"></script>
+
+<div class="content" id="app">
+</div>
+
+<script src="/script.js"></script>
+<script type="module" src="/app-usuarios.js"></script>
+
+<style>
+.status-active {
+    color: #28a745;
+    font-weight: bold;
+}
+.status-inactive {
+    color: #dc3545;
+    font-weight: bold;
+}
+.form-container {
+    background: rgba(252, 228, 236, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1);
+    border: 1px solid rgba(179, 229, 252, 0.3);
+}
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #5d4037;
+}
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+.form-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+}
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+.filters-container {
+    display: flex;
+    gap: 15px;
+    align-items: end;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(252, 228, 236, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1);
+    border: 1px solid rgba(179, 229, 252, 0.3);
+    flex-wrap: wrap;
+    width: fit-content;
+}
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    min-width: fit-content;
+}
+.filter-group label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #5d4037;
+}
+.search-bar {
+    padding: 8px 12px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+    width: 300px;
+}
+.search-bar:focus {
+    border-color: #5d4037;
+    outline: none;
+}
+</style>
+
+</body>
+</html>

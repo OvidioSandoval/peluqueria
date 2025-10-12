@@ -154,3 +154,7 @@ new Vue({
         </div>
     `
 });
+
+const style = document.createElement('style');
+style.textContent = '.form-container { margin: 0 auto !important; }';
+document.head.appendChild(style);

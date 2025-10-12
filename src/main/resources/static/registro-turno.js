@@ -26,6 +26,15 @@ new Vue({
             },
             turnoExistente: null,
             modoModificar: false,
+            mostrarFormCliente: false,
+            nuevoCliente: {
+                nombreCompleto: '',
+                telefono: '',
+                ruc: '',
+                correo: '',
+                redesSociales: '',
+                fechaNacimiento: null
+            }
         };
     },
     mounted() {
@@ -210,8 +219,50 @@ new Vue({
             }
             return typeof hora === 'string' ? hora : hora.toString();
         },
-        crearCliente() {
-            window.open('/web/registro-cliente', '_blank');
+
+        async crearCliente() {
+            if (!this.nuevoCliente.nombreCompleto.trim()) {
+                NotificationSystem.error('El nombre completo es obligatorio');
+                return;
+            }
+            try {
+                const clienteData = {
+                    nombreCompleto: this.capitalizarTexto(this.nuevoCliente.nombreCompleto),
+                    telefono: this.nuevoCliente.telefono,
+                    ruc: this.nuevoCliente.ruc,
+                    correo: this.nuevoCliente.correo,
+                    redesSociales: this.nuevoCliente.redesSociales,
+                    fechaNacimiento: this.nuevoCliente.fechaNacimiento
+                };
+                const response = await fetch(`${config.apiBaseUrl}/clientes/agregar_cliente`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(clienteData)
+                });
+                if (response.ok) {
+                    const clienteCreado = await response.json();
+                    await this.fetchClientes();
+                    this.nuevoTurno.clienteId = clienteCreado.id;
+                    this.mostrarFormCliente = false;
+                    this.nuevoCliente = { nombreCompleto: '', telefono: '', ruc: '', correo: '', redesSociales: '', fechaNacimiento: null };
+                    NotificationSystem.success('Cliente agregado exitosamente');
+                } else {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error al agregar cliente:', error);
+                NotificationSystem.error(`Error al agregar cliente: ${error.message}`);
+            }
+        },
+        toggleFormCliente() {
+            this.mostrarFormCliente = !this.mostrarFormCliente;
+            this.nuevoCliente = { nombreCompleto: '', telefono: '', ruc: '', correo: '', redesSociales: '', fechaNacimiento: null };
+        },
+        capitalizarTexto(texto) {
+            if (!texto) return '';
+            return texto.split(' ').map(palabra => 
+                palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase()
+            ).join(' ');
         },
         goBack() {
             window.history.back();
@@ -235,7 +286,7 @@ new Vue({
                                             {{ cliente.nombreCompleto || cliente.nombre }}
                                         </option>
                                     </select>
-                                    <button type="button" @click="crearCliente()" class="btn btn-small">+</button>
+                                    <button type="button" @click="toggleFormCliente()" class="btn btn-small">+</button>
                                 </div>
                             </div>
                             <div class="form-col">
@@ -282,6 +333,43 @@ new Vue({
                                 <input type="text" v-model="nuevoTurno.motivoCancelacion" placeholder="Opcional"/>
                             </div>
                         </div>
+                        
+                        <div v-if="mostrarFormCliente" class="form-container" style="margin-top: 20px; padding: 15px; border: 2px dashed #ccc;">
+                            <h4>Nuevo Cliente</h4>
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <label>Nombre Completo: *</label>
+                                    <input type="text" v-model="nuevoCliente.nombreCompleto" placeholder="Ingrese el nombre completo" required style="border: 2px solid #87CEEB;"/>
+                                </div>
+                                <div class="form-col">
+                                    <label>Teléfono:</label>
+                                    <input type="tel" v-model="nuevoCliente.telefono" placeholder="Ej: 0981234567" maxlength="10" style="border: 2px solid #87CEEB;"/>
+                                </div>
+                                <div class="form-col">
+                                    <label>RUC:</label>
+                                    <input type="text" v-model="nuevoCliente.ruc" placeholder="Ingrese el RUC" maxlength="20" style="border: 2px solid #87CEEB;"/>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <label>Correo Electrónico:</label>
+                                    <input type="email" v-model="nuevoCliente.correo" placeholder="ejemplo@correo.com" style="border: 2px solid #87CEEB;"/>
+                                </div>
+                                <div class="form-col">
+                                    <label>Fecha de Nacimiento:</label>
+                                    <input type="date" v-model="nuevoCliente.fechaNacimiento" style="border: 2px solid #87CEEB;"/>
+                                </div>
+                                <div class="form-col">
+                                    <label>Redes Sociales:</label>
+                                    <textarea v-model="nuevoCliente.redesSociales" placeholder="Facebook, Instagram, etc." rows="2" style="resize: vertical; border: 2px solid #87CEEB;"></textarea>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <button @click="crearCliente()" class="btn btn-small">Agregar Cliente</button>
+                                <button @click="toggleFormCliente()" class="btn btn-secondary btn-small">Cancelar</button>
+                            </div>
+                        </div>
+                        
                         <div class="form-buttons">
                             <button @click="modoModificar ? modificarTurno() : agregarTurno()" class="btn">
                                 {{ modoModificar ? 'Modificar' : 'Agregar' }} Turno
@@ -298,5 +386,5 @@ new Vue({
 });
 
 const style = document.createElement('style');
-style.textContent = 'input, textarea, select { border: 2px solid #87ceeb !important; }';
+style.textContent = 'input, textarea, select { border: 2px solid #87ceeb !important; padding: 8px 12px !important; font-size: 12px !important; height: 32px !important; width: auto !important; min-width: 150px !important; } label { font-size: 12px !important; margin-bottom: 4px !important; } .form-container { padding: 15px !important; margin: 10px auto !important; width: fit-content !important; max-width: 100% !important; } .form-row { margin: 10px 0 !important; gap: 15px !important; display: flex !important; flex-wrap: wrap !important; align-items: end !important; } .form-col { flex: 0 0 auto !important; min-width: fit-content !important; } .page-title { font-size: 1.8rem !important; margin-bottom: 15px !important; } h1, h2, h3 { margin-bottom: 10px !important; } .btn { padding: 8px 16px !important; font-size: 12px !important; } .btn-small { padding: 6px 10px !important; font-size: 11px !important; }';
 document.head.appendChild(style);
