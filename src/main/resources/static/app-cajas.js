@@ -735,7 +735,7 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 class="page-title">Gestión de Cajas</h1>
+                <h1 class="page-title">Lista de Cajas</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
                     
@@ -762,80 +762,12 @@ new Vue({
                         </div>
                         <div style="display: flex; gap: 10px; align-items: end;">
                             <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
-                            <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nueva Caja</button>
                             <button @click="exportarPDF()" class="btn btn-small">
                                 <i class="fas fa-file-pdf"></i> Exportar PDF
                             </button>
                         </div>
                     </div>
                     
-                    <div v-if="formularioVisible" class="form-container">
-                        <h3>{{ nuevaCaja.id ? 'Modificar Caja - ' + cajaSeleccionada : 'Nueva Caja' }}</h3>
-                        <div class="form-row">
-                            <div class="form-col">
-                                <label>Nombre: *</label>
-                                <input type="text" v-model="nuevaCaja.nombre" placeholder="Nombre de la caja" required/>
-                            </div>
-                            <div class="form-col">
-                                <label>Fecha: *</label>
-                                <input type="date" v-model="nuevaCaja.fecha" :readonly="nuevaCaja.id" required/>
-                            </div>
-                            <div class="form-col">
-                                <label>Hora Apertura:</label>
-                                <input type="time" v-model="nuevaCaja.horaApertura" step="1"/>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-col">
-                                <label>Hora Cierre:</label>
-                                <input type="time" v-model="nuevaCaja.horaCierre" step="1"/>
-                            </div>
-                            <div class="form-col">
-                                <label>Monto Inicial: *</label>
-                                <input type="number" v-model="nuevaCaja.montoInicial" placeholder="0" :readonly="nuevaCaja.id" required/>
-                            </div>
-                            <div class="form-col">
-                                <label>Monto Final:</label>
-                                <input type="number" v-model="nuevaCaja.montoFinal" placeholder="0" readonly/>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-col">
-                                <label>Empleado:</label>
-                                <select v-model="nuevaCaja.empleadoId" :disabled="nuevaCaja.id">
-                                    <option value="" disabled>Seleccionar Empleado</option>
-                                    <option v-for="empleado in empleados" :key="empleado.id" :value="empleado.id">{{ empleado.nombreCompleto }}</option>
-                                </select>
-                            </div>
-                            <div class="form-col">
-                                <label>Estado:</label>
-                                <select v-model="nuevaCaja.estado" @change="onEstadoChange" required>
-                                    <option value="abierto">Abierto</option>
-                                    <option value="cerrado">Cerrado</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-col">
-                                <label>Total Servicios:</label>
-                                <input type="number" v-model="nuevaCaja.totalServicios" placeholder="0" readonly/>
-                            </div>
-                            <div class="form-col">
-                                <label>Total Productos:</label>
-                                <input type="number" v-model="nuevaCaja.totalProductos" placeholder="0" readonly/>
-                            </div>
-                            <div class="form-col">
-                                <label>Total Descuentos:</label>
-                                <input type="number" v-model="nuevaCaja.totalDescuentos" placeholder="0" readonly/>
-                            </div>
-                        </div>
-                        <div class="form-buttons">
-                            <button @click="nuevaCaja.id ? modificarCaja() : agregarCaja()" class="btn">
-                                {{ nuevaCaja.id ? 'Modificar' : 'Agregar' }}
-                            </button>
-                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
-                        </div>
-                    </div>
                     
                     <table>
                         <thead>

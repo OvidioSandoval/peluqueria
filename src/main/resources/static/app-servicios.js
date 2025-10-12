@@ -373,7 +373,7 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 class="page-title">Gestión de Servicios</h1>
+                <h1 class="page-title">Lista de Servicios</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
                     <div class="filters-container" style="display: flex; gap: 15px; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; width: fit-content;">
@@ -381,52 +381,11 @@ new Vue({
                             <label>Buscar Servicio:</label>
                             <input type="text" v-model="filtroBusqueda" @input="filtrarServicios" placeholder="Buscar servicio..." class="search-bar" style="width: 300px;"/>
                         </div>
-                        <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nuevo Servicio</button>
-                        <button @click="exportarPDF" class="btn btn-small" v-if="!formularioVisible">
+                        <button @click="exportarPDF" class="btn btn-small">
                             <i class="fas fa-file-pdf"></i> Exportar PDF
                         </button>
                     </div>
                     
-                    <div v-if="formularioVisible" class="form-container">
-                        <h3>{{ nuevoServicio.id ? 'Modificar Servicio - ' + servicioSeleccionado : 'Nuevo Servicio' }}</h3>
-                        <div class="form-row">
-                            <div class="form-col">
-                                <label>Nombre: *</label>
-                                <input type="text" v-model="nuevoServicio.nombre" placeholder="Ingrese el nombre del servicio" required/>
-                            </div>
-                            <div class="form-col">
-                                <label>Precio Base: *</label>
-                                <input type="number" v-model="nuevoServicio.precioBase" placeholder="Ingrese el precio base" required/>
-                            </div>
-                            <div class="form-col">
-                                <label>Categoría:</label>
-                                <select v-model="nuevoServicio.categoriaId">
-                                    <option value="" disabled selected>Selecciona una categoría</option>
-                                    <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
-                                        {{ categoria.descripcion }}
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row" style="gap: 20px;">
-                            <div class="form-col" style="flex: none; width: 150px;">
-                                <label>Descripción:</label>
-                                <textarea v-model="nuevoServicio.descripcion" placeholder="Descripción del servicio" rows="2" style="resize: vertical; width: 150px;"></textarea>
-                            </div>
-                            <div class="form-col" style="flex: none; width: auto; display: flex; align-items: flex-end; padding-bottom: 10px;">
-                                <label style="display: flex; align-items: center; gap: 8px; margin: 0; white-space: nowrap;">
-                                    <input type="checkbox" v-model="nuevoServicio.activo" style="margin: 0;"/>
-                                    Servicio Activo
-                                </label>
-                            </div>
-                        </div>
-                        <div class="form-buttons">
-                            <button @click="nuevoServicio.id ? modificarServicio() : agregarServicio()" class="btn">
-                                {{ nuevoServicio.id ? 'Modificar' : 'Agregar' }}
-                            </button>
-                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
-                        </div>
-                    </div>
                     
                     <table>
                         <thead>
@@ -447,7 +406,6 @@ new Vue({
                                 <td>{{ getCategoriaDescripcion(servicio) }}</td>
                                 <td>{{ servicio.activo ? 'Activo' : 'Inactivo' }}</td>
                                 <td>
-                                    <button @click="cargarServicio(servicio)" class="btn-small">Editar</button>
                                     <button @click="eliminarServicio(servicio)" class="btn-small btn-danger">Eliminar</button>
                                 </td>
                             </tr>

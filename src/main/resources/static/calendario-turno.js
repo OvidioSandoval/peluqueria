@@ -345,23 +345,25 @@ new Vue({
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
                     
-                    <div class="filters-container" style="display: flex; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; gap: 25px; width: fit-content;">
-                        <div class="filter-group" style="margin-right: 10px;">
+                    <div class="filters-container" style="display: flex; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; gap: 10px; width: fit-content; min-width: fit-content;">
+                        <div class="filter-group" style="min-width: 240px;">
                             <label>Buscar:</label>
-                            <input type="text" v-model="filtroBusqueda" @input="filtrarTurnos" placeholder="Cliente, servicio, empleado, estado..." class="search-bar" style="width: 240px;"/>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarTurnos" placeholder="Cliente, servicio, empleado, estado..." class="search-bar" style="width: 100%;"/>
                         </div>
-                        <div class="filter-group">
+                        <div class="filter-group" style="min-width: 140px;">
                             <label>Fecha:</label>
-                            <input type="date" v-model="filtroFecha" @change="filtrarTurnos" class="search-bar" style="width: 140px;"/>
+                            <input type="date" v-model="filtroFecha" @change="filtrarTurnos" class="search-bar" style="width: 100%;"/>
                         </div>
-                        <div class="filter-group">
+                        <div class="filter-group" style="min-width: 120px;">
                             <label>Hora:</label>
-                            <input type="time" v-model="filtroHora" @change="filtrarTurnos" class="search-bar" style="width: 120px;"/>
+                            <input type="time" v-model="filtroHora" @change="filtrarTurnos" class="search-bar" style="width: 100%;"/>
                         </div>
-                        <button @click="limpiarFiltros" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">Limpiar</button>
-                        <button @click="exportarPDF" class="btn btn-small">
-                            <i class="fas fa-file-pdf"></i> Exportar PDF
-                        </button>
+                        <div style="display: flex; gap: 10px; align-items: end; min-width: fit-content; white-space: nowrap;">
+                            <button @click="limpiarFiltros" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">Limpiar</button>
+                            <button @click="exportarPDF" class="btn btn-small">
+                                <i class="fas fa-file-pdf"></i> Exportar PDF
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="calendar-controls" style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px;">

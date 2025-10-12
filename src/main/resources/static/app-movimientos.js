@@ -109,6 +109,7 @@ new Vue({
                     (movimiento.tipo && movimiento.tipo.toLowerCase().includes(busqueda))
                 );
             }
+            this.paginaActual = 1;
         },
         
         limpiarFiltros() {
@@ -364,7 +365,7 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 class="page-title">Gestión de Movimientos</h1>
+                <h1 class="page-title">Lista de Movimientos</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
 
@@ -373,53 +374,11 @@ new Vue({
                             <label>Buscar Movimiento:</label>
                             <input type="text" v-model="filtroBusqueda" @input="filtrarMovimientos" placeholder="Buscar por monto, caja, ID asociado o tipo..." class="search-bar" style="width: 350px;"/>
                         </div>
-                        <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
-                        <button @click="toggleFormulario()" class="btn btn-small">Nuevo Movimiento</button>
                         <button @click="exportarPDF" class="btn btn-small">
                             <i class="fas fa-file-pdf"></i> Exportar PDF
                         </button>
                     </div>
                     
-                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 800px;">
-                        <h3>{{ nuevoMovimiento.id ? 'Modificar Movimiento - ' + (cajas.find(c => c.id == nuevoMovimiento.cajaId)?.nombre || 'Caja') : 'Nuevo Movimiento' }}</h3>
-                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                            <div style="flex: 1; min-width: 200px;">
-                                <label>Monto: *</label>
-                                <input type="number" v-model="nuevoMovimiento.monto" placeholder="Ingrese el monto" required/>
-                            </div>
-                            <div style="flex: 1; min-width: 200px;">
-                                <label>Caja: *</label>
-                                <select v-model="nuevoMovimiento.cajaId" required>
-                                    <option value="" disabled>Seleccionar Caja</option>
-                                    <option v-for="caja in cajasAbiertas" :key="caja.id" :value="caja.id">
-                                        Caja {{ caja.id }} - {{ caja.nombre }} 
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px;">
-                            <div style="flex: 1; min-width: 200px;">
-                                <label>ID Asociado:</label>
-                                <input type="number" v-model="nuevoMovimiento.idAsociado" placeholder="ID Asociado (opcional)"/>
-                            </div>
-                            <div style="flex: 1; min-width: 200px;">
-                                <label>Tipo: *</label>
-                                <select v-model="nuevoMovimiento.tipo" required>
-                                    <option value="" disabled>Seleccionar Tipo</option>
-                                    <option value="INGRESO">Ingreso</option>
-                                    <option value="EGRESO">Egreso</option>
-                                    <option value="VENTA">Venta</option>
-                                    <option value="COMPRA">Compra</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
-                            <button @click="nuevoMovimiento.id ? modificarMovimiento() : agregarMovimiento()" class="btn">
-                                {{ nuevoMovimiento.id ? 'Modificar' : 'Agregar' }}
-                            </button>
-                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
-                        </div>
-                    </div>
                     
                     <table>
                         <thead>

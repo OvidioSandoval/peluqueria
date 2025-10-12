@@ -195,7 +195,7 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 class="page-title">Gestión de Categoría de los Servicios</h1>
+                <h1 class="page-title">Lista de Categoria de Servicios</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
 
@@ -204,20 +204,9 @@ new Vue({
                             <label>Buscar Categoría:</label>
                             <input type="text" v-model="filtroBusqueda" @input="filtrarCategorias" placeholder="Buscar por descripción..." class="search-bar" style="width: 300px; padding: 8px 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px;"/>
                         </div>
-                        <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nueva Categoría</button>
+
                     </div>
                     
-                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 500px;">
-                        <h3>{{ nuevaCategoria.id ? 'Modificar Categoría - ' + categoriaSeleccionada : 'Nueva Categoría' }}</h3>
-                        <label>Descripción: *</label>
-                        <textarea v-model="nuevaCategoria.descripcion" placeholder="Ingrese la descripción de la categoría" required rows="3" style="resize: vertical;"></textarea>
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
-                            <button @click="nuevaCategoria.id ? modificarCategoria() : agregarCategoria()" class="btn">
-                                {{ nuevaCategoria.id ? 'Modificar' : 'Agregar' }}
-                            </button>
-                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
-                        </div>
-                    </div>
                     
                     <table>
                         <thead>
@@ -232,7 +221,6 @@ new Vue({
                                 <td>{{ categoria.id }}</td>
                                 <td>{{ categoria.descripcion }}</td>
                                 <td>
-                                    <button @click="cargarCategoria(categoria)" class="btn-small">Editar</button>
                                     <button @click="eliminarCategoria(categoria)" class="btn-small btn-danger">Eliminar</button>
                                 </td>
                             </tr>

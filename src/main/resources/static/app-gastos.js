@@ -301,7 +301,7 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 class="page-title">Gestión de Gastos</h1>
+                <h1 class="page-title">Lista de Gastos</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
                     <div class="filters-container" style="display: flex; gap: 25px; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; width: fit-content;">
@@ -314,46 +314,11 @@ new Vue({
                             <input type="date" v-model="filtroFecha" @change="filtrarGastos" class="search-bar" style="width: 150px;"/>
                         </div>
                         <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
-                        <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nuevo Gasto</button>
-                        <button @click="exportarPDF" class="btn btn-small" v-if="!formularioVisible">
+                        <button @click="exportarPDF" class="btn btn-small">
                             <i class="fas fa-file-pdf"></i> Exportar PDF
                         </button>
                     </div>
                     
-                    <div v-if="formularioVisible" class="form-container">
-                        <h3>{{ nuevoGasto.id ? 'Modificar Gasto: ' + nuevoGasto.descripcion : 'Nuevo Gasto' }}</h3>
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: end; width: 100%;">
-                            <div class="filter-group" style="flex: 0 0 auto; width: 200px;">
-                                <label>Descripción *</label>
-                                <input type="text" v-model="nuevoGasto.descripcion" placeholder="Descripción del gasto" required class="search-bar"/>
-                            </div>
-                            <div class="filter-group" style="flex: 0 0 auto; width: 100px;">
-                                <label>Monto *</label>
-                                <input type="number" v-model="nuevoGasto.monto" placeholder="Monto" min="0" required class="search-bar"/>
-                            </div>
-                            <div class="filter-group" style="flex: 0 0 auto; width: 130px;">
-                                <label>Fecha *</label>
-                                <input type="date" v-model="nuevoGasto.fechaGasto" required class="search-bar"/>
-                            </div>
-                            <div class="filter-group" style="flex: 0 0 auto; width: 150px;">
-                                <label>Categoría</label>
-                                <input type="text" v-model="nuevoGasto.categoriaGasto" placeholder="Categoría" class="search-bar"/>
-                            </div>
-                            <div class="filter-group" style="flex: 0 0 auto; width: 180px;">
-                                <label>Empleado</label>
-                                <select v-model="nuevoGasto.empleado" class="search-bar">
-                                    <option value="" disabled>Seleccionar Empleado</option>
-                                    <option v-for="empleado in empleados" :key="empleado.id" :value="empleado">{{ empleado.nombreCompleto }}</option>
-                                </select>
-                            </div>
-                            <div style="flex: 0 0 auto;">
-                                <button @click="agregarGasto()" class="btn" v-if="!nuevoGasto.id">Agregar</button>
-                            </div>
-                            <div style="flex: 0 0 auto;">
-                                <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
-                            </div>
-                        </div>
-                    </div>
                     
                     <table>
                         <thead>

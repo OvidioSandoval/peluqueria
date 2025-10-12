@@ -559,7 +559,7 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 class="page-title">Gestión de Productos</h1>
+                <h1 class="page-title">Lista de Productos</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
                     <div class="filters-container" style="gap: 10px; padding: 15px; width: fit-content;">
@@ -576,71 +576,15 @@ new Vue({
                                 <option value="normal">Normal</option>
                             </select>
                         </div>
-                        <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible" style="margin: 0 2px;">Nuevo Producto</button>
-                        <button @click="exportarPDF" class="btn btn-small" v-if="!formularioVisible" style="margin: 0 2px;">
+                        <button @click="exportarPDF" class="btn btn-small" style="margin: 0 2px;">
                             <i class="fas fa-file-pdf"></i> Exportar
                         </button>
-                        <button @click="exportarStockBajo" class="btn btn-small" v-if="!formularioVisible" style="margin: 0 2px;">
+                        <button @click="exportarStockBajo" class="btn btn-small" style="margin: 0 2px;">
                             <i class="fas fa-file-pdf"></i> Stock Mínimo
                         </button>
                     </div>
                     
-                    <div v-if="formularioVisible" class="form-container">
-                        <h3>{{ nuevoProducto.id ? 'Modificar Producto - ' + productoSeleccionado : 'Nuevo Producto' }}</h3>
-                        <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: end;">
-                            <div style="flex: 1; min-width: 200px;">
-                                <label>Nombre: *</label>
-                                <input type="text" v-model="nuevoProducto.nombre" placeholder="Nombre del producto" required/>
-                            </div>
-                            <div style="flex: 1; min-width: 150px;">
-                                <label>Precio Compra: *</label>
-                                <input type="number" v-model="nuevoProducto.precioCompra" placeholder="Precio compra" required/>
-                            </div>
-                            <div style="flex: 1; min-width: 150px;">
-                                <label>Precio Venta: *</label>
-                                <input type="number" v-model="nuevoProducto.precioVenta" placeholder="Precio venta" required/>
-                            </div>
-                            <div style="flex: 1; min-width: 120px;">
-                                <label>Stock Inicial: *</label>
-                                <input type="number" v-model="nuevoProducto.cantidadStockInicial" placeholder="Stock inicial" required/>
-                            </div>
-                            <div style="flex: 1; min-width: 120px;">
-                                <label>Stock Óptimo: *</label>
-                                <input type="number" v-model="nuevoProducto.cantidadOptimaStock" placeholder="Stock óptimo" required/>
-                            </div>
-                            <div style="flex: 1; min-width: 120px;">
-                                <label>Stock Mínimo: *</label>
-                                <input type="number" v-model="nuevoProducto.minimoStock" placeholder="Stock mínimo" required/>
-                            </div>
 
-                            <div v-if="nuevoProducto.enPromocion" style="flex: 1; min-width: 150px;">
-                                <label>Precio Promoción:</label>
-                                <input type="number" v-model="nuevoProducto.precioPromocion" placeholder="Precio promoción"/>
-                            </div>
-                        </div>
-                        <div style="margin-top: 15px; display: flex; gap: 20px; align-items: flex-start;">
-                            <div>
-                                <label>Descripción:</label>
-                                <textarea v-model="nuevoProducto.descripcion" placeholder="Descripción del producto" rows="2" style="resize: vertical; width: 150px; height: 150px;"></textarea>
-                            </div>
-                            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 25px;">
-                                <label style="display: flex; align-items: center; gap: 5px; margin: 0;">
-                                    <input type="checkbox" v-model="nuevoProducto.activo" style="margin: 0;"/>
-                                    Activo
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 5px; margin: 0;">
-                                    <input type="checkbox" v-model="nuevoProducto.enPromocion" style="margin: 0;"/>
-                                    Promoción
-                                </label>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
-                            <button @click="nuevoProducto.id ? modificarProducto() : agregarProducto()" class="btn">
-                                {{ nuevoProducto.id ? 'Modificar' : 'Agregar' }}
-                            </button>
-                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
-                        </div>
-                    </div>
                     <div v-if="alertasStock.length > 0" class="alert-summary">
                         <h3 style="margin: 0 0 10px 0; color: #856404;"><i class="fas fa-exclamation-triangle"></i> Alertas de Stock</h3>
                         <p style="margin: 0; font-size: 16px;"><strong>{{ alertasStock.length }}</strong> producto(s) con stock por debajo del mínimo requerido</p>
@@ -692,7 +636,6 @@ new Vue({
                                 <td>{{ producto.enPromocion ? 'Sí' : 'No' }}</td>
                                 <td>{{ producto.precioPromocion ? formatearNumero(producto.precioPromocion) : '-' }}</td>
                                 <td>
-                                    <button @click="cargarProducto(producto)" class="btn-small">Editar</button>
                                     <button @click="eliminarProducto(producto)" class="btn-small btn-danger">Eliminar</button>
                                 </td>
                             </tr>

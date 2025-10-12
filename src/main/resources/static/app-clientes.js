@@ -356,7 +356,7 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 class="page-title">Gestión de Clientes</h1>
+                <h1 class="page-title">Lista de Clientes</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
                     <div class="filters-container" style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap; width: fit-content; padding: 15px; margin: 15px 0;">
@@ -365,50 +365,12 @@ new Vue({
                             <input type="text" v-model="filtroBusqueda" @input="filtrarClientes" placeholder="Buscar por nombre, teléfono, RUC o email..." class="search-bar" style="width: 300px;"/>
                         </div>
                         <div style="display: flex; gap: 10px; align-items: end;">
-                            <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nuevo Cliente</button>
                             <button @click="exportarPDF" class="btn btn-small">
                                 <i class="fas fa-file-pdf"></i> Exportar PDF
                             </button>
                         </div>
                     </div>
                     
-                    <div v-if="formularioVisible" class="form-container">
-                        <h3>{{ nuevoCliente.id ? 'Modificar Cliente - ' + clienteSeleccionado : 'Nuevo Cliente' }}</h3>
-                        <div class="form-row">
-                            <div class="form-col">
-                                <label>Nombre Completo: *</label>
-                                <input type="text" v-model="nuevoCliente.nombreCompleto" placeholder="Ingrese el nombre completo" required/>
-                            </div>
-                            <div class="form-col">
-                                <label>Teléfono:</label>
-                                <input type="tel" v-model="nuevoCliente.telefono" placeholder="Ej: 0981234567" maxlength="10"/>
-                            </div>
-                            <div class="form-col">
-                                <label>RUC:</label>
-                                <input type="text" v-model="nuevoCliente.ruc" placeholder="Ingrese el RUC" maxlength="20"/>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-col">
-                                <label>Correo Electrónico:</label>
-                                <input type="email" v-model="nuevoCliente.correo" placeholder="ejemplo@correo.com"/>
-                            </div>
-                            <div class="form-col">
-                                <label>Fecha de Nacimiento:</label>
-                                <input type="date" v-model="nuevoCliente.fechaNacimiento"/>
-                            </div>
-                            <div class="form-col">
-                                <label>Redes Sociales:</label>
-                                <textarea v-model="nuevoCliente.redesSociales" placeholder="Facebook, Instagram, etc." rows="2" style="resize: vertical;"></textarea>
-                            </div>
-                        </div>
-                        <div class="form-buttons">
-                            <button @click="nuevoCliente.id ? modificarCliente() : agregarCliente()" class="btn">
-                                {{ nuevoCliente.id ? 'Modificar' : 'Agregar' }}
-                            </button>
-                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
-                        </div>
-                    </div>
                     
                     <table>
                         <thead>
@@ -433,7 +395,6 @@ new Vue({
                                 <td>{{ formatearFecha(cliente.fechaNacimiento) }}</td>
                                 <td>{{ cliente.redesSociales }}</td>
                                 <td>
-                                    <button @click="cargarCliente(cliente)" class="btn-small">Editar</button>
                                     <button @click="eliminarCliente(cliente)" class="btn-small btn-danger">Eliminar</button>
                                 </td>
                             </tr>

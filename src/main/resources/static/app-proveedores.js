@@ -16,12 +16,6 @@ new Vue({
 
             paginaActual: 1,
             itemsPorPagina: 10,
-            formularioVisible: false,
-            nuevoProveedor: { 
-                id: null, 
-                descripcion: ''
-            },
-            proveedorSeleccionado: '',
             intervalId: null,
             mostrarSalir: false,
         };
@@ -40,6 +34,13 @@ new Vue({
         proveedoresPaginados() {
             const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
             return this.proveedoresFiltrados.slice(inicio, inicio + this.itemsPorPagina);
+        }
+    },
+    watch: {
+        filtroBusqueda(newVal) {
+            if (newVal === '') {
+                this.filtrarProveedores();
+            }
         }
     },
     methods: {
@@ -74,58 +75,10 @@ new Vue({
                     proveedor.descripcion && proveedor.descripcion.toLowerCase().includes(busqueda)
                 );
             }
+            this.paginaActual = 1;
         },
         
-        limpiarFiltros() {
-            this.filtroBusqueda = '';
-            this.filtrarProveedores();
-        },
-        async agregarProveedor() {
-            if (!this.nuevoProveedor.descripcion.trim()) {
-                NotificationSystem.error('La descripción es requerida');
-                return;
-            }
-            try {
-                const response = await fetch(`${config.apiBaseUrl}/proveedores/agregar_proveedor`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(this.nuevoProveedor)
-                });
-                if (response.ok) {
-                    await this.fetchProveedores();
-                    this.toggleFormulario();
-                    NotificationSystem.success('Proveedor agregado exitosamente');
-                } else {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-            } catch (error) {
-                console.error('Error al agregar proveedor:', error);
-                NotificationSystem.error(`Error al agregar proveedor: ${error.message}`);
-            }
-        },
-        async modificarProveedor() {
-            if (!this.nuevoProveedor.descripcion.trim()) {
-                NotificationSystem.error('La descripción es requerida');
-                return;
-            }
-            try {
-                const response = await fetch(`${config.apiBaseUrl}/proveedores/actualizar_proveedor/${this.nuevoProveedor.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(this.nuevoProveedor)
-                });
-                if (response.ok) {
-                    await this.fetchProveedores();
-                    this.toggleFormulario();
-                    NotificationSystem.success('Proveedor actualizado exitosamente');
-                } else {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-            } catch (error) {
-                console.error('Error al modificar proveedor:', error);
-                NotificationSystem.error(`Error al modificar proveedor: ${error.message}`);
-            }
-        },
+
         async eliminarProveedor(proveedor) {
             NotificationSystem.confirm(`¿Eliminar proveedor "${proveedor.descripcion}"?`, async () => {
                 try {
@@ -144,19 +97,7 @@ new Vue({
                 }
             });
         },
-        toggleFormulario() {
-            this.formularioVisible = !this.formularioVisible;
-            this.nuevoProveedor = { 
-                id: null, 
-                descripcion: ''
-            };
-            this.proveedorSeleccionado = '';
-        },
-        cargarProveedor(proveedor) {
-            this.nuevoProveedor = { ...proveedor };
-            this.formularioVisible = true;
-            this.proveedorSeleccionado = proveedor.descripcion;
-        },
+
         cambiarPagina(pagina) {
             if (pagina >= 1 && pagina <= this.totalPaginas) {
                 this.paginaActual = pagina;
@@ -186,7 +127,7 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 class="page-title">Gestión de Proveedores</h1>
+                <h1 class="page-title">Lista de Proveedores</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
 
@@ -194,20 +135,6 @@ new Vue({
                         <div class="filter-group">
                             <label>Buscar Proveedor:</label>
                             <input type="text" v-model="filtroBusqueda" @input="filtrarProveedores" placeholder="Buscar por descripción..." class="search-bar" style="width: 300px;"/>
-                        </div>
-                        <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
-                        <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nuevo Proveedor</button>
-                    </div>
-                    
-                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 500px;">
-                        <h3>{{ nuevoProveedor.id ? 'Modificar Proveedor - ' + proveedorSeleccionado : 'Nuevo Proveedor' }}</h3>
-                        <label>Descripción: *</label>
-                        <input type="text" v-model="nuevoProveedor.descripcion" placeholder="Ingrese la descripción del proveedor" required/>
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
-                            <button @click="nuevoProveedor.id ? modificarProveedor() : agregarProveedor()" class="btn">
-                                {{ nuevoProveedor.id ? 'Modificar' : 'Agregar' }}
-                            </button>
-                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
                         </div>
                     </div>
                     
@@ -222,7 +149,6 @@ new Vue({
                             <tr v-for="proveedor in proveedoresPaginados" :key="proveedor.id">
                                 <td>{{ proveedor.descripcion }}</td>
                                 <td>
-                                    <button @click="cargarProveedor(proveedor)" class="btn-small">Editar</button>
                                     <button @click="eliminarProveedor(proveedor)" class="btn-small btn-danger">Eliminar</button>
                                 </td>
                             </tr>

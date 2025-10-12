@@ -56,7 +56,15 @@ new Vue({
             }
         },
         cargarClienteParaEdicion(cliente) {
-            this.nuevoCliente = { ...cliente };
+            this.nuevoCliente = {
+                id: cliente.id,
+                nombreCompleto: cliente.nombreCompleto || '',
+                telefono: cliente.telefono || '',
+                ruc: cliente.ruc || '',
+                correo: cliente.correo || '',
+                redesSociales: cliente.redesSociales || '',
+                fechaNacimiento: cliente.fechaNacimiento || null
+            };
             this.modoEdicion = true;
             this.clienteExistente = cliente;
         },

@@ -179,7 +179,7 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 class="page-title">Gestión de Áreas</h1>
+                <h1 class="page-title">Lista de Areas</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
                     <div class="filters-container" style="display: flex; gap: 15px; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; width: fit-content;">
@@ -187,20 +187,9 @@ new Vue({
                             <label>Buscar Área:</label>
                             <input type="text" v-model="filtroBusqueda" @input="filtrarAreas" placeholder="Buscar área..." class="search-bar" style="width: 300px;"/>
                         </div>
-                        <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nueva Área</button>
+
                     </div>
                     
-                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 500px;">
-                        <h3>{{ nuevaArea.id ? 'Modificar Área - ' + areaSeleccionada : 'Nueva Área' }}</h3>
-                        <label>Nombre: *</label>
-                        <input type="text" v-model="nuevaArea.nombre" placeholder="Ingrese el nombre del área" required/>
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
-                            <button @click="nuevaArea.id ? modificarArea() : agregarArea()" class="btn">
-                                {{ nuevaArea.id ? 'Modificar' : 'Agregar' }}
-                            </button>
-                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
-                        </div>
-                    </div>
                     
                     <table>
                         <thead>
@@ -213,7 +202,6 @@ new Vue({
                             <tr v-for="area in areasPaginadas" :key="area.id">
                                 <td>{{ area.nombre }}</td>
                                 <td>
-                                    <button @click="cargarArea(area)" class="btn-small">Editar</button>
                                     <button @click="eliminarArea(area)" class="btn-small btn-danger">Eliminar</button>
                                 </td>
                             </tr>

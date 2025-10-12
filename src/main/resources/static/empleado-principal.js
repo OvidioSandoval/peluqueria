@@ -34,6 +34,11 @@ new Vue({
             return this.empleadosFiltrados.slice(inicio, inicio + this.itemsPorPagina);
         }
     },
+    watch: {
+        filtroBusqueda() {
+            this.filtrarEmpleados();
+        }
+    },
     methods: {
         async fetchEmpleados() {
             try {
@@ -62,10 +67,7 @@ new Vue({
             this.paginaActual = 1;
         },
         
-        limpiarFiltros() {
-            this.filtroBusqueda = '';
-            this.filtrarEmpleados();
-        },
+
         
         async seleccionarEmpleado(empleado) {
             this.empleadoSeleccionado = empleado;
@@ -749,10 +751,9 @@ new Vue({
                     <div class="filters-container">
                         <div class="filter-group">
                             <label>Buscar Empleado:</label>
-                            <input type="text" v-model="filtroBusqueda" @input="filtrarEmpleados" placeholder="Buscar por nombre o área..." class="search-bar"/>
+                            <input type="text" v-model="filtroBusqueda" placeholder="Buscar por nombre o área..." class="search-bar"/>
                         </div>
                         <div class="filter-group" style="flex-direction: row; gap: 10px; align-items: end;">
-                            <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
                             <button @click="calcularResumenMensual" class="btn btn-small">
                                 <i class="fas fa-calculator"></i> Calcular Resumen
                             </button>

@@ -415,7 +415,7 @@ new Vue({
     template: `
         <div class="glass-container">
             <div>
-                <h1 class="page-title">Gestión de Empleados</h1>
+                <h1 class="page-title">Lista de Empleados</h1>
                 <button @click="goBack" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
                     <div class="filters-container" style="display: flex; gap: 30px; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; width: fit-content;">
@@ -427,64 +427,11 @@ new Vue({
                             <label>Filtrar por Área:</label>
                             <input type="text" v-model="filtroArea" @input="filtrarEmpleados" placeholder="Buscar por área..." class="search-bar" style="width: 200px;"/>
                         </div>
-                        <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nuevo Empleado</button>
-                        <button @click="exportarPDF" class="btn btn-small" v-if="!formularioVisible">
+                        <button @click="exportarPDF" class="btn btn-small">
                             <i class="fas fa-file-pdf"></i> Exportar PDF
                         </button>
                     </div>
                     
-                    <div v-if="formularioVisible" class="form-container">
-                        <h3>{{ nuevoEmpleado.id ? 'Modificar Empleado - ' + nuevoEmpleado.nombreCompleto : 'Nuevo Empleado' }}</h3>
-                        <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: end;">
-                            <div style="flex: 1; min-width: 200px;">
-                                <label>Nombre Completo: *</label>
-                                <input type="text" v-model="nuevoEmpleado.nombreCompleto" placeholder="Nombre completo" required/>
-                            </div>
-                            <div style="flex: 1; min-width: 180px;">
-                                <label>Correo Electrónico:</label>
-                                <input type="email" v-model="nuevoEmpleado.correo" placeholder="Correo electrónico"/>
-                            </div>
-                            <div style="flex: 1; min-width: 150px;">
-                                <label>Teléfono:</label>
-                                <input type="tel" v-model="nuevoEmpleado.telefono" placeholder="Teléfono"/>
-                            </div>
-                            <div style="flex: 1; min-width: 150px;">
-                                <label>Área: *</label>
-                                <select v-model="nuevoEmpleado.area" required>
-                                    <option value="" disabled>Seleccionar Área</option>
-                                    <option v-for="area in areas" :key="area.id" :value="area">{{ area.nombre }}</option>
-                                </select>
-                            </div>
-                            <div style="flex: 1; min-width: 120px;">
-                                <label>Sueldo Base:</label>
-                                <input type="number" v-model="nuevoEmpleado.sueldoBase" placeholder="Sueldo base" min="0"/>
-                            </div>
-                            <div style="flex: 1; min-width: 120px;">
-                                <label>Comisión %:</label>
-                                <input type="number" v-model="nuevoEmpleado.comisionPorcentaje" placeholder="Comisión %" min="0" max="100"/>
-                            </div>
-                            <div style="flex: 1; min-width: 120px;">
-                                <label>Total Pagado:</label>
-                                <input type="number" v-model="nuevoEmpleado.totalPagado" placeholder="Total pagado" min="0"/>
-                            </div>
-                            <div style="flex: 1; min-width: 150px;">
-                                <label>Fecha de Ingreso:</label>
-                                <input type="date" v-model="nuevoEmpleado.fechaIngreso"/>
-                            </div>
-                            <div style="flex: none; min-width: 80px;">
-                                <label style="display: flex; align-items: center; gap: 5px; margin: 0;">
-                                    <input type="checkbox" v-model="nuevoEmpleado.activo" style="margin: 0;"/>
-                                    Activo
-                                </label>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
-                            <button @click="nuevoEmpleado.id ? modificarEmpleado() : agregarEmpleado()" class="btn">
-                                {{ nuevoEmpleado.id ? 'Modificar' : 'Agregar' }}
-                            </button>
-                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
-                        </div>
-                    </div>
                     
                     <table>
                         <thead>
@@ -513,7 +460,6 @@ new Vue({
                                 <td style="font-weight: bold;" :style="{ color: (empleado.diferenciaPago || 0) > 0 ? '#dc3545' : '#28a745' }">{{ formatearNumero(empleado.diferenciaPago || 0) }}</td>
                                 <td><span :class="empleado.activo ? 'status-active' : 'status-inactive'">{{ empleado.activo ? "Activo" : "Inactivo" }}</span></td>
                                 <td>
-                                    <button @click="cargarEmpleado(empleado)" class="btn-small">Editar</button>
                                     <button @click="eliminarEmpleado(empleado)" class="btn-small btn-danger">Eliminar</button>
                                 </td>
                             </tr>

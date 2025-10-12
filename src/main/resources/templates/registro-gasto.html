@@ -1,15 +1,14 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lista de Clientes Frecuentes</title>
+  <title>Registro de Gasto</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.css">
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/style-content.css">
   <style>
-    /* Forzar estilos personalizados sobre Vuetify */
     .v-application {
       background: linear-gradient(135deg, #fce4ec, #f8bbd9) !important;
       min-height: 100vh !important;
@@ -29,27 +28,11 @@
       transition: all 0.3s ease !important;
       box-shadow: 0 3px 10px rgba(129, 212, 250, 0.3) !important;
     }
-    .v-btn .v-icon {
-      color: #87ceeb !important;
-    }
     .v-btn:hover {
       background: linear-gradient(135deg, #81d4fa, #4fc3f7) !important;
       color: white !important;
       transform: translateY(-2px) !important;
       box-shadow: 0 6px 20px rgba(79, 195, 247, 0.4) !important;
-    }
-    .v-data-table {
-      background: rgba(255, 255, 255, 0.95) !important;
-      border-radius: 15px !important;
-      border: 1px solid rgba(179, 229, 252, 0.2) !important;
-    }
-    .v-data-table-header {
-      background: linear-gradient(135deg, #ad1457, #c2185b) !important;
-    }
-    .v-data-table-header th {
-      color: white !important;
-      font-weight: 600 !important;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
     }
     h1, h2, h3, .v-card-title {
       color: #66bb6a !important;
@@ -67,13 +50,6 @@
       border-color: #81d4fa !important;
       box-shadow: 0 0 15px rgba(129, 212, 250, 0.3) !important;
     }
-    .v-data-table tbody tr:hover {
-      background: rgba(252, 228, 236, 0.6) !important;
-    }
-    .v-data-table tbody td {
-      color: #66bb6a !important;
-      font-weight: 500 !important;
-    }
     .page-title {
       margin-top: 20px !important;
       margin-bottom: 15px !important;
@@ -83,30 +59,20 @@
       font-weight: 700 !important;
       text-shadow: 0 2px 4px rgba(255,255,255,0.8), 0 1px 2px rgba(102,187,106,0.3) !important;
     }
-    .v-btn .v-icon {
-      color: #87ceeb !important;
-    }
-    .v-btn .mdi-close,
-    .v-btn .mdi-arrow-left {
-      color: #000000 !important;
-    }
   </style>
 </head>
-<body class="page-cliente-principal" style="padding-top: 70px; background: linear-gradient(135deg, #fce4ec, #f8bbd9); min-height: 100vh;">
+<body class="page-registro-gasto" style="padding-top: 70px; background: linear-gradient(135deg, #fce4ec, #f8bbd9); min-height: 100vh;">
 <div id="navbar"></div>
 <div id="sidebar"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
 <div class="content" id="app">
 </div>
 
 <script src="/script.js"></script>
-<script type="module" src="/cliente-principal.js"></script>
+<script type="module" src="/registro-gasto.js"></script>
 
 </body>
 </html>
-

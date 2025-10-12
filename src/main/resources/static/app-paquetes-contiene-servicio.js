@@ -14,16 +14,10 @@ new Vue({
             relacionesFiltradas: [],
             paquetes: [],
             servicios: [],
+            filtroPaquete: '',
 
             paginaActual: 1,
             itemsPorPagina: 10,
-            formularioVisible: false,
-            nuevaRelacion: { 
-                id: null, 
-                paqueteId: null,
-                servicioId: null
-            },
-            relacionSeleccionada: '',
             intervalId: null,
             mostrarSalir: false,
         };
@@ -41,6 +35,13 @@ new Vue({
         relacionesPaginadas() {
             const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
             return this.relacionesFiltradas.slice(inicio, inicio + this.itemsPorPagina);
+        }
+    },
+    watch: {
+        filtroPaquete(newVal) {
+            if (newVal === '') {
+                this.filtrarRelaciones();
+            }
         }
     },
     methods: {
@@ -83,67 +84,18 @@ new Vue({
             }
         },
         filtrarRelaciones() {
-            this.relacionesFiltradas = this.relaciones;
+            if (this.filtroPaquete.trim() === '') {
+                this.relacionesFiltradas = this.relaciones;
+            } else {
+                const busqueda = this.filtroPaquete.toLowerCase();
+                this.relacionesFiltradas = this.relaciones.filter(relacion =>
+                    this.getPaqueteDescripcion(relacion).toLowerCase().includes(busqueda) ||
+                    this.getServicioName(relacion).toLowerCase().includes(busqueda)
+                );
+            }
+            this.paginaActual = 1;
         },
-        async agregarRelacion() {
-            if (!this.nuevaRelacion.paqueteId || !this.nuevaRelacion.servicioId) {
-                NotificationSystem.error('Debe seleccionar paquete y servicio');
-                return;
-            }
-            try {
-                const relacionData = {
-                    paquete: { id: this.nuevaRelacion.paqueteId },
-                    servicio: { id: this.nuevaRelacion.servicioId }
-                };
-                const response = await fetch(`${config.apiBaseUrl}/paquetes-servicios/agregar_paquete_servicio`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(relacionData)
-                });
-                if (response.ok) {
-                    const relacion = await response.json();
-                    this.relaciones.push(relacion);
-                    this.filtrarRelaciones();
-                    this.toggleFormulario();
-                    NotificationSystem.success('Relación agregada exitosamente');
-                } else {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-            } catch (error) {
-                console.error('Error al agregar relación:', error);
-                NotificationSystem.error(`Error al agregar relación: ${error.message}`);
-            }
-        },
-        async modificarRelacion() {
-            if (!this.nuevaRelacion.paqueteId || !this.nuevaRelacion.servicioId) {
-                NotificationSystem.error('Debe seleccionar paquete y servicio');
-                return;
-            }
-            try {
-                const relacionData = {
-                    paquete: { id: this.nuevaRelacion.paqueteId },
-                    servicio: { id: this.nuevaRelacion.servicioId }
-                };
-                const response = await fetch(`${config.apiBaseUrl}/paquetes-servicios/actualizar_paquete_servicio/${this.nuevaRelacion.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(relacionData)
-                });
-                if (response.ok) {
-                    const relacion = await response.json();
-                    const index = this.relaciones.findIndex(r => r.id === relacion.id);
-                    if (index !== -1) this.relaciones[index] = relacion;
-                    this.filtrarRelaciones();
-                    this.toggleFormulario();
-                    NotificationSystem.success('Relación actualizada exitosamente');
-                } else {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-            } catch (error) {
-                console.error('Error al modificar relación:', error);
-                NotificationSystem.error(`Error al modificar relación: ${error.message}`);
-            }
-        },
+
         async eliminarRelacion(relacion) {
             NotificationSystem.confirm('¿Eliminar esta relación?', async () => {
                 try {
@@ -159,24 +111,7 @@ new Vue({
                 }
             });
         },
-        toggleFormulario() {
-            this.formularioVisible = !this.formularioVisible;
-            this.nuevaRelacion = { 
-                id: null, 
-                paqueteId: null,
-                servicioId: null
-            };
-            this.relacionSeleccionada = '';
-        },
-        cargarRelacion(relacion) {
-            this.nuevaRelacion = { 
-                id: relacion.id,
-                paqueteId: relacion.paqueteId,
-                servicioId: relacion.servicioId
-            };
-            this.formularioVisible = true;
-            this.relacionSeleccionada = `${relacion.paqueteDescripcion} - ${relacion.servicioNombre}`;
-        },
+
         cambiarPagina(pagina) {
             if (pagina >= 1 && pagina <= this.totalPaginas) {
                 this.paginaActual = pagina;
@@ -215,49 +150,21 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 class="page-title">Gestión de Paquetes - Servicios</h1>
+                <h1 class="page-title">Lista de Paquetes - Servicios</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
 
                     <div class="filters-container" style="display: flex; gap: 15px; align-items: end; margin-bottom: 20px; padding: 15px; background: rgba(252, 228, 236, 0.9); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3); flex-wrap: wrap; width: fit-content;">
-                        <button @click="toggleFormulario()" class="btn btn-small" v-if="!formularioVisible">Nueva Relación</button>
+                        <div>
+                            <label>Buscar por paquete o servicio:</label>
+                            <input type="text" v-model="filtroPaquete" @input="filtrarRelaciones" placeholder="Buscar paquete o servicio..." style="width: 250px;"/>
+                        </div>
                     </div>
                     
-                    <div v-if="formularioVisible" class="form-container" style="width: fit-content; max-width: 800px;">
-                        <h3>{{ nuevaRelacion.id ? 'Modificar Relación - ' + relacionSeleccionada : 'Nueva Relación' }}</h3>
-                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                            <div style="flex: 1; min-width: 200px;">
-                                <label>Paquete: *</label>
-                                <select v-model="nuevaRelacion.paqueteId" required>
-                                    <option value="" disabled>Seleccionar Paquete</option>
-                                    <option v-for="paquete in paquetes" :key="paquete.id" :value="paquete.id">
-                                        {{ paquete.descripcion }}
-                                    </option>
-                                </select>
-                            </div>
-                            <div style="flex: 1; min-width: 200px;">
-                                <label>Servicio: *</label>
-                                <select v-model="nuevaRelacion.servicioId" required>
-                                    <option value="" disabled>Seleccionar Servicio</option>
-                                    <option v-for="servicio in servicios" :key="servicio.id" :value="servicio.id">
-                                        {{ servicio.nombre }}
-                                    </option>
-                                </select>
-                            </div>
 
-                        </div>
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
-                            <button @click="nuevaRelacion.id ? modificarRelacion() : agregarRelacion()" class="btn">
-                                {{ nuevaRelacion.id ? 'Modificar' : 'Agregar' }}
-                            </button>
-                            <button @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
-                        </div>
-                    </div>
-                    
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Paquete</th>
                                 <th>Servicio</th>
                                 <th>Acciones</th>
@@ -265,11 +172,9 @@ new Vue({
                         </thead>
                         <tbody>
                             <tr v-for="relacion in relacionesPaginadas" :key="relacion.id">
-                                <td>{{ relacion.id }}</td>
                                 <td>{{ getPaqueteDescripcion(relacion) }}</td>
                                 <td>{{ getServicioName(relacion) }}</td>
                                 <td>
-                                    <button @click="cargarRelacion(relacion)" class="btn-small">Editar</button>
                                     <button @click="eliminarRelacion(relacion)" class="btn-small btn-danger">Eliminar</button>
                                 </td>
                             </tr>

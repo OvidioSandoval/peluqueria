@@ -10,15 +10,13 @@ new Vue({
     el: '#app',
     data() {
         return {
-            clientes: [],
-            clientesFiltrados: [],
+            clientesFrecuentes: [],
+            clientesFrecuentesFiltrados: [],
             clienteSeleccionado: null,
             historialServicios: [],
-            clientesFrecuentes: [],
             paginaActual: 1,
             itemsPorPagina: 10,
             mostrarHistorial: false,
-            mostrarFrecuentes: false,
             cargandoHistorial: false,
             cargandoFrecuentes: false,
             generandoPDF: false,
@@ -27,57 +25,45 @@ new Vue({
         };
     },
     mounted() {
-        this.fetchClientes();
         this.fetchClientesFrecuentes();
     },
     computed: {
         totalPaginas() {
-            return Math.ceil(this.clientesFiltrados.length / this.itemsPorPagina);
+            return Math.ceil(this.clientesFrecuentesFiltrados.length / this.itemsPorPagina);
         },
-        clientesPaginados() {
+        clientesFrecuentesPaginados() {
             const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
-            return this.clientesFiltrados.slice(inicio, inicio + this.itemsPorPagina);
+            return this.clientesFrecuentesFiltrados.slice(inicio, inicio + this.itemsPorPagina);
+        }
+    },
+    watch: {
+        busqueda() {
+            this.filtrarClientesFrecuentes();
         }
     },
     methods: {
-        async fetchClientes() {
-            try {
-                const response = await fetch(config.apiBaseUrl + '/clientes');
-                if (!response.ok) throw new Error('Error ' + response.status + ': ' + response.statusText);
-                this.clientes = await response.json();
-                this.filtrarClientes();
-            } catch (error) {
-                console.error('Error al cargar clientes:', error);
-                NotificationSystem.error('Error al cargar los clientes: ' + error.message);
-            }
-        },
         
         async fetchClientesFrecuentes() {
             try {
                 this.cargandoFrecuentes = true;
-                const response = await fetch(config.apiBaseUrl + '/ventas');
+                const response = await fetch(config.apiBaseUrl + '/reportes/clientes-mas-frecuentes');
                 if (!response.ok) throw new Error('Error ' + response.status + ': ' + response.statusText);
-                const ventas = await response.json();
+                const clientesData = await response.json();
                 
-                const frecuenciaClientes = {};
-                ventas.forEach(venta => {
-                    if (venta.cliente && venta.cliente.id) {
-                        const clienteId = venta.cliente.id;
-                        if (!frecuenciaClientes[clienteId]) {
-                            frecuenciaClientes[clienteId] = {
-                                cliente: venta.cliente,
-                                cantidadVisitas: 0,
-                                montoTotal: 0
-                            };
-                        }
-                        frecuenciaClientes[clienteId].cantidadVisitas++;
-                        frecuenciaClientes[clienteId].montoTotal += venta.montoTotal || 0;
-                    }
-                });
-                
-                this.clientesFrecuentes = Object.values(frecuenciaClientes)
-                    .sort((a, b) => b.cantidadVisitas - a.cantidadVisitas)
-                    .slice(0, 10);
+                this.clientesFrecuentes = clientesData.map(cliente => ({
+                    cliente: {
+                        id: cliente.id,
+                        nombreCompleto: cliente.nombreCompleto,
+                        telefono: cliente.telefono,
+                        correo: cliente.correo,
+                        ruc: cliente.ruc
+                    },
+                    cantidadVisitas: cliente.visitas || 0,
+                    montoTotal: cliente.totalGastado || 0
+                }));
+                console.log('Clientes frecuentes encontrados:', this.clientesFrecuentes.length);
+                console.log('Datos de clientes frecuentes:', this.clientesFrecuentes);
+                this.filtrarClientesFrecuentes();
                     
             } catch (error) {
                 console.error('Error al cargar clientes frecuentes:', error);
@@ -131,24 +117,19 @@ new Vue({
             }
         },
         
-        filtrarClientes() {
+        filtrarClientesFrecuentes() {
             if (this.busqueda.trim() === '') {
-                this.clientesFiltrados = this.clientes;
+                this.clientesFrecuentesFiltrados = this.clientesFrecuentes;
             } else {
                 const busqueda = this.busqueda.toLowerCase();
-                this.clientesFiltrados = this.clientes.filter(cliente =>
-                    (cliente.nombreCompleto && cliente.nombreCompleto.toLowerCase().includes(busqueda)) ||
-                    (cliente.ruc && cliente.ruc.toLowerCase().includes(busqueda)) ||
-                    (cliente.telefono && cliente.telefono.toLowerCase().includes(busqueda)) ||
-                    (cliente.correo && cliente.correo.toLowerCase().includes(busqueda))
+                this.clientesFrecuentesFiltrados = this.clientesFrecuentes.filter(item =>
+                    (item.cliente.nombreCompleto && item.cliente.nombreCompleto.toLowerCase().includes(busqueda)) ||
+                    (item.cliente.ruc && item.cliente.ruc.toLowerCase().includes(busqueda)) ||
+                    (item.cliente.telefono && item.cliente.telefono.toLowerCase().includes(busqueda)) ||
+                    (item.cliente.correo && item.cliente.correo.toLowerCase().includes(busqueda))
                 );
             }
             this.paginaActual = 1;
-        },
-        
-        limpiarFiltros() {
-            this.busqueda = '';
-            this.filtrarClientes();
         },
         
         seleccionarCliente(cliente) {
@@ -164,9 +145,7 @@ new Vue({
             this.paginaHistorial = 1;
         },
         
-        toggleFrecuentes() {
-            this.mostrarFrecuentes = !this.mostrarFrecuentes;
-        },
+
         
         formatearFecha(fecha) {
             if (!fecha) return '';
@@ -219,118 +198,15 @@ new Vue({
             return colores[metodoPago] || 'grey';
         },
         
-        exportarClientesFrecuentes() {
-            try {
-                this.generandoPDF = true;
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                
-                // Header profesional
-                doc.setLineWidth(2);
-                doc.line(20, 25, 190, 25);
-                
-                doc.setTextColor(0, 0, 0);
-                doc.setFontSize(24);
-                doc.setFont('helvetica', 'bold');
-                doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
-                
-                doc.setLineWidth(0.5);
-                doc.line(20, 28, 190, 28);
-                
-                doc.setFontSize(16);
-                doc.setFont('helvetica', 'normal');
-                doc.text('REPORTE DE CLIENTES FRECUENTES', 105, 40, { align: 'center' });
-                
-                // Información del reporte
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'normal');
-                const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-                doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
-                doc.text(`Total de clientes frecuentes: ${this.clientesFrecuentes.length}`, 20, 62);
-                
-                const headers = [['CLIENTE', 'VISITAS', 'TOTAL GASTADO', 'TELÉFONO', 'EMAIL']];
-                const data = this.clientesFrecuentes.map(item => [
-                    item.cliente.nombreCompleto || '',
-                    item.cantidadVisitas.toString(),
-                    this.formatearNumero(item.montoTotal),
-                    item.cliente.telefono || 'No registrado',
-                    item.cliente.correo || 'No registrado'
-                ]);
-                
-                doc.autoTable({
-                    head: headers,
-                    body: data,
-                    startY: 68,
-                    styles: { 
-                        fontSize: 9,
-                        textColor: [0, 0, 0],
-                        fillColor: [255, 255, 255],
-                        font: 'helvetica',
-                        cellPadding: 4,
-                        lineColor: [0, 0, 0],
-                        lineWidth: 0.1
-                    },
-                    headStyles: { 
-                        fontSize: 10,
-                        fillColor: [255, 255, 255],
-                        textColor: [0, 0, 0],
-                        fontStyle: 'bold',
-                        font: 'helvetica',
-                        halign: 'center',
-                        cellPadding: 5
-                    },
-                    bodyStyles: {
-                        fontSize: 9,
-                        textColor: [0, 0, 0],
-                        fillColor: [255, 255, 255],
-                        font: 'helvetica'
-                    },
-                    alternateRowStyles: {
-                        fillColor: [255, 255, 255]
-                    },
-                    columnStyles: {
-                        0: { cellWidth: 50 },
-                        1: { cellWidth: 20, halign: 'center' },
-                        2: { cellWidth: 30, halign: 'right' },
-                        3: { cellWidth: 35 },
-                        4: { cellWidth: 45 }
-                    },
-                    margin: { bottom: 40 }
-                });
-                
-                // Footer profesional
-                const pageHeight = doc.internal.pageSize.height;
-                doc.setLineWidth(0.5);
-                doc.line(20, pageHeight - 25, 190, pageHeight - 25);
-                
-                doc.setFontSize(8);
-                doc.setFont('helvetica', 'normal');
-                doc.text('Página 1 de 1', 20, pageHeight - 15);
-                doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
-                
-                const fecha = new Date().toISOString().split('T')[0];
-                doc.save(`clientes-frecuentes-${fecha}.pdf`);
-                NotificationSystem.success('Reporte de clientes frecuentes exportado exitosamente');
-                
-            } catch (error) {
-                console.error('Error al generar PDF:', error);
-                NotificationSystem.error('Error al generar el PDF: ' + error.message);
-            } finally {
-                this.generandoPDF = false;
-            }
-        },
+
         
-        exportarListaClientes() {
+        exportarClientesFrecuentesPDF() {
             try {
                 this.generandoPDF = true;
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
-                const clientesParaExportar = this.clientesFiltrados;
+                const clientesParaExportar = this.clientesFrecuentesFiltrados;
                 const itemsPorPagina = 20;
                 const totalPaginas = Math.ceil(clientesParaExportar.length / itemsPorPagina);
                 
@@ -351,7 +227,7 @@ new Vue({
                     
                     doc.setFontSize(16);
                     doc.setFont('helvetica', 'normal');
-                    doc.text('LISTA DE CLIENTES', 105, 40, { align: 'center' });
+                    doc.text('LISTA DE CLIENTES FRECUENTES', 105, 40, { align: 'center' });
                     
                     // Información del reporte
                     doc.setFontSize(10);
@@ -371,13 +247,13 @@ new Vue({
                     const fin = Math.min(inicio + itemsPorPagina, clientesParaExportar.length);
                     const clientesPagina = clientesParaExportar.slice(inicio, fin);
                     
-                    const headers = [['NOMBRE COMPLETO', 'TELÉFONO', 'RUC', 'EMAIL', 'EDAD']];
-                    const data = clientesPagina.map((cliente) => [
-                        cliente.nombreCompleto || '',
-                        cliente.telefono || 'No registrado',
-                        cliente.ruc || 'No registrado',
-                        cliente.correo || 'No registrado',
-                        this.calcularEdad(cliente.fechaNacimiento)
+                    const headers = [['CLIENTE', 'VISITAS', 'TOTAL GASTADO', 'TELÉFONO', 'EMAIL']];
+                    const data = clientesPagina.map(item => [
+                        item.cliente.nombreCompleto || '',
+                        item.cantidadVisitas.toString(),
+                        this.formatearNumero(item.montoTotal),
+                        item.cliente.telefono || 'No registrado',
+                        item.cliente.correo || 'No registrado'
                     ]);
                     
                     doc.autoTable({
@@ -413,10 +289,10 @@ new Vue({
                         },
                         columnStyles: {
                             0: { cellWidth: 50 },
-                            1: { cellWidth: 30 },
-                            2: { cellWidth: 30 },
-                            3: { cellWidth: 50 },
-                            4: { cellWidth: 20, halign: 'center' }
+                            1: { cellWidth: 20, halign: 'center' },
+                            2: { cellWidth: 30, halign: 'right' },
+                            3: { cellWidth: 35 },
+                            4: { cellWidth: 45 }
                         },
                         margin: { bottom: 40 }
                     });
@@ -434,8 +310,8 @@ new Vue({
                 
                 const fecha = new Date().toISOString().split('T')[0];
                 const filtroTexto = this.busqueda.trim() ? '-filtrado' : '';
-                doc.save(`lista-clientes${filtroTexto}-${fecha}.pdf`);
-                NotificationSystem.success('Lista de clientes exportada exitosamente');
+                doc.save(`clientes-frecuentes${filtroTexto}-${fecha}.pdf`);
+                NotificationSystem.success('Lista de clientes frecuentes exportada exitosamente');
                 
             } catch (error) {
                 console.error('Error al generar PDF:', error);
@@ -593,37 +469,32 @@ new Vue({
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 class="page-title">Gestión de Clientes</h1>
+                <h1 class="page-title">Lista de Clientes Frecuentes</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 <main style="padding: 20px;">
-                    <div class="filters-container" style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap; width: fit-content; padding: 15px; margin: 15px 0;">
-                        <div class="filter-group" style="flex: none; width: auto;">
+                    <div class="filters-container" style="display: flex; gap: 10px; align-items: end; flex-wrap: wrap; width: fit-content; padding: 15px; margin: 15px 0;">
+                        <div class="filter-group" style="flex: none; width: auto; min-width: 240px;">
                             <label>Buscar Cliente:</label>
-                            <input type="text" v-model="busqueda" @input="filtrarClientes" placeholder="Buscar por nombre, RUC, teléfono o email..." class="search-bar" style="width: 300px;"/>
+                            <input type="text" v-model="busqueda" placeholder="Buscar por nombre, RUC, teléfono o email..." class="search-bar" style="width: 100%;"/>
                         </div>
-                        <div style="display: flex; gap: 10px; align-items: end;">
-                            <button @click="limpiarFiltros" class="btn btn-secondary btn-small">Limpiar</button>
-                            <button @click="toggleFrecuentes" class="btn btn-small">
-                                {{ mostrarFrecuentes ? 'Ocultar' : 'Ver' }} Frecuentes
+                        <div style="display: flex; gap: 10px; align-items: end; min-width: fit-content; white-space: nowrap;">
+                            <button @click="exportarClientesFrecuentesPDF" class="btn btn-small" :disabled="generandoPDF">
+                                <i class="fas fa-file-pdf"></i> Exportar PDF
                             </button>
                         </div>
                     </div>
                     
-                    <div v-if="mostrarFrecuentes" class="form-container" style="margin: 20px 0;">
+                    <div class="form-container" style="margin: 20px 0;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <h3>Clientes Frecuentes</h3>
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <button @click="exportarClientesFrecuentes" class="btn btn-small">
-                                    <i class="fas fa-file-pdf"></i> Exportar
-                                </button>
-                                <button @click="mostrarFrecuentes = false" class="btn btn-small btn-danger">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
                         </div>
                         <div v-if="cargandoFrecuentes" style="text-align: center; padding: 20px;">
                             <i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i>
                             <p>Cargando...</p>
+                        </div>
+                        <div v-else-if="clientesFrecuentesFiltrados.length === 0" style="text-align: center; padding: 40px; color: #66bb6a;">
+                            <i class="fas fa-info-circle" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                            <div>No hay clientes frecuentes registrados</div>
                         </div>
                         <table v-else>
                             <thead>
@@ -631,49 +502,20 @@ new Vue({
                                     <th>Cliente</th>
                                     <th>Visitas</th>
                                     <th>Total Gastado</th>
+                                    <th>Teléfono</th>
+                                    <th>Email</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="item in clientesFrecuentes" :key="item.cliente.id">
+                                <tr v-for="item in clientesFrecuentesPaginados" :key="item.cliente.id">
                                     <td>{{ item.cliente.nombreCompleto }}</td>
                                     <td>{{ item.cantidadVisitas }}</td>
                                     <td>{{ formatearNumero(item.montoTotal) }}</td>
+                                    <td>{{ item.cliente.telefono || 'N/A' }}</td>
+                                    <td>{{ item.cliente.correo || 'N/A' }}</td>
                                     <td>
                                         <button @click="seleccionarCliente(item.cliente)" class="btn-small">Ver Historial</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div class="form-container" style="margin: 20px 0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h3>Lista de Clientes</h3>
-                            <button @click="exportarListaClientes" class="btn btn-small" :disabled="generandoPDF">
-                                <i class="fas fa-file-pdf"></i> Exportar PDF
-                            </button>
-                        </div>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Nombre</th>
-                                    <th>Teléfono</th>
-                                    <th>RUC</th>
-                                    <th>Email</th>
-                                    <th>Edad</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="cliente in clientesPaginados" :key="cliente.id">
-                                    <td>{{ cliente.nombreCompleto }}</td>
-                                    <td>{{ cliente.telefono || 'N/A' }}</td>
-                                    <td>{{ cliente.ruc || 'N/A' }}</td>
-                                    <td>{{ cliente.correo || 'N/A' }}</td>
-                                    <td>{{ calcularEdad(cliente.fechaNacimiento) }}</td>
-                                    <td>
-                                        <button @click="seleccionarCliente(cliente)" class="btn-small">Ver Historial</button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -769,7 +611,7 @@ const style = document.createElement('style');
 style.textContent = `
     .filters-container {
         display: flex;
-        gap: 15px;
+        gap: 10px;
         align-items: end;
         margin-bottom: 20px;
         padding: 15px;
@@ -780,11 +622,12 @@ style.textContent = `
         border: 1px solid rgba(179, 229, 252, 0.3);
         flex-wrap: wrap;
         width: fit-content;
+        min-width: fit-content;
     }
     .filter-group {
         display: flex;
         flex-direction: column;
-        min-width: fit-content;
+        min-width: 240px;
     }
     .filter-group label {
         font-weight: bold;
@@ -797,7 +640,7 @@ style.textContent = `
         border-radius: 5px;
         font-size: 14px;
         transition: border-color 0.3s;
-        width: 300px;
+        width: 100%;
     }
     .search-bar:focus {
         border-color: #5d4037;

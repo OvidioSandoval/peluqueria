@@ -222,4 +222,40 @@ public class FrontController {
         LOGGER.info("IN: mostrarRegistroCategoria");
         return "registro-categoria";
     }
+
+    @GetMapping("/web/registro-gasto")
+    public String mostrarRegistroGasto(Model model) {
+        LOGGER.info("IN: mostrarRegistroGasto");
+        return "registro-gasto";
+    }
+
+    @GetMapping("/web/registro-movimiento")
+    public String mostrarRegistroMovimiento(Model model) {
+        LOGGER.info("IN: mostrarRegistroMovimiento");
+        return "registro-movimiento";
+    }
+
+    @GetMapping("/web/registro-paquetes-servicio")
+    public String mostrarRegistroPaquetesServicio(Model model) {
+        LOGGER.info("IN: mostrarRegistroPaquetesServicio");
+        return "registro-paquetes-servicio";
+    }
+
+    @GetMapping("/web/registro-paquetes-contiene-servicios")
+    public String mostrarRegistroPaquetesContieneServicios(Model model) {
+        LOGGER.info("IN: mostrarRegistroPaquetesContieneServicios");
+        return "registro-paquetes-contiene-servicios";
+    }
+
+    @GetMapping("/web/registro-proveedor")
+    public String mostrarRegistroProveedor(Model model) {
+        LOGGER.info("IN: mostrarRegistroProveedor");
+        return "registro-proveedor";
+    }
+
+    @GetMapping("/web/registro-turno")
+    public String mostrarRegistroTurno(Model model) {
+        LOGGER.info("IN: mostrarRegistroTurno");
+        return "registro-turno";
+    }
 }
