@@ -17,6 +17,237 @@ public class FrontController {
         return "panel-control";
     }
 
+    // Encoded URLs
+    @GetMapping("/app/a1")
+    public String mostrarAreasEncoded(Model model) {
+        return "areas";
+    }
+
+    @GetMapping("/app/p1")
+    public String mostrarPaginaPrincipalEncoded(Model model) {
+        return "pagina-principal";
+    }
+
+    @GetMapping("/app/c1")
+    public String mostrarCajasEncoded(Model model) {
+        return "cajas";
+    }
+
+    @GetMapping("/app/cs1")
+    public String mostrarCategoriasEncoded(Model model) {
+        return "categoria-servicios";
+    }
+
+    @GetMapping("/app/cl1")
+    public String mostrarClientesEncoded(Model model) {
+        return "clientes";
+    }
+
+    @GetMapping("/app/co1")
+    public String mostrarComprasEncoded(Model model) {
+        return "compras";
+    }
+
+    @GetMapping("/app/dc1")
+    public String mostrarDetalleComprasEncoded(Model model) {
+        return "detalle-compras";
+    }
+
+    @GetMapping("/app/dv1")
+    public String mostrarDetalleVentasEncoded(Model model) {
+        return "detalle-ventas";
+    }
+
+    @GetMapping("/app/e1")
+    public String mostrarEmpleadosEncoded(Model model) {
+        return "empleados";
+    }
+
+    @GetMapping("/app/g1")
+    public String mostrarGastosEncoded(Model model) {
+        return "gastos";
+    }
+
+    @GetMapping("/app/m1")
+    public String mostrarMovimientosEncoded(Model model) {
+        return "movimientos";
+    }
+
+    @GetMapping("/app/ps1")
+    public String mostrarPaqueteServiciosEncoded(Model model) {
+        return "paquete-servicios";
+    }
+
+    @GetMapping("/app/pr1")
+    public String mostrarProductosEncoded(Model model) {
+        return "productos";
+    }
+
+    @GetMapping("/app/pv1")
+    public String mostrarProveedoresEncoded(Model model) {
+        return "proveedores";
+    }
+
+    @GetMapping("/app/s1")
+    public String mostrarServiciosEncoded(Model model) {
+        return "servicios";
+    }
+
+    @GetMapping("/app/t1")
+    public String mostrarTurnosEncoded(Model model) {
+        return "turnos";
+    }
+
+    @GetMapping("/app/v1")
+    public String mostrarVentasEncoded(Model model) {
+        return "ventas";
+    }
+
+    @GetMapping("/app/as1")
+    public String mostrarAlertasStockEncoded(Model model) {
+        return "alertas-stock";
+    }
+
+    @GetMapping("/app/r1")
+    public String mostrarReportesEncoded(Model model) {
+        return "reportes";
+    }
+
+    @GetMapping("/app/u1")
+    public String mostrarUsuariosEncoded(Model model) {
+        return "usuarios";
+    }
+
+    @GetMapping("/app/ro1")
+    public String mostrarRolesEncoded(Model model) {
+        return "roles";
+    }
+
+    @GetMapping("/app/ru1")
+    public String mostrarRegistroUsuarioEncoded(Model model) {
+        return "registro-usuario";
+    }
+
+    @GetMapping("/app/rr1")
+    public String mostrarRegistroRolEncoded(Model model) {
+        return "registro-rol";
+    }
+
+    @GetMapping("/app/pc1")
+    public String mostrarDashboardEncoded(Model model) {
+        return "panel-control";
+    }
+
+    @GetMapping("/app/cp1")
+    public String mostrarClientePrincipalEncoded(Model model) {
+        return "cliente-principal";
+    }
+
+    @GetMapping("/app/ct1")
+    public String mostrarCalendarioTurnoEncoded(Model model) {
+        return "calendario-turno";
+    }
+
+    @GetMapping("/app/rv1")
+    public String mostrarRegistroVentaEncoded(Model model) {
+        return "registro-venta";
+    }
+
+    @GetMapping("/app/rc1")
+    public String mostrarRegistroCompraEncoded(Model model) {
+        return "registro-compra";
+    }
+
+    @GetMapping("/app/ep1")
+    public String mostrarEmpleadoEncoded(Model model) {
+        return "empleado-principal";
+    }
+
+    @GetMapping("/app/rcl1")
+    public String mostrarRegistroClienteEncoded(Model model) {
+        return "registro-cliente";
+    }
+
+    @GetMapping("/app/re1")
+    public String mostrarRegistroEmpleadoEncoded(Model model) {
+        return "registro-empleado";
+    }
+
+    @GetMapping("/app/rs1")
+    public String mostrarRegistroServicioEncoded(Model model) {
+        return "registro-servicio";
+    }
+
+    @GetMapping("/app/rp1")
+    public String mostrarRegistroProductoEncoded(Model model) {
+        return "registro-producto";
+    }
+
+    @GetMapping("/app/ra1")
+    public String mostrarRegistroAreaEncoded(Model model) {
+        return "registro-area";
+    }
+
+    @GetMapping("/app/rca1")
+    public String mostrarRegistroCajaEncoded(Model model) {
+        return "registro-caja";
+    }
+
+    @GetMapping("/app/rct1")
+    public String mostrarRegistroCategoriaEncoded(Model model) {
+        return "registro-categoria";
+    }
+
+    @GetMapping("/app/rg1")
+    public String mostrarRegistroGastoEncoded(Model model) {
+        return "registro-gasto";
+    }
+
+    @GetMapping("/app/rm1")
+    public String mostrarRegistroMovimientoEncoded(Model model) {
+        return "registro-movimiento";
+    }
+
+    @GetMapping("/app/rps1")
+    public String mostrarRegistroPaquetesServicioEncoded(Model model) {
+        return "registro-paquetes-servicio";
+    }
+
+    @GetMapping("/app/rpv1")
+    public String mostrarRegistroProveedorEncoded(Model model) {
+        return "registro-proveedor";
+    }
+
+    @GetMapping("/app/rt1")
+    public String mostrarRegistroTurnoEncoded(Model model) {
+        return "registro-turno";
+    }
+
+    @GetMapping("/app/rpr1")
+    public String mostrarRegistroPromocionEncoded(Model model) {
+        return "registro-promocion";
+    }
+
+    @GetMapping("/app/ap1")
+    public String mostrarAdminPromocionesEncoded(Model model) {
+        return "admin-promociones";
+    }
+
+    @GetMapping("/app/pcs1")
+    public String mostrarPaquetesContieneServicioEncoded(Model model) {
+        return "paquetes-contiene-servicio";
+    }
+
+    @GetMapping("/app/rpcs1")
+    public String mostrarRegistroPaquetesContieneServiciosEncoded(Model model) {
+        return "registro-paquetes-contiene-servicios";
+    }
+
+    @GetMapping("/app/au1")
+    public String mostrarAuditoriaEncoded(Model model) {
+        return "auditoria";
+    }
+
     @GetMapping("/web/areas")
     public String mostrarAreas(Model model) {
         LOGGER.info("IN: mostrarAreas");
@@ -325,6 +556,17 @@ public class FrontController {
     public String mostrarLogin(Model model) {
         LOGGER.info("IN: mostrarLogin");
         return "login";
+    }
+
+    @GetMapping("/auth/l1")
+    public String mostrarLoginEncoded(Model model) {
+        return "login";
+    }
+
+    @GetMapping("/web/auditoria")
+    public String mostrarAuditoria(Model model) {
+        LOGGER.info("IN: mostrarAuditoria");
+        return "auditoria";
     }
 
 }

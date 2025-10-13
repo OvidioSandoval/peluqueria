@@ -1,0 +1,232 @@
+URLS DE LA APLICACIÓN PELUQUERÍA LUNA
+=====================================
+
+LINKS ORIGINALES:
+================
+
+PÁGINAS PRINCIPALES:
+/ - Panel de Control (Index)
+/web/panel-control - Panel de Control
+/web/pagina-principal - Página Principal
+
+AUTENTICACION:
+/login - Login
+/logout - Cerrar Sesión
+
+GESTIÓN DE USUARIOS Y ROLES:
+/web/usuarios - Lista de Usuarios
+/web/registro-usuario - Registro de Usuario
+/web/roles - Lista de Roles
+/web/registro-rol - Registro de Rol
+
+GESTIÓN DE CLIENTES:
+/web/clientes - Lista de Clientes
+/web/registro-cliente - Registro de Cliente
+/web/cliente-principal - Clientes Frecuentes
+
+GESTIÓN DE EMPLEADOS:
+/web/empleados - Lista de Empleados
+/web/registro-empleado - Registro de Empleado
+/web/empleado-principal - Empleado Principal
+
+GESTIÓN DE SERVICIOS:
+/web/servicios - Lista de Servicios
+/web/registro-servicio - Registro de Servicio
+/web/categorias - Categorías de Servicios
+/web/registro-categoria - Registro de Categoría
+
+GESTIÓN DE PRODUCTOS:
+/web/productos - Lista de Productos
+/web/registro-producto - Registro de Producto
+
+GESTIÓN DE VENTAS:
+/web/ventas - Lista de Ventas
+/web/registro-venta - Registro de Venta
+/web/detalle-ventas - Detalle de Ventas
+
+GESTIÓN DE COMPRAS:
+/web/compras - Lista de Compras
+/web/registro-compra - Registro de Compra
+/web/detalle-compras - Detalle de Compras
+
+GESTIÓN DE TURNOS:
+/web/turnos - Lista de Turnos
+/web/registro-turno - Registro de Turno
+/web/calendario-turno - Calendario de Turnos
+
+GESTIÓN DE PROMOCIONES:
+/web/registro-promocion - Registro de Promoción
+/web/admin-promociones - Administrar Promociones
+
+GESTIÓN DE ÁREAS:
+/web/areas - Lista de Áreas
+/web/registro-area - Registro de Área
+
+GESTIÓN DE CAJAS:
+/web/cajas - Lista de Cajas
+/web/registro-caja - Registro de Caja
+
+GESTIÓN DE GASTOS:
+/web/gastos - Lista de Gastos
+/web/registro-gasto - Registro de Gasto
+
+GESTIÓN DE MOVIMIENTOS:
+/web/movimientos - Lista de Movimientos
+/web/registro-movimiento - Registro de Movimiento
+
+GESTIÓN DE PAQUETES:
+/web/paquete-servicios - Paquete de Servicios
+/web/registro-paquetes-servicio - Registro de Paquetes Servicio
+/web/paquetes-contiene-servicio - Paquetes Contiene Servicio
+/web/registro-paquetes-contiene-servicios - Registro Paquetes Contiene Servicios
+
+GESTIÓN DE PROVEEDORES:
+/web/proveedores - Lista de Proveedores
+/web/registro-proveedor - Registro de Proveedor
+
+REPORTES Y ALERTAS:
+/web/reportes - Reportes
+/web/alertas-stock - Alertas de Stock
+/web/auditoria - Auditoría del Sistema
+
+PÁGINAS PÚBLICAS (LANDING):
+/landing - Landing Principal
+/web/landing - Landing Principal
+/web/landing-servicios - Landing Servicios
+/web/landing-productos - Landing Productos
+/web/landing-promociones - Landing Promociones
+
+APIS PÚBLICAS:
+/api/servicios - API de Servicios (GET)
+/api/productos - API de Productos (GET)
+/config/api-url - Configuración API
+
+ARCHIVOS ESTÁTICOS:
+/style.css - Estilos principales
+/style-content.css - Estilos de contenido
+/landing-style.css - Estilos de landing
+/script.js - Scripts principales
+/config.js - Configuración JavaScript
+/navbar.html - Barra de navegación
+/sidebar.html - Barra lateral
+/notification-system.js - Sistema de notificaciones
+
+ARCHIVOS JAVASCRIPT DE PÁGINAS:
+/app-usuarios.js - Aplicación de usuarios
+/app-roles.js - Aplicación de roles
+/registro-usuario.js - Registro de usuario
+/registro-rol.js - Registro de rol
+/registro-cliente.js - Registro de cliente
+/registro-empleado.js - Registro de empleado
+/registro-servicio.js - Registro de servicio
+/registro-producto.js - Registro de producto
+/registro-area.js - Registro de área
+/registro-caja.js - Registro de caja
+/registro-categoria.js - Registro de categoría
+/registro-gasto.js - Registro de gasto
+/registro-movimiento.js - Registro de movimiento
+/registro-paquetes-servicio.js - Registro de paquetes servicio
+/registro-proveedor.js - Registro de proveedor
+/registro-turno.js - Registro de turno
+/registro-venta.js - Registro de venta
+/registro-compra.js - Registro de compra
+/registro-promocion.js - Registro de promoción
+/landing-app.js - Aplicación de landing
+/landing-promociones-app.js - Aplicación de promociones landing
+/admin-promociones-app.js - Administración de promociones
+
+LINKS CODIFICADOS:
+==================
+
+PÁGINAS PRINCIPALES:
+/app/pc1 - Panel de Control
+/app/p1 - Página Principal
+
+AUTENTICACION:
+/auth/l1 - Login
+
+GESTIÓN DE USUARIOS Y ROLES:
+/app/u1 - Lista de Usuarios
+/app/ru1 - Registro de Usuario
+/app/ro1 - Lista de Roles
+/app/rr1 - Registro de Rol
+
+GESTIÓN DE CLIENTES:
+/app/cl1 - Lista de Clientes
+/app/rcl1 - Registro de Cliente
+/app/cp1 - Clientes Frecuentes
+
+GESTIÓN DE EMPLEADOS:
+/app/e1 - Lista de Empleados
+/app/re1 - Registro de Empleado
+/app/ep1 - Empleado Principal
+
+GESTIÓN DE SERVICIOS:
+/app/s1 - Lista de Servicios
+/app/rs1 - Registro de Servicio
+/app/cs1 - Categorías de Servicios
+/app/rct1 - Registro de Categoría
+
+GESTIÓN DE PRODUCTOS:
+/app/pr1 - Lista de Productos
+/app/rp1 - Registro de Producto
+
+GESTIÓN DE VENTAS:
+/app/v1 - Lista de Ventas
+/app/rv1 - Registro de Venta
+/app/dv1 - Detalle de Ventas
+
+GESTIÓN DE COMPRAS:
+/app/co1 - Lista de Compras
+/app/rc1 - Registro de Compra
+/app/dc1 - Detalle de Compras
+
+GESTIÓN DE TURNOS:
+/app/t1 - Lista de Turnos
+/app/rt1 - Registro de Turno
+/app/ct1 - Calendario de Turnos
+
+GESTIÓN DE PROMOCIONES:
+/app/rpr1 - Registro de Promoción
+/app/ap1 - Administrar Promociones
+
+GESTIÓN DE ÁREAS:
+/app/a1 - Lista de Áreas
+/app/ra1 - Registro de Área
+
+GESTIÓN DE CAJAS:
+/app/c1 - Lista de Cajas
+/app/rca1 - Registro de Caja
+
+GESTIÓN DE GASTOS:
+/app/g1 - Lista de Gastos
+/app/rg1 - Registro de Gasto
+
+GESTIÓN DE MOVIMIENTOS:
+/app/m1 - Lista de Movimientos
+/app/rm1 - Registro de Movimiento
+
+GESTIÓN DE PAQUETES:
+/app/ps1 - Paquete de Servicios
+/app/rps1 - Registro de Paquetes Servicio
+/app/pcs1 - Paquetes Contiene Servicio
+/app/rpcs1 - Registro Paquetes Contiene Servicios
+
+GESTIÓN DE PROVEEDORES:
+/app/pv1 - Lista de Proveedores
+/app/rpv1 - Registro de Proveedor
+
+REPORTES Y ALERTAS:
+/app/r1 - Reportes
+/app/as1 - Alertas de Stock
+/app/au1 - Auditoría del Sistema
+
+NOTAS:
+======
+- Los links originales (/web/) son descriptivos
+- Los links codificados (/app/) ocultan la funcionalidad
+- Las páginas de landing son públicas (no requieren autenticación)
+- Todas las demás páginas requieren autenticación
+- Usuario por defecto: admin / admin123
+- Los archivos estáticos (.css, .js, .html) son públicos
+- Las API /api/servicios y /api/productos son públicas para las landing pages

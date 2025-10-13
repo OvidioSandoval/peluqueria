@@ -4,25 +4,25 @@
 .cards-container {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 12px;
-    padding: 20px 15px;
+    gap: 8px;
+    padding: 15px 10px;
     max-width: 1400px;
     margin: 0 auto;
 }
 
 .card {
     background: rgba(252, 228, 236, 0.9);
-    border-radius: 20px;
-    padding: 20px 15px;
+    border-radius: 15px;
+    padding: 12px 8px;
     text-align: center;
-    box-shadow: 0 8px 25px rgba(233, 30, 99, 0.15);
+    box-shadow: 0 6px 20px rgba(233, 30, 99, 0.15);
     transition: all 0.3s ease;
     cursor: pointer;
     text-decoration: none;
     color: #66bb6a;
     border: 2px solid rgba(179, 229, 252, 0.3);
     backdrop-filter: blur(5px);
-    min-height: 120px;
+    min-height: 85px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -39,8 +39,8 @@
 }
 
 .card i {
-    font-size: 2.5rem;
-    margin-bottom: 8px;
+    font-size: 1.8rem;
+    margin-bottom: 6px;
     color: #87ceeb;
     transition: all 0.3s ease;
     text-shadow: 0 2px 4px rgba(135, 206, 235, 0.3);
@@ -53,11 +53,11 @@
 
 .card h3 {
     margin: 0;
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: #66bb6a;
     text-shadow: 0 1px 2px rgba(255,255,255,0.8);
-    line-height: 1.2;
+    line-height: 1.1;
 }
 
 /* Header de página principal */
@@ -412,6 +412,33 @@
 .page-servicios .search-bar {
     min-width: 280px;
     max-width: 350px;
+}
+
+/* Estilos específicos para panel-control */
+.page-panel-control .card {
+    min-height: 70px;
+    padding: 10px 6px;
+    border-radius: 12px;
+}
+
+.page-panel-control .card i {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+}
+
+.page-panel-control .card h3 {
+    font-size: 0.75rem;
+    line-height: 1;
+}
+
+.page-panel-control .cards-container {
+    gap: 6px;
+    padding: 10px 8px;
+}
+
+/* Estilos específicos para auditoría */
+.filters-container {
+    background: #fccce2 !important;
 }
 
 /* Responsive para contenido */

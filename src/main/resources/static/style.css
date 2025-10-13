@@ -243,17 +243,26 @@ td {
 
 .navbar-menu {
     display: flex;
-    gap: 20px;
+    gap: 8px;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 .navbar-menu a {
     color: white;
     text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 20px;
+    padding: 6px 10px;
+    border-radius: 15px;
     transition: all 0.3s ease;
     font-weight: 500;
+    font-size: 12px;
+    white-space: nowrap;
+    min-width: fit-content;
+}
+
+.navbar-menu a i {
+    font-size: 12px;
+    margin-right: 4px;
 }
 
 .navbar-menu a:hover {
