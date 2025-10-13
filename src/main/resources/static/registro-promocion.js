@@ -155,22 +155,20 @@ new Vue({
                         <div class="form-row">
                             <div class="form-col">
                                 <label>Título: *</label>
-                                <input type="text" v-model="nuevaPromocion.titulo" @blur="verificarPromocionExistente" placeholder="Título" required style="border: 2px solid #87CEEB; width: 150px; padding: 4px; font-size: 11px;"/>
+                                <input type="text" v-model="nuevaPromocion.titulo" @blur="verificarPromocionExistente" placeholder="Ingrese el título" required style="border: 2px solid #87CEEB;"/>
                             </div>
                             <div class="form-col">
                                 <label>Precio: *</label>
-                                <input type="number" v-model="nuevaPromocion.precio" placeholder="Precio" required style="border: 2px solid #87CEEB; width: 100px; padding: 4px; font-size: 11px;"/>
+                                <input type="number" v-model="nuevaPromocion.precio" placeholder="Ingrese el precio" required style="border: 2px solid #87CEEB;"/>
                             </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-col" style="min-width: 200px;">
+                            <div class="form-col">
                                 <label>Servicios: *</label>
-                                <select v-model="nuevaPromocion.descripcion" multiple required style="border: 2px solid #87CEEB; min-height: 80px; width: 200px; padding: 4px; font-size: 11px;">
+                                <select v-model="nuevaPromocion.descripcion" multiple required style="border: 2px solid #87CEEB; min-height: 60px;">
                                     <option v-for="servicio in servicios" :key="servicio.id" :value="servicio.nombre">
                                         {{ servicio.nombre }}
                                     </option>
                                 </select>
-                                <small style="color: #666; font-size: 9px;">Ctrl + clic para múltiples</small>
+                                <small style="color: #666; font-size: 10px; display: block;">Ctrl + clic para seleccionar múltiples</small>
                             </div>
                         </div>
                         <div class="form-buttons">
@@ -187,3 +185,7 @@ new Vue({
         </div>
     `
 });
+
+const style = document.createElement('style');
+style.textContent = 'input, textarea, select { padding: 8px 12px !important; font-size: 12px !important; height: 32px !important; width: auto !important; min-width: 150px !important; } textarea { height: auto !important; min-height: 60px !important; } label { font-size: 12px !important; margin-bottom: 4px !important; } .form-container { padding: 15px !important; margin: 10px auto !important; width: fit-content !important; max-width: 100% !important; } .form-row { margin: 10px 0 !important; gap: 15px !important; display: flex !important; flex-wrap: wrap !important; align-items: end !important; } .form-col { flex: 0 0 auto !important; min-width: fit-content !important; } .page-title { font-size: 1.8rem !important; margin-bottom: 15px !important; } h1, h2, h3 { margin-bottom: 10px !important; } .btn { padding: 8px 16px !important; font-size: 12px !important; } select[multiple] { height: 80px !important; min-height: 80px !important; }';
+document.head.appendChild(style);

@@ -20,7 +20,7 @@
                     <li><a href="#inicio">Inicio</a></li>
                     <li><a href="/web/landing-servicios">Servicios</a></li>
                     <li><a href="/web/landing-productos">Productos</a></li>
-                    <li><a href="/web/landing-promociones">Promociones</a></li>
+                    <li v-if="tienePromociones"><a href="/web/landing-promociones">Promociones</a></li>
                     <li><a href="#contacto">Contacto</a></li>
                 </ul>
             </nav>
@@ -34,7 +34,7 @@
                 <div class="hero-buttons">
                     <a href="/web/landing-servicios" class="btn-primary">Ver Servicios</a>
                     <a href="/web/landing-productos" class="btn-primary">Ver Productos</a>
-                    <a href="/web/landing-promociones" class="btn-primary">Ver Promociones</a>
+                    <a v-if="tienePromociones" href="/web/landing-promociones" class="btn-primary">Ver Promociones</a>
                     <button class="btn-secondary" @click="scrollTo('.horarios')">Horarios de Atención</button>
                 </div>
             </div>

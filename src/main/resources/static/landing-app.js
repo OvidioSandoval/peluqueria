@@ -5,12 +5,14 @@ new Vue({
     data() {
         return {
             servicios: [],
-            productos: []
+            productos: [],
+            tienePromociones: false
         };
     },
     mounted() {
         this.fetchServicios();
         this.fetchProductos();
+        this.verificarPromociones();
     },
     methods: {
         async fetchServicios() {
@@ -73,6 +75,10 @@ new Vue({
                 "📅 Sábados: 7:00 AM - 12:00 PM"
             );
             window.open(`https://bot-whatsapp.netlify.app/?message=${mensaje}`, '_blank');
+        },
+        verificarPromociones() {
+            const promocionesGuardadas = localStorage.getItem('promociones');
+            this.tienePromociones = promocionesGuardadas && JSON.parse(promocionesGuardadas).length > 0;
         }
     }
 });

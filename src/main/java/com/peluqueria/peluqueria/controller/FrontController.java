@@ -321,5 +321,10 @@ public class FrontController {
         return "admin-promociones";
     }
 
+    @GetMapping("/login")
+    public String mostrarLogin(Model model) {
+        LOGGER.info("IN: mostrarLogin");
+        return "login";
+    }
 
 }
