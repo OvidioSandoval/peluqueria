@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peluquería Luna - Servicios de Belleza</title>
+    <link rel="stylesheet" href="/landing-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <nav class="navbar">
+                <div class="nav-brand">
+                    <h1><i class="fas fa-cut"></i> Peluquería Luna</h1>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="#inicio">Inicio</a></li>
+                    <li><a href="/web/landing-servicios">Servicios</a></li>
+                    <li><a href="/web/landing-productos">Productos</a></li>
+                    <li><a href="/web/landing-promociones">Promociones</a></li>
+                    <li><a href="#contacto">Contacto</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <!-- Hero Section -->
+        <section id="inicio" class="hero">
+            <div class="hero-content">
+                <h1>Bienvenidos a Peluquería Luna</h1>
+                <p>Tu belleza es nuestra pasión. Servicios profesionales de peluquería y estética.</p>
+                <div class="hero-buttons">
+                    <a href="/web/landing-servicios" class="btn-primary">Ver Servicios</a>
+                    <a href="/web/landing-productos" class="btn-primary">Ver Productos</a>
+                    <a href="/web/landing-promociones" class="btn-primary">Ver Promociones</a>
+                    <button class="btn-secondary" @click="scrollTo('.horarios')">Horarios de Atención</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Horarios -->
+        <section class="horarios">
+            <div class="container">
+                <h2><i class="fas fa-clock"></i> Horarios de Atención</h2>
+                <div class="horarios-grid">
+                    <div class="horario-item">
+                        <h3>Lunes a Viernes</h3>
+                        <p>7:00 AM - 12:00 PM</p>
+                        <p>1:00 PM - 5:00 PM</p>
+                    </div>
+                    <div class="horario-item">
+                        <h3>Sábados</h3>
+                        <p>7:00 AM - 12:00 PM</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+
+        <!-- Contacto -->
+        <section id="contacto" class="contacto">
+            <div class="container">
+                <h2><i class="fas fa-phone"></i> Contacto</h2>
+                <div class="contacto-info">
+                    <div class="contacto-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <p>Dirección: TTE. Fariña</p>
+                    </div>
+                    <div class="contacto-item">
+                        <i class="fab fa-instagram"></i>
+                        <p>Instagram: Soel Sandoval</p>
+                    </div>
+                    <div class="contacto-item">
+                        <i class="fab fa-whatsapp"></i>
+                        <p>WhatsApp: 0976763408</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- WhatsApp Chatbot -->
+        <div class="whatsapp-float" @click="abrirWhatsApp()">
+            <i class="fab fa-whatsapp"></i>
+        </div>
+    </div>
+
+    <script type="module" src="/landing-app.js"></script>
+</body>
+</html>

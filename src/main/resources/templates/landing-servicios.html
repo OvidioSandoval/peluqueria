@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicios - Peluquería Luna</title>
+    <link rel="stylesheet" href="/landing-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <nav class="navbar">
+                <div class="nav-brand">
+                    <h1><i class="fas fa-cut"></i> Peluquería Luna</h1>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="/web/landing">Inicio</a></li>
+                    <li><a href="/web/landing-servicios">Servicios</a></li>
+                    <li><a href="/web/landing-productos">Productos</a></li>
+                    <li><a href="/web/landing-promociones">Promociones</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <section class="servicios" style="padding-top: 120px;">
+            <div class="container">
+                <h2><i class="fas fa-scissors"></i> Nuestros Servicios</h2>
+                <div class="servicios-grid">
+                    <div v-for="servicio in servicios" :key="servicio.id" class="servicio-card">
+                        <i :class="getServiceIcon(servicio.nombre)"></i>
+                        <h3>{{ servicio.nombre }}</h3>
+                        <p>{{ servicio.descripcion }}</p>
+                        <div class="precio">{{ formatearPrecio(servicio.precioBase || 0) }}</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="whatsapp-float" @click="abrirWhatsApp()">
+            <i class="fab fa-whatsapp"></i>
+        </div>
+    </div>
+
+    <script type="module" src="/landing-app.js"></script>
+</body>
+</html>

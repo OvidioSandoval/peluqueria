@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrar Promociones - Peluquería Luna</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/style-content.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body class="page-admin-promociones" style="padding-top: 80px; background: linear-gradient(135deg, #fce4ec, #f8bbd9); min-height: 100vh;">
+<div id="navbar"></div>
+
+<div class="content" id="app">
+    <div class="glass-container">
+        <h1 class="page-title">Lista de Promociones</h1>
+        <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
+        
+        <main style="padding: 20px;">
+            <div class="filters-container" style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap; width: fit-content; padding: 15px; margin: 15px 0; background: #fce4ec; backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3);">
+                <div class="filter-group" style="flex: none; width: auto;">
+                    <label>Buscar por Servicio:</label>
+                    <input type="text" v-model="filtroBusqueda" @input="filtrarPromociones" placeholder="Buscar por nombre de servicio..." class="search-bar" style="width: 300px;"/>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: end;">
+                    <button @click="exportarPDF" class="btn btn-small">
+                        <i class="fas fa-file-pdf"></i> Exportar PDF
+                    </button>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Título</th>
+                        <th>Descripción</th>
+                        <th>Precio</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="promo in promocionesFiltradas" :key="promo.id">
+                        <td>{{ capitalizarTexto(promo.titulo) }}</td>
+                        <td>{{ capitalizarTexto(promo.descripcion) }}</td>
+                        <td>{{ formatearPrecio(promo.precio) }}</td>
+                        <td>
+                            <button @click="eliminarPromocion(promo.id)" class="btn-small btn-danger">Eliminar</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </main>
+    </div>
+</div>
+
+<script src="/script.js"></script>
+<script type="module" src="/admin-promociones-app.js"></script>
+</body>
+</html>

@@ -276,4 +276,50 @@ public class FrontController {
         LOGGER.info("IN: mostrarRegistroTurno");
         return "registro-turno";
     }
+
+    @GetMapping("/landing")
+    public String mostrarLanding(Model model) {
+        LOGGER.info("IN: mostrarLanding");
+        return "landing";
+    }
+
+    @GetMapping("/web/landing")
+    public String mostrarWebLanding(Model model) {
+        LOGGER.info("IN: mostrarWebLanding");
+        return "landing";
+    }
+
+    @GetMapping("/web/landing-servicios")
+    public String mostrarLandingServicios(Model model) {
+        LOGGER.info("IN: mostrarLandingServicios");
+        return "landing-servicios";
+    }
+
+    @GetMapping("/web/landing-productos")
+    public String mostrarLandingProductos(Model model) {
+        LOGGER.info("IN: mostrarLandingProductos");
+        return "landing-productos";
+    }
+
+    @GetMapping("/web/registro-promocion")
+    public String mostrarRegistroPromocion(Model model) {
+        LOGGER.info("IN: mostrarRegistroPromocion");
+        return "registro-promocion";
+
+
+    }
+
+    @GetMapping("/web/landing-promociones")
+    public String mostrarLandingPromociones(Model model) {
+        LOGGER.info("IN: mostrarLandingPromociones");
+        return "landing-promociones";
+    }
+
+    @GetMapping("/web/admin-promociones")
+    public String mostrarAdminPromociones(Model model) {
+        LOGGER.info("IN: mostrarAdminPromociones");
+        return "admin-promociones";
+    }
+
+
 }
