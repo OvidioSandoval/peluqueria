@@ -27,6 +27,17 @@ public class UsuarioController {
                 .orElse(ResponseEntity.notFound().build());
     }
     
+    @GetMapping("/verificar/{username}")
+    public ResponseEntity<?> verificarUsuario(@PathVariable String username) {
+        boolean existe = usuarioService.existsByUsername(username);
+        if (existe) {
+            Usuario usuario = usuarioService.findByUsername(username);
+            return ResponseEntity.ok().body("{ \"existe\": true, \"usuario\": " + 
+                "{\"id\": " + usuario.getId() + ", \"username\": \"" + usuario.getUsername() + "\"}}");
+        }
+        return ResponseEntity.ok().body("{ \"existe\": false }");
+    }
+    
     @PostMapping
     public ResponseEntity<?> createUsuario(@Valid @RequestBody Usuario usuario) {
         try {

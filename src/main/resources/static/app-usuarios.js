@@ -11,26 +11,14 @@ new Vue({
     data() {
         return {
             usuarios: [],
-            roles: [],
             filtroBusqueda: '',
             usuariosFiltrados: [],
             paginaActual: 1,
-            itemsPorPagina: 10,
-            formularioVisible: false,
-            nuevoUsuario: {
-                id: null,
-                username: '',
-                password: '',
-                correo: '',
-                activo: true,
-                rol: null
-            },
-            usuarioSeleccionado: ''
+            itemsPorPagina: 10
         };
     },
     mounted() {
         this.fetchUsuarios();
-        this.fetchRoles();
     },
     computed: {
         totalPaginas() {
@@ -44,23 +32,13 @@ new Vue({
     methods: {
         async fetchUsuarios() {
             try {
-                const response = await fetch(`${config.apiBaseUrl}/api/usuarios`);
+                const response = await fetch(`${config.apiBaseUrl}/usuarios`);
                 if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
                 this.usuarios = await response.json();
                 this.filtrarUsuarios();
             } catch (error) {
                 console.error('Error al cargar usuarios:', error);
                 NotificationSystem.error(`Error al cargar los usuarios: ${error.message}`);
-            }
-        },
-        async fetchRoles() {
-            try {
-                const response = await fetch(`${config.apiBaseUrl}/api/roles`);
-                if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
-                this.roles = await response.json();
-            } catch (error) {
-                console.error('Error al cargar roles:', error);
-                NotificationSystem.error(`Error al cargar los roles: ${error.message}`);
             }
         },
         filtrarUsuarios() {
@@ -76,70 +54,10 @@ new Vue({
             }
             this.paginaActual = 1;
         },
-        async agregarUsuario() {
-            if (!this.nuevoUsuario.username.trim()) {
-                NotificationSystem.error('El username es obligatorio');
-                return;
-            }
-            if (!this.nuevoUsuario.password.trim()) {
-                NotificationSystem.error('La contraseña es obligatoria');
-                return;
-            }
-            if (!this.validarEmail(this.nuevoUsuario.correo)) {
-                NotificationSystem.error('Por favor ingrese un email válido');
-                return;
-            }
-            try {
-                const response = await fetch(`${config.apiBaseUrl}/api/usuarios`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(this.nuevoUsuario)
-                });
-                if (response.ok) {
-                    await this.fetchUsuarios();
-                    this.toggleFormulario();
-                    NotificationSystem.success('Usuario agregado exitosamente');
-                } else {
-                    const errorText = await response.text();
-                    throw new Error(errorText || `Error ${response.status}`);
-                }
-            } catch (error) {
-                console.error('Error al agregar usuario:', error);
-                NotificationSystem.error(`Error al agregar usuario: ${error.message}`);
-            }
-        },
-        async modificarUsuario() {
-            if (!this.nuevoUsuario.username.trim()) {
-                NotificationSystem.error('El username es obligatorio');
-                return;
-            }
-            if (!this.validarEmail(this.nuevoUsuario.correo)) {
-                NotificationSystem.error('Por favor ingrese un email válido');
-                return;
-            }
-            try {
-                const response = await fetch(`${config.apiBaseUrl}/api/usuarios/${this.nuevoUsuario.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(this.nuevoUsuario)
-                });
-                if (response.ok) {
-                    await this.fetchUsuarios();
-                    this.toggleFormulario();
-                    NotificationSystem.success('Usuario actualizado exitosamente');
-                } else {
-                    const errorText = await response.text();
-                    throw new Error(errorText || `Error ${response.status}`);
-                }
-            } catch (error) {
-                console.error('Error al modificar usuario:', error);
-                NotificationSystem.error(`Error al modificar usuario: ${error.message}`);
-            }
-        },
         async eliminarUsuario(usuario) {
             NotificationSystem.confirm(`¿Eliminar usuario "${usuario.username}"?`, async () => {
                 try {
-                    const response = await fetch(`${config.apiBaseUrl}/api/usuarios/${usuario.id}`, {
+                    const response = await fetch(`${config.apiBaseUrl}/usuarios/${usuario.id}`, {
                         method: 'DELETE'
                     });
                     if (response.ok) {
@@ -154,82 +72,136 @@ new Vue({
                 }
             });
         },
-        toggleFormulario() {
-            this.formularioVisible = !this.formularioVisible;
-            this.nuevoUsuario = {
-                id: null,
-                username: '',
-                password: '',
-                correo: '',
-                activo: true,
-                rol: null
-            };
-            this.usuarioSeleccionado = '';
-        },
-        cargarUsuario(usuario) {
-            this.nuevoUsuario = {
-                id: usuario.id,
-                username: usuario.username,
-                password: '',
-                correo: usuario.correo || '',
-                activo: usuario.activo,
-                rol: usuario.rol
-            };
-            this.formularioVisible = true;
-            this.usuarioSeleccionado = usuario.username;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        },
-        validarEmail(email) {
-            if (!email) return true;
-            const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
-            return emailRegex.test(email);
-        },
         cambiarPagina(pagina) {
             if (pagina >= 1 && pagina <= this.totalPaginas) {
                 this.paginaActual = pagina;
+            }
+        },
+        capitalizarTexto(texto) {
+            if (!texto) return '';
+            return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
+        },
+        exportarPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                const usuariosParaExportar = this.usuariosFiltrados;
+                const itemsPorPagina = 20;
+                const totalPaginas = Math.ceil(usuariosParaExportar.length / itemsPorPagina);
+                
+                for (let pagina = 0; pagina < totalPaginas; pagina++) {
+                    if (pagina > 0) doc.addPage();
+                    
+                    // Header profesional
+                    doc.setLineWidth(2);
+                    doc.line(20, 25, 190, 25);
+                    
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(24);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
+                    
+                    doc.setLineWidth(0.5);
+                    doc.line(20, 28, 190, 28);
+                    
+                    doc.setFontSize(16);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('LISTA DE USUARIOS', 105, 40, { align: 'center' });
+                    
+                    // Información del reporte
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                    doc.text(`Total de registros: ${usuariosParaExportar.length}`, 20, 62);
+                    if (this.filtroBusqueda.trim()) {
+                        doc.text(`Filtro aplicado: "${this.filtroBusqueda}"`, 20, 69);
+                    }
+                    
+                    const inicio = pagina * itemsPorPagina;
+                    const fin = Math.min(inicio + itemsPorPagina, usuariosParaExportar.length);
+                    const usuariosPagina = usuariosParaExportar.slice(inicio, fin);
+                    
+                    const headers = [['USUARIO', 'CORREO', 'ROL', 'ESTADO']];
+                    const data = usuariosPagina.map((usuario) => [
+                        usuario.username || '',
+                        usuario.correo || 'No registrado',
+                        usuario.rol ? usuario.rol.descripcion : 'Sin rol',
+                        usuario.activo ? 'Activo' : 'Inactivo'
+                    ]);
+                    
+                    doc.autoTable({
+                        head: headers,
+                        body: data,
+                        startY: this.filtroBusqueda.trim() ? 75 : 68,
+                        styles: { 
+                            fontSize: 9,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            cellPadding: 4,
+                            lineColor: [0, 0, 0],
+                            lineWidth: 0.1
+                        },
+                        headStyles: { 
+                            fontSize: 10,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'center',
+                            cellPadding: 5
+                        },
+                        bodyStyles: {
+                            fontSize: 9,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica'
+                        },
+                        alternateRowStyles: {
+                            fillColor: [255, 255, 255]
+                        },
+                        columnStyles: {
+                            0: { cellWidth: 40 },
+                            1: { cellWidth: 60 },
+                            2: { cellWidth: 40 },
+                            3: { cellWidth: 30, halign: 'center' }
+                        },
+                        margin: { bottom: 40 }
+                    });
+                    
+                    // Footer profesional
+                    const pageHeight = doc.internal.pageSize.height;
+                    doc.setLineWidth(0.5);
+                    doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                    
+                    doc.setFontSize(8);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`Página ${pagina + 1} de ${totalPaginas}`, 20, pageHeight - 15);
+                    doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
+                }
+                
+                const fecha = new Date().toISOString().split('T')[0];
+                const filtroTexto = this.filtroBusqueda.trim() ? '-filtrado' : '';
+                doc.save(`lista-usuarios${filtroTexto}-${fecha}.pdf`);
+                NotificationSystem.success('Lista de usuarios exportada exitosamente');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                NotificationSystem.error('Error al generar el PDF: ' + error.message);
             }
         }
     },
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 class="page-title">Gestión de Usuarios</h1>
+                <h1 class="page-title">Lista de Usuarios</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
-                
-                <div v-if="formularioVisible" class="form-container">
-                    <h2>{{ nuevoUsuario.id ? 'Modificar' : 'Agregar' }} Usuario</h2>
-                    <form @submit.prevent="nuevoUsuario.id ? modificarUsuario() : agregarUsuario()">
-                        <div class="form-group">
-                            <label>Username:</label>
-                            <input type="text" v-model="nuevoUsuario.username" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Contraseña:</label>
-                            <input type="password" v-model="nuevoUsuario.password" :required="!nuevoUsuario.id">
-                            <small v-if="nuevoUsuario.id">Dejar vacío para mantener la contraseña actual</small>
-                        </div>
-                        <div class="form-group">
-                            <label>Correo:</label>
-                            <input type="email" v-model="nuevoUsuario.correo">
-                        </div>
-                        <div class="form-group">
-                            <label>Rol:</label>
-                            <select v-model="nuevoUsuario.rol" required>
-                                <option value="">Seleccionar rol</option>
-                                <option v-for="rol in roles" :key="rol.id" :value="rol">{{ rol.descripcion }}</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" v-model="nuevoUsuario.activo"> Activo
-                            </label>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn">{{ nuevoUsuario.id ? 'Modificar' : 'Agregar' }}</button>
-                            <button type="button" @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
-                        </div>
-                    </form>
-                </div>
                 
                 <main style="padding: 20px;">
                     <div class="filters-container">
@@ -237,16 +209,15 @@ new Vue({
                             <label>Buscar Usuario:</label>
                             <input type="text" v-model="filtroBusqueda" @input="filtrarUsuarios" placeholder="Buscar por username, correo o rol..." class="search-bar"/>
                         </div>
-                        <button @click="toggleFormulario()" class="btn">
-                            <i class="fas fa-plus"></i> Nuevo Usuario
+                        <button @click="exportarPDF" class="btn btn-small">
+                            <i class="fas fa-file-pdf"></i> Exportar PDF
                         </button>
                     </div>
                     
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Username</th>
+                                <th>Nombre de Usuario</th>
                                 <th>Correo</th>
                                 <th>Rol</th>
                                 <th>Estado</th>
@@ -255,17 +226,15 @@ new Vue({
                         </thead>
                         <tbody>
                             <tr v-for="usuario in usuariosPaginados" :key="usuario.id">
-                                <td>{{ usuario.id }}</td>
                                 <td>{{ usuario.username }}</td>
                                 <td>{{ usuario.correo || 'No registrado' }}</td>
-                                <td>{{ usuario.rol ? usuario.rol.descripcion : 'Sin rol' }}</td>
+                                <td>{{ usuario.rol ? capitalizarTexto(usuario.rol.descripcion) : 'Sin rol' }}</td>
                                 <td>
                                     <span :class="usuario.activo ? 'status-active' : 'status-inactive'">
                                         {{ usuario.activo ? 'Activo' : 'Inactivo' }}
                                     </span>
                                 </td>
                                 <td>
-                                    <button @click="cargarUsuario(usuario)" class="btn-small">Modificar</button>
                                     <button @click="eliminarUsuario(usuario)" class="btn-small btn-danger">Eliminar</button>
                                 </td>
                             </tr>

@@ -146,6 +146,24 @@ public class FrontController {
         return "usuarios";
     }
 
+    @GetMapping("/web/roles")
+    public String mostrarRoles(Model model) {
+        LOGGER.info("IN: mostrarRoles");
+        return "roles";
+    }
+
+    @GetMapping("/web/registro-usuario")
+    public String mostrarRegistroUsuario(Model model) {
+        LOGGER.info("IN: mostrarRegistroUsuario");
+        return "registro-usuario";
+    }
+
+    @GetMapping("/web/registro-rol")
+    public String mostrarRegistroRol(Model model) {
+        LOGGER.info("IN: mostrarRegistroRol");
+        return "registro-rol";
+    }
+
     @GetMapping("/web/panel-control")
     public String mostrarDashboard(Model model) {
         LOGGER.info("IN: mostrarDashboard");

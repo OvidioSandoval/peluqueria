@@ -14,13 +14,7 @@ new Vue({
             filtroBusqueda: '',
             rolesFiltrados: [],
             paginaActual: 1,
-            itemsPorPagina: 10,
-            formularioVisible: false,
-            nuevoRol: {
-                id: null,
-                descripcion: ''
-            },
-            rolSeleccionado: ''
+            itemsPorPagina: 10
         };
     },
     mounted() {
@@ -38,7 +32,7 @@ new Vue({
     methods: {
         async fetchRoles() {
             try {
-                const response = await fetch(`${config.apiBaseUrl}/api/roles`);
+                const response = await fetch(`${config.apiBaseUrl}/roles`);
                 if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
                 this.roles = await response.json();
                 this.filtrarRoles();
@@ -58,56 +52,10 @@ new Vue({
             }
             this.paginaActual = 1;
         },
-        async agregarRol() {
-            if (!this.nuevoRol.descripcion.trim()) {
-                NotificationSystem.error('La descripción es obligatoria');
-                return;
-            }
-            try {
-                const response = await fetch(`${config.apiBaseUrl}/api/roles`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(this.nuevoRol)
-                });
-                if (response.ok) {
-                    await this.fetchRoles();
-                    this.toggleFormulario();
-                    NotificationSystem.success('Rol agregado exitosamente');
-                } else {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-            } catch (error) {
-                console.error('Error al agregar rol:', error);
-                NotificationSystem.error(`Error al agregar rol: ${error.message}`);
-            }
-        },
-        async modificarRol() {
-            if (!this.nuevoRol.descripcion.trim()) {
-                NotificationSystem.error('La descripción es obligatoria');
-                return;
-            }
-            try {
-                const response = await fetch(`${config.apiBaseUrl}/api/roles/${this.nuevoRol.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(this.nuevoRol)
-                });
-                if (response.ok) {
-                    await this.fetchRoles();
-                    this.toggleFormulario();
-                    NotificationSystem.success('Rol actualizado exitosamente');
-                } else {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-            } catch (error) {
-                console.error('Error al modificar rol:', error);
-                NotificationSystem.error(`Error al modificar rol: ${error.message}`);
-            }
-        },
         async eliminarRol(rol) {
             NotificationSystem.confirm(`¿Eliminar rol "${rol.descripcion}"?`, async () => {
                 try {
-                    const response = await fetch(`${config.apiBaseUrl}/api/roles/${rol.id}`, {
+                    const response = await fetch(`${config.apiBaseUrl}/roles/${rol.id}`, {
                         method: 'DELETE'
                     });
                     if (response.ok) {
@@ -122,68 +70,155 @@ new Vue({
                 }
             });
         },
-        toggleFormulario() {
-            this.formularioVisible = !this.formularioVisible;
-            this.nuevoRol = { id: null, descripcion: '' };
-            this.rolSeleccionado = '';
-        },
-        cargarRol(rol) {
-            this.nuevoRol = { id: rol.id, descripcion: rol.descripcion };
-            this.formularioVisible = true;
-            this.rolSeleccionado = rol.descripcion;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        },
         cambiarPagina(pagina) {
             if (pagina >= 1 && pagina <= this.totalPaginas) {
                 this.paginaActual = pagina;
+            }
+        },
+        capitalizarTexto(texto) {
+            if (!texto) return '';
+            return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
+        },
+        exportarPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                const rolesParaExportar = this.rolesFiltrados;
+                const itemsPorPagina = 20;
+                const totalPaginas = Math.ceil(rolesParaExportar.length / itemsPorPagina);
+                
+                for (let pagina = 0; pagina < totalPaginas; pagina++) {
+                    if (pagina > 0) doc.addPage();
+                    
+                    // Header profesional
+                    doc.setLineWidth(2);
+                    doc.line(20, 25, 190, 25);
+                    
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(24);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('PELUQUERÍA LUNA', 105, 20, { align: 'center' });
+                    
+                    doc.setLineWidth(0.5);
+                    doc.line(20, 28, 190, 28);
+                    
+                    doc.setFontSize(16);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('LISTA DE ROLES', 105, 40, { align: 'center' });
+                    
+                    // Información del reporte
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    doc.text(`Fecha de generación: ${fechaGeneracion}`, 20, 55);
+                    doc.text(`Total de registros: ${rolesParaExportar.length}`, 20, 62);
+                    if (this.filtroBusqueda.trim()) {
+                        doc.text(`Filtro aplicado: "${this.filtroBusqueda}"`, 20, 69);
+                    }
+                    
+                    const inicio = pagina * itemsPorPagina;
+                    const fin = Math.min(inicio + itemsPorPagina, rolesParaExportar.length);
+                    const rolesPagina = rolesParaExportar.slice(inicio, fin);
+                    
+                    const headers = [['DESCRIPCIÓN']];
+                    const data = rolesPagina.map((rol) => [
+                        this.capitalizarTexto(rol.descripcion) || ''
+                    ]);
+                    
+                    doc.autoTable({
+                        head: headers,
+                        body: data,
+                        startY: this.filtroBusqueda.trim() ? 75 : 68,
+                        styles: { 
+                            fontSize: 9,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica',
+                            cellPadding: 4,
+                            lineColor: [0, 0, 0],
+                            lineWidth: 0.1
+                        },
+                        headStyles: { 
+                            fontSize: 10,
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            font: 'helvetica',
+                            halign: 'center',
+                            cellPadding: 5
+                        },
+                        bodyStyles: {
+                            fontSize: 9,
+                            textColor: [0, 0, 0],
+                            fillColor: [255, 255, 255],
+                            font: 'helvetica'
+                        },
+                        alternateRowStyles: {
+                            fillColor: [255, 255, 255]
+                        },
+                        columnStyles: {
+                            0: { cellWidth: 170 }
+                        },
+                        margin: { bottom: 40 }
+                    });
+                    
+                    // Footer profesional
+                    const pageHeight = doc.internal.pageSize.height;
+                    doc.setLineWidth(0.5);
+                    doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+                    
+                    doc.setFontSize(8);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`Página ${pagina + 1} de ${totalPaginas}`, 20, pageHeight - 15);
+                    doc.text(new Date().toLocaleTimeString('es-ES'), 190, pageHeight - 15, { align: 'right' });
+                }
+                
+                const fecha = new Date().toISOString().split('T')[0];
+                const filtroTexto = this.filtroBusqueda.trim() ? '-filtrado' : '';
+                doc.save(`lista-roles${filtroTexto}-${fecha}.pdf`);
+                NotificationSystem.success('Lista de roles exportada exitosamente');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                NotificationSystem.error('Error al generar el PDF: ' + error.message);
             }
         }
     },
     template: `
         <div class="glass-container">
             <div id="app">
-                <h1 class="page-title">Gestión de Roles</h1>
+                <h1 class="page-title">Lista de Roles</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
                 
-                <div v-if="formularioVisible" class="form-container">
-                    <h2>{{ nuevoRol.id ? 'Modificar' : 'Agregar' }} Rol</h2>
-                    <form @submit.prevent="nuevoRol.id ? modificarRol() : agregarRol()">
-                        <div class="form-group">
-                            <label>Descripción:</label>
-                            <input type="text" v-model="nuevoRol.descripcion" required>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn">{{ nuevoRol.id ? 'Modificar' : 'Agregar' }}</button>
-                            <button type="button" @click="toggleFormulario()" class="btn btn-secondary">Cancelar</button>
-                        </div>
-                    </form>
-                </div>
-                
                 <main style="padding: 20px;">
-                    <div class="filters-container">
-                        <div class="filter-group">
+                    <div class="filters-container" style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap; width: fit-content; padding: 15px; margin: 15px 0; background: #fce4ec; backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3);">
+                        <div class="filter-group" style="flex: none; width: auto;">
                             <label>Buscar Rol:</label>
-                            <input type="text" v-model="filtroBusqueda" @input="filtrarRoles" placeholder="Buscar por descripción..." class="search-bar"/>
+                            <input type="text" v-model="filtroBusqueda" @input="filtrarRoles" placeholder="Buscar por descripción..." class="search-bar" style="width: 300px;"/>
                         </div>
-                        <button @click="toggleFormulario()" class="btn">
-                            <i class="fas fa-plus"></i> Nuevo Rol
-                        </button>
+                        <div style="display: flex; gap: 10px; align-items: end;">
+                            <button @click="exportarPDF" class="btn btn-small">
+                                <i class="fas fa-file-pdf"></i> Exportar PDF
+                            </button>
+                        </div>
                     </div>
                     
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Descripción</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="rol in rolesPaginados" :key="rol.id">
-                                <td>{{ rol.id }}</td>
-                                <td>{{ rol.descripcion }}</td>
+                                <td>{{ capitalizarTexto(rol.descripcion) }}</td>
                                 <td>
-                                    <button @click="cargarRol(rol)" class="btn-small">Modificar</button>
                                     <button @click="eliminarRol(rol)" class="btn-small btn-danger">Eliminar</button>
                                 </td>
                             </tr>

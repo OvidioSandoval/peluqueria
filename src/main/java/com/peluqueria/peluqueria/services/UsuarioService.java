@@ -65,4 +65,12 @@ public class UsuarioService {
     private boolean isValidEmail(String email) {
         return EMAIL_PATTERN.matcher(email).matches();
     }
+    
+    public boolean existsByUsername(String username) {
+        return usuarioRepository.existsByUsername(username);
+    }
+    
+    public Usuario findByUsername(String username) {
+        return usuarioRepository.findByUsername(username);
+    }
 }
