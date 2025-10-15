@@ -48,12 +48,16 @@ new Vue({
 
         async fetchClientes() {
             try {
+                if (window.ConsoleLogger) ConsoleLogger.network.request('GET', `${config.apiBaseUrl}/clientes`);
                 const response = await fetch(`${config.apiBaseUrl}/clientes`);
+                if (window.ConsoleLogger) ConsoleLogger.network.response(response.status, `${config.apiBaseUrl}/clientes`);
                 if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
                 this.clientes = await response.json();
+                if (window.ConsoleLogger) ConsoleLogger.crud.read('Clientes', { cantidad: this.clientes.length });
                 this.filtrarClientes();
             } catch (error) {
                 console.error('Error al cargar clientes:', error);
+                if (window.ConsoleLogger) ConsoleLogger.error('Error al cargar clientes', error);
                 NotificationSystem.error(`Error al cargar los clientes: ${error.message}`);
             }
         },
@@ -73,10 +77,12 @@ new Vue({
         },
         async agregarCliente() {
             if (!this.nuevoCliente.nombreCompleto.trim()) {
+                if (window.ConsoleLogger) ConsoleLogger.warning('Validación fallida: nombre completo requerido');
                 NotificationSystem.error('El nombre completo es obligatorio');
                 return;
             }
             if (!this.validarEmail(this.nuevoCliente.correo)) {
+                if (window.ConsoleLogger) ConsoleLogger.warning('Validación fallida: email inválido', { email: this.nuevoCliente.correo });
                 NotificationSystem.error('Por favor ingrese un email válido');
                 return;
             }
@@ -85,12 +91,15 @@ new Vue({
                     ...this.nuevoCliente,
                     nombreCompleto: this.capitalizarTexto(this.nuevoCliente.nombreCompleto)
                 };
+                if (window.ConsoleLogger) ConsoleLogger.network.request('POST', `${config.apiBaseUrl}/clientes/agregar_cliente`, clienteData);
                 const response = await fetch(`${config.apiBaseUrl}/clientes/agregar_cliente`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(clienteData)
                 });
+                if (window.ConsoleLogger) ConsoleLogger.network.response(response.status, `${config.apiBaseUrl}/clientes/agregar_cliente`);
                 if (response.ok) {
+                    if (window.ConsoleLogger) ConsoleLogger.crud.create('Cliente', clienteData);
                     await this.fetchClientes();
                     this.toggleFormulario();
                     NotificationSystem.success('Cliente agregado exitosamente');
@@ -99,15 +108,18 @@ new Vue({
                 }
             } catch (error) {
                 console.error('Error al agregar cliente:', error);
+                if (window.ConsoleLogger) ConsoleLogger.error('Error al agregar cliente', error);
                 NotificationSystem.error(`Error al agregar cliente: ${error.message}`);
             }
         },
         async modificarCliente() {
             if (!this.nuevoCliente.nombreCompleto.trim()) {
+                if (window.ConsoleLogger) ConsoleLogger.warning('Validación fallida: nombre completo requerido');
                 NotificationSystem.error('El nombre completo es obligatorio');
                 return;
             }
             if (!this.validarEmail(this.nuevoCliente.correo)) {
+                if (window.ConsoleLogger) ConsoleLogger.warning('Validación fallida: email inválido', { email: this.nuevoCliente.correo });
                 NotificationSystem.error('Por favor ingrese un email válido');
                 return;
             }
@@ -116,12 +128,15 @@ new Vue({
                     ...this.nuevoCliente,
                     nombreCompleto: this.capitalizarTexto(this.nuevoCliente.nombreCompleto)
                 };
+                if (window.ConsoleLogger) ConsoleLogger.network.request('PUT', `${config.apiBaseUrl}/clientes/actualizar_cliente/${this.nuevoCliente.id}`, clienteData);
                 const response = await fetch(`${config.apiBaseUrl}/clientes/actualizar_cliente/${this.nuevoCliente.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(clienteData)
                 });
+                if (window.ConsoleLogger) ConsoleLogger.network.response(response.status, `${config.apiBaseUrl}/clientes/actualizar_cliente/${this.nuevoCliente.id}`);
                 if (response.ok) {
+                    if (window.ConsoleLogger) ConsoleLogger.crud.update('Cliente', clienteData);
                     await this.fetchClientes();
                     this.toggleFormulario();
                     NotificationSystem.success('Cliente actualizado exitosamente');
@@ -130,16 +145,21 @@ new Vue({
                 }
             } catch (error) {
                 console.error('Error al modificar cliente:', error);
+                if (window.ConsoleLogger) ConsoleLogger.error('Error al modificar cliente', error);
                 NotificationSystem.error(`Error al modificar cliente: ${error.message}`);
             }
         },
         async eliminarCliente(cliente) {
+            if (window.ConsoleLogger) ConsoleLogger.info('Solicitando confirmación para eliminar cliente', { cliente: cliente.nombreCompleto });
             NotificationSystem.confirm(`¿Eliminar cliente "${cliente.nombreCompleto}"?`, async () => {
                 try {
+                    if (window.ConsoleLogger) ConsoleLogger.network.request('DELETE', `${config.apiBaseUrl}/clientes/eliminar_cliente/${cliente.id}`);
                     const response = await fetch(`${config.apiBaseUrl}/clientes/eliminar_cliente/${cliente.id}`, {
                         method: 'DELETE'
                     });
+                    if (window.ConsoleLogger) ConsoleLogger.network.response(response.status, `${config.apiBaseUrl}/clientes/eliminar_cliente/${cliente.id}`);
                     if (response.ok) {
+                        if (window.ConsoleLogger) ConsoleLogger.crud.delete('Cliente', { id: cliente.id, nombre: cliente.nombreCompleto });
                         await this.fetchClientes();
                         NotificationSystem.success('Cliente eliminado exitosamente');
                     } else {
@@ -147,6 +167,7 @@ new Vue({
                     }
                 } catch (error) {
                     console.error('Error al eliminar cliente:', error);
+                    if (window.ConsoleLogger) ConsoleLogger.error('Error al eliminar cliente', error);
                     NotificationSystem.error(`Error al eliminar cliente: ${error.message}`);
                 }
             });
@@ -225,6 +246,7 @@ new Vue({
         
         exportarPDF() {
             try {
+                if (window.ConsoleLogger) ConsoleLogger.info('Iniciando exportación de PDF de clientes');
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
@@ -332,11 +354,14 @@ new Vue({
                 
                 const fecha = new Date().toISOString().split('T')[0];
                 const filtroTexto = this.filtroBusqueda.trim() ? '-filtrado' : '';
-                doc.save(`lista-clientes${filtroTexto}-${fecha}.pdf`);
+                const nombreArchivo = `lista-clientes${filtroTexto}-${fecha}.pdf`;
+                doc.save(nombreArchivo);
+                if (window.ConsoleLogger) ConsoleLogger.success('PDF de clientes exportado exitosamente', { archivo: nombreArchivo, registros: this.clientesFiltrados.length });
                 NotificationSystem.success('Lista de clientes exportada exitosamente');
                 
             } catch (error) {
                 console.error('Error al generar PDF:', error);
+                if (window.ConsoleLogger) ConsoleLogger.error('Error al generar PDF de clientes', error);
                 NotificationSystem.error('Error al generar el PDF: ' + error.message);
             }
         },

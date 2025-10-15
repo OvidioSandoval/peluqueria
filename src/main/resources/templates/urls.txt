@@ -11,6 +11,7 @@ PÁGINAS PRINCIPALES:
 
 AUTENTICACION:
 /login - Login
+/web/login - Login (Web)
 /logout - Cerrar Sesión
 
 GESTIÓN DE USUARIOS Y ROLES:

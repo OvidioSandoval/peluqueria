@@ -1,5 +1,4 @@
 import config from './config.js';
-import NotificationSystem from './notification-system.js';
 
 new Vue({
     vuetify: new Vuetify({
@@ -21,7 +20,10 @@ new Vue({
             empleados: [],
             cajaExistente: null,
             modoEdicion: false,
-            cajaOriginalId: null
+            cajaOriginalId: null,
+            mensaje: '',
+            tipoMensaje: '',
+            accionConfirmar: null
         };
     },
     mounted() {
@@ -34,7 +36,7 @@ new Vue({
                 this.empleados = await response.json();
             } catch (error) {
                 console.error('Error al cargar empleados:', error);
-                NotificationSystem.error('Error al cargar empleados');
+                this.mostrarMensajeError('Error al cargar empleados');
             }
         },
         async fetchCajas() {
@@ -57,13 +59,9 @@ new Vue({
             
             if (cajaExistente && (!this.modoEdicion || cajaExistente.id !== this.cajaOriginalId)) {
                 this.cajaExistente = cajaExistente;
-                NotificationSystem.confirm(
+                this.mostrarMensajeConfirmacion(
                     `Ya existe una caja "${cajaExistente.nombre}" para la fecha ${this.formatearFecha(cajaExistente.fecha)}. ¿Desea modificarla?`,
-                    () => this.cargarCajaParaEdicion(cajaExistente),
-                    () => {
-                        this.cajaExistente = null;
-                        this.caja.nombre = '';
-                    }
+                    () => this.cargarCajaParaEdicion(cajaExistente)
                 );
             } else {
                 this.cajaExistente = null;
@@ -106,7 +104,7 @@ new Vue({
                 });
                 
                 if (response.ok) {
-                    NotificationSystem.success(
+                    this.mostrarMensajeExito(
                         this.modoEdicion ? 'Caja modificada exitosamente' : 'Caja registrada exitosamente'
                     );
                     this.limpiarFormulario();
@@ -115,7 +113,7 @@ new Vue({
                 }
             } catch (error) {
                 console.error('Error al registrar caja:', error);
-                NotificationSystem.error(`Error al registrar caja: ${error.message}`);
+                this.mostrarMensajeError(`Error al registrar caja: ${error.message}`);
             }
         },
         async modificarCaja() {
@@ -123,11 +121,11 @@ new Vue({
         },
         validarFormulario() {
             if (!this.caja.nombre.trim()) {
-                NotificationSystem.error('El nombre de la caja es requerido');
+                this.mostrarMensajeError('El nombre de la caja es requerido');
                 return false;
             }
             if (!this.caja.montoInicial || this.caja.montoInicial <= 0) {
-                NotificationSystem.error('El monto inicial debe ser mayor a 0');
+                this.mostrarMensajeError('El monto inicial debe ser mayor a 0');
                 return false;
             }
             return true;
@@ -156,6 +154,31 @@ new Vue({
             return texto.split(' ').map(palabra => 
                 palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase()
             ).join(' ');
+        },
+        mostrarMensajeError(mensaje) {
+            this.mensaje = mensaje;
+            this.tipoMensaje = 'error';
+        },
+        mostrarMensajeExito(mensaje) {
+            this.mensaje = mensaje;
+            this.tipoMensaje = 'exito';
+        },
+        mostrarMensajeConfirmacion(mensaje, accion) {
+            this.mensaje = mensaje;
+            this.tipoMensaje = 'confirmacion';
+            this.accionConfirmar = accion;
+        },
+        confirmarAccion() {
+            if (this.accionConfirmar) {
+                this.accionConfirmar();
+                this.accionConfirmar = null;
+            }
+            this.cerrarMensaje();
+        },
+        cerrarMensaje() {
+            this.mensaje = '';
+            this.tipoMensaje = '';
+            this.accionConfirmar = null;
         }
     },
     template: `
@@ -163,6 +186,18 @@ new Vue({
             <div id="app">
                 <h1 class="page-title">{{ modoEdicion ? 'Modificar Caja' : 'Registro de Caja' }}</h1>
                 <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
+                
+                <div v-if="mensaje" class="mensaje-overlay" @click="cerrarMensaje">
+                    <div class="mensaje-modal" @click.stop>
+                        <div class="mensaje-contenido" :class="tipoMensaje">
+                            <p>{{ mensaje }}</p>
+                            <div class="mensaje-botones">
+                                <button v-if="tipoMensaje === 'confirmacion'" @click="confirmarAccion" class="btn btn-confirmar">Sí</button>
+                                <button @click="cerrarMensaje" class="btn" :class="tipoMensaje === 'confirmacion' ? 'btn-cancelar' : 'btn-cerrar'">{{ tipoMensaje === 'confirmacion' ? 'No' : 'Cerrar' }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <main style="padding: 20px;">
                     <div class="form-container" style="max-width: 600px; margin: 0 auto; padding: 15px;">
                         <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
@@ -243,5 +278,5 @@ new Vue({
 });
 
 const style = document.createElement('style');
-style.textContent = 'input, textarea, select { background: #fcccce2 !important; }';
+style.textContent = 'input, textarea, select { background: #fcccce2 !important; } .mensaje-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; } .mensaje-modal { background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); max-width: 500px; width: 90%; } .mensaje-contenido { padding: 20px; text-align: center; } .mensaje-contenido.error { border-left: 4px solid #e74c3c; } .mensaje-contenido.exito { border-left: 4px solid #27ae60; } .mensaje-contenido.confirmacion { border-left: 4px solid #f39c12; } .mensaje-botones { margin-top: 15px; display: flex; gap: 10px; justify-content: center; } .btn-confirmar { background-color: #27ae60; color: white; } .btn-cancelar { background-color: #95a5a6; color: white; } .btn-cerrar { background-color: #3498db; color: white; }';
 document.head.appendChild(style);

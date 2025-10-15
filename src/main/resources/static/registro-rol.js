@@ -16,7 +16,10 @@ new Vue({
                 descripcion: ''
             },
             modoEdicion: false,
-            rolExistente: null
+            rolExistente: null,
+            mensaje: null,
+            tipoMensaje: null,
+            accionConfirmar: null
         };
     },
     mounted() {
@@ -30,7 +33,7 @@ new Vue({
                 this.roles = await response.json();
             } catch (error) {
                 console.error('Error:', error);
-                NotificationSystem.error('Error al cargar roles');
+                this.mostrarMensajeError('Error al cargar roles');
             }
         },
         verificarRolExistente() {
@@ -42,7 +45,7 @@ new Vue({
             );
             
             if (this.rolExistente && !this.modoEdicion) {
-                NotificationSystem.confirm(
+                this.mostrarMensajeConfirmacion(
                     `El rol "${this.rolExistente.descripcion}" ya existe. ¿Desea modificarlo?`,
                     () => {
                         this.cargarRolParaEdicion(this.rolExistente);
@@ -60,7 +63,7 @@ new Vue({
         },
         async agregarRol() {
             if (!this.nuevoRol.descripcion.trim()) {
-                NotificationSystem.error('La descripción es obligatoria');
+                this.mostrarMensajeError('La descripción es obligatoria');
                 return;
             }
             
@@ -71,7 +74,7 @@ new Vue({
                     body: JSON.stringify(this.nuevoRol)
                 });
                 if (response.ok) {
-                    NotificationSystem.success('Rol agregado exitosamente');
+                    this.mostrarMensajeExito('Rol agregado exitosamente');
                     this.limpiarFormulario();
                     await this.fetchRoles();
                 } else {
@@ -79,12 +82,12 @@ new Vue({
                 }
             } catch (error) {
                 console.error('Error al agregar rol:', error);
-                NotificationSystem.error(`Error al agregar rol: ${error.message}`);
+                this.mostrarMensajeError(`Error al agregar rol: ${error.message}`);
             }
         },
         async modificarRol() {
             if (!this.nuevoRol.descripcion.trim()) {
-                NotificationSystem.error('La descripción es obligatoria');
+                this.mostrarMensajeError('La descripción es obligatoria');
                 return;
             }
             
@@ -95,7 +98,7 @@ new Vue({
                     body: JSON.stringify(this.nuevoRol)
                 });
                 if (response.ok) {
-                    NotificationSystem.success('Rol actualizado exitosamente');
+                    this.mostrarMensajeExito('Rol actualizado exitosamente');
                     this.limpiarFormulario();
                     await this.fetchRoles();
                 } else {
@@ -103,7 +106,7 @@ new Vue({
                 }
             } catch (error) {
                 console.error('Error al modificar rol:', error);
-                NotificationSystem.error(`Error al modificar rol: ${error.message}`);
+                this.mostrarMensajeError(`Error al modificar rol: ${error.message}`);
             }
         },
         limpiarFormulario() {
@@ -113,6 +116,29 @@ new Vue({
             };
             this.modoEdicion = false;
             this.rolExistente = null;
+        },
+        mostrarMensajeError(mensaje) {
+            this.mensaje = mensaje;
+            this.tipoMensaje = 'error';
+        },
+        mostrarMensajeExito(mensaje) {
+            this.mensaje = mensaje;
+            this.tipoMensaje = 'exito';
+            setTimeout(() => this.cerrarMensaje(), 3000);
+        },
+        mostrarMensajeConfirmacion(mensaje, accion) {
+            this.mensaje = mensaje;
+            this.tipoMensaje = 'confirmacion';
+            this.accionConfirmar = accion;
+        },
+        confirmarAccion() {
+            if (this.accionConfirmar) this.accionConfirmar();
+            this.cerrarMensaje();
+        },
+        cerrarMensaje() {
+            this.mensaje = null;
+            this.tipoMensaje = null;
+            this.accionConfirmar = null;
         },
         goBack() {
             window.history.back();
@@ -141,6 +167,22 @@ new Vue({
                             </button>
                         </div>
                     </div>
+                    <div v-if="mensaje" class="mensaje-overlay">
+                        <div class="mensaje-content" :class="tipoMensaje">
+                            <div class="mensaje-header" :class="tipoMensaje">
+                                <h3 v-if="tipoMensaje === 'error'"><i class="fas fa-exclamation-triangle"></i> Error</h3>
+                                <h3 v-if="tipoMensaje === 'exito'"><i class="fas fa-check-circle"></i> Éxito</h3>
+                                <h3 v-if="tipoMensaje === 'confirmacion'"><i class="fas fa-question-circle"></i> Confirmación</h3>
+                            </div>
+                            <div class="mensaje-body">
+                                <p>{{ mensaje }}</p>
+                            </div>
+                            <div class="mensaje-footer">
+                                <button v-if="tipoMensaje === 'confirmacion'" @click="confirmarAccion" class="btn btn-primary">Sí</button>
+                                <button @click="cerrarMensaje" class="btn btn-secondary">{{ tipoMensaje === 'confirmacion' ? 'No' : 'Cerrar' }}</button>
+                            </div>
+                        </div>
+                    </div>
                 </main>
             </div>
         </div>
@@ -148,5 +190,5 @@ new Vue({
 });
 
 const style = document.createElement('style');
-style.textContent = 'input, textarea, select { padding: 8px 12px !important; font-size: 12px !important; height: 32px !important; width: auto !important; min-width: 150px !important; } textarea { height: auto !important; min-height: 60px !important; } label { font-size: 12px !important; margin-bottom: 4px !important; } .form-container { padding: 15px !important; margin: 10px auto !important; width: fit-content !important; max-width: 100% !important; } .form-row { margin: 10px 0 !important; gap: 15px !important; display: flex !important; flex-wrap: wrap !important; align-items: end !important; } .form-col { flex: 0 0 auto !important; min-width: fit-content !important; } .page-title { font-size: 1.8rem !important; margin-bottom: 15px !important; } h1, h2, h3 { margin-bottom: 10px !important; } .btn { padding: 8px 16px !important; font-size: 12px !important; }';
+style.textContent = 'input, textarea, select { padding: 8px 12px !important; font-size: 12px !important; height: 32px !important; width: auto !important; min-width: 150px !important; } textarea { height: auto !important; min-height: 60px !important; } label { font-size: 12px !important; margin-bottom: 4px !important; } .form-container { padding: 15px !important; margin: 10px auto !important; width: fit-content !important; max-width: 100% !important; } .form-row { margin: 10px 0 !important; gap: 15px !important; display: flex !important; flex-wrap: wrap !important; align-items: end !important; } .form-col { flex: 0 0 auto !important; min-width: fit-content !important; } .page-title { font-size: 1.8rem !important; margin-bottom: 15px !important; } h1, h2, h3 { margin-bottom: 10px !important; } .btn { padding: 8px 16px !important; font-size: 12px !important; } .mensaje-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 2000; } .mensaje-content { background: white; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); } .mensaje-content.error { border: 3px solid #dc3545; } .mensaje-content.exito { border: 3px solid #28a745; } .mensaje-content.confirmacion { border: 3px solid #ffc107; } .mensaje-header { padding: 20px; text-align: center; } .mensaje-header.error { background: #f8d7da; } .mensaje-header.exito { background: #d4edda; } .mensaje-header.confirmacion { background: #fff3cd; } .mensaje-header h3 { margin: 0; font-size: 18px; } .mensaje-body { padding: 25px; text-align: center; } .mensaje-body p { margin: 0; font-size: 16px; line-height: 1.5; } .mensaje-footer { padding: 20px; display: flex; gap: 15px; justify-content: center; border-top: 1px solid #ddd; } .btn-primary { background: #28a745 !important; color: white !important; }';
 document.head.appendChild(style);

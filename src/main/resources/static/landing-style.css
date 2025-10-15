@@ -55,6 +55,21 @@ body {
     color: #e91e63;
 }
 
+.user-icon {
+    background: #e91e63;
+    color: white !important;
+    padding: 8px 12px;
+    border-radius: 50%;
+    transition: all 0.3s;
+    margin-left: 1rem;
+}
+
+.user-icon:hover {
+    background: #c2185b !important;
+    color: white !important;
+    transform: scale(1.1);
+}
+
 /* Hero Section */
 .hero {
     background: linear-gradient(135deg, #fce4ec, #f8bbd9);

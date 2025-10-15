@@ -30,11 +30,15 @@ new Vue({
     methods: {
         async fetchClientes() {
             try {
+                if (window.ConsoleLogger) ConsoleLogger.network.request('GET', `${config.apiBaseUrl}/clientes`);
                 const response = await fetch(`${config.apiBaseUrl}/clientes`);
+                if (window.ConsoleLogger) ConsoleLogger.network.response(response.status, `${config.apiBaseUrl}/clientes`);
                 if (!response.ok) throw new Error('Error al cargar clientes');
                 this.clientes = await response.json();
+                if (window.ConsoleLogger) ConsoleLogger.crud.read('Clientes para registro', { cantidad: this.clientes.length });
             } catch (error) {
                 console.error('Error:', error);
+                if (window.ConsoleLogger) ConsoleLogger.error('Error al cargar clientes para registro', error);
                 NotificationSystem.error('Error al cargar clientes');
             }
         },
@@ -42,20 +46,52 @@ new Vue({
             if (!this.nuevoCliente.nombreCompleto.trim()) return;
             
             const nombreBuscar = this.nuevoCliente.nombreCompleto.trim().toLowerCase();
+            if (window.ConsoleLogger) ConsoleLogger.info('Verificando cliente existente', { nombre: nombreBuscar });
             this.clienteExistente = this.clientes.find(c => 
                 c.nombreCompleto.toLowerCase() === nombreBuscar
             );
             
             if (this.clienteExistente && !this.modoEdicion) {
+                if (window.ConsoleLogger) ConsoleLogger.warning('Cliente ya existe', { cliente: this.clienteExistente.nombreCompleto });
                 NotificationSystem.confirm(
                     `El cliente "${this.clienteExistente.nombreCompleto}" ya existe. ¿Desea modificarlo?`,
                     () => {
                         this.cargarClienteParaEdicion(this.clienteExistente);
                     }
                 );
+            } else if (!this.clienteExistente) {
+                if (window.ConsoleLogger) ConsoleLogger.success('Cliente no existe, puede proceder con el registro');
+            }
+        },
+        verificarRucExistente() {
+            if (!this.nuevoCliente.ruc.trim()) return;
+            
+            const rucBuscar = this.nuevoCliente.ruc.trim().toLowerCase();
+            const clienteConRuc = this.clientes.find(c => 
+                c.ruc && c.ruc.toLowerCase() === rucBuscar && c.id !== this.nuevoCliente.id
+            );
+            
+            if (clienteConRuc) {
+                NotificationSystem.confirm(
+                    `Ya existe un cliente con el RUC "${this.nuevoCliente.ruc}": ${clienteConRuc.nombreCompleto}. ¿Desea modificarlo?`,
+                    () => {
+                        this.cargarClienteParaEdicion(clienteConRuc);
+                    },
+                    () => {
+                        this.nuevoCliente.ruc = '';
+                    }
+                );
             }
         },
         cargarClienteParaEdicion(cliente) {
+            let fechaFormateada = null;
+            if (cliente.fechaNacimiento && Array.isArray(cliente.fechaNacimiento)) {
+                const [year, month, day] = cliente.fechaNacimiento;
+                fechaFormateada = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            } else if (cliente.fechaNacimiento) {
+                fechaFormateada = cliente.fechaNacimiento;
+            }
+            
             this.nuevoCliente = {
                 id: cliente.id,
                 nombreCompleto: cliente.nombreCompleto || '',
@@ -63,17 +99,19 @@ new Vue({
                 ruc: cliente.ruc || '',
                 correo: cliente.correo || '',
                 redesSociales: cliente.redesSociales || '',
-                fechaNacimiento: cliente.fechaNacimiento || null
+                fechaNacimiento: fechaFormateada
             };
             this.modoEdicion = true;
             this.clienteExistente = cliente;
         },
         async agregarCliente() {
             if (!this.nuevoCliente.nombreCompleto.trim()) {
+                if (window.ConsoleLogger) ConsoleLogger.warning('Validación fallida en registro: nombre completo requerido');
                 NotificationSystem.error('El nombre completo es obligatorio');
                 return;
             }
             if (!this.validarEmail(this.nuevoCliente.correo)) {
+                if (window.ConsoleLogger) ConsoleLogger.warning('Validación fallida en registro: email inválido', { email: this.nuevoCliente.correo });
                 NotificationSystem.error('Por favor ingrese un email válido');
                 return;
             }
@@ -82,12 +120,15 @@ new Vue({
                     ...this.nuevoCliente,
                     nombreCompleto: this.capitalizarTexto(this.nuevoCliente.nombreCompleto)
                 };
+                if (window.ConsoleLogger) ConsoleLogger.network.request('POST', `${config.apiBaseUrl}/clientes/agregar_cliente`, clienteData);
                 const response = await fetch(`${config.apiBaseUrl}/clientes/agregar_cliente`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(clienteData)
                 });
+                if (window.ConsoleLogger) ConsoleLogger.network.response(response.status, `${config.apiBaseUrl}/clientes/agregar_cliente`);
                 if (response.ok) {
+                    if (window.ConsoleLogger) ConsoleLogger.crud.create('Cliente desde registro', clienteData);
                     NotificationSystem.success('Cliente agregado exitosamente');
                     this.limpiarFormulario();
                     await this.fetchClientes();
@@ -96,15 +137,18 @@ new Vue({
                 }
             } catch (error) {
                 console.error('Error al agregar cliente:', error);
+                if (window.ConsoleLogger) ConsoleLogger.error('Error al agregar cliente desde registro', error);
                 NotificationSystem.error(`Error al agregar cliente: ${error.message}`);
             }
         },
         async modificarCliente() {
             if (!this.nuevoCliente.nombreCompleto.trim()) {
+                if (window.ConsoleLogger) ConsoleLogger.warning('Validación fallida en modificación: nombre completo requerido');
                 NotificationSystem.error('El nombre completo es obligatorio');
                 return;
             }
             if (!this.validarEmail(this.nuevoCliente.correo)) {
+                if (window.ConsoleLogger) ConsoleLogger.warning('Validación fallida en modificación: email inválido', { email: this.nuevoCliente.correo });
                 NotificationSystem.error('Por favor ingrese un email válido');
                 return;
             }
@@ -113,12 +157,15 @@ new Vue({
                     ...this.nuevoCliente,
                     nombreCompleto: this.capitalizarTexto(this.nuevoCliente.nombreCompleto)
                 };
+                if (window.ConsoleLogger) ConsoleLogger.network.request('PUT', `${config.apiBaseUrl}/clientes/actualizar_cliente/${this.nuevoCliente.id}`, clienteData);
                 const response = await fetch(`${config.apiBaseUrl}/clientes/actualizar_cliente/${this.nuevoCliente.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(clienteData)
                 });
+                if (window.ConsoleLogger) ConsoleLogger.network.response(response.status, `${config.apiBaseUrl}/clientes/actualizar_cliente/${this.nuevoCliente.id}`);
                 if (response.ok) {
+                    if (window.ConsoleLogger) ConsoleLogger.crud.update('Cliente desde registro', clienteData);
                     NotificationSystem.success('Cliente actualizado exitosamente');
                     this.limpiarFormulario();
                     await this.fetchClientes();
@@ -127,10 +174,12 @@ new Vue({
                 }
             } catch (error) {
                 console.error('Error al modificar cliente:', error);
+                if (window.ConsoleLogger) ConsoleLogger.error('Error al modificar cliente desde registro', error);
                 NotificationSystem.error(`Error al modificar cliente: ${error.message}`);
             }
         },
         limpiarFormulario() {
+            if (window.ConsoleLogger) ConsoleLogger.info('Limpiando formulario de cliente');
             this.nuevoCliente = {
                 id: null,
                 nombreCompleto: '',
@@ -177,7 +226,7 @@ new Vue({
                             </div>
                             <div class="form-col">
                                 <label>RUC:</label>
-                                <input type="text" v-model="nuevoCliente.ruc" placeholder="Ingrese el RUC" maxlength="20" style="border: 2px solid #87CEEB;"/>
+                                <input type="text" v-model="nuevoCliente.ruc" @blur="verificarRucExistente" placeholder="Ingrese el RUC" maxlength="20" style="border: 2px solid #87CEEB;"/>
                             </div>
                         </div>
                         <div class="form-row">
