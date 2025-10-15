@@ -636,14 +636,14 @@ style.textContent = `
     }
     .search-bar {
         padding: 8px 12px;
-        border: 2px solid #ddd;
+        border: 2px solid #87CEEB;
         border-radius: 5px;
         font-size: 14px;
         transition: border-color 0.3s;
         width: 100%;
     }
     .search-bar:focus {
-        border-color: #5d4037;
+        border-color: #87CEEB;
         outline: none;
     }
 `;
