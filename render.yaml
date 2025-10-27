@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: peluqueria           # Nombre que quieras (aparecerá en Render)
+    env: java                    # Entorno de ejecución
+    buildCommand: "./mvnw clean package -DskipTests"
+    startCommand: "java -jar target/*.jar"
+    envVars:
+      - key: PORT
+        value: "10000"           # Valor por defecto; Render lo sobrescribe
