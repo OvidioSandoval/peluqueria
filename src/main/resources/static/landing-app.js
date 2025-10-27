@@ -18,9 +18,7 @@ new Vue({
         async fetchServicios() {
             try {
                 const response = await fetch(`${config.apiBaseUrl}/servicios`);
-                if (response.ok) {
-                    this.servicios = await response.json();
-                }
+                if (response.ok) this.servicios = await response.json();
             } catch (error) {
                 console.error('Error al cargar servicios:', error);
             }
@@ -28,9 +26,7 @@ new Vue({
         async fetchProductos() {
             try {
                 const response = await fetch(`${config.apiBaseUrl}/productos`);
-                if (response.ok) {
-                    this.productos = await response.json();
-                }
+                if (response.ok) this.productos = await response.json();
             } catch (error) {
                 console.error('Error al cargar productos:', error);
             }
@@ -53,28 +49,18 @@ new Vue({
                 'depilacion': 'fas fa-feather',
                 'maquillaje': 'fas fa-paint-brush'
             };
-            
             const nombreLower = nombre.toLowerCase();
             for (const key in iconMap) {
-                if (nombreLower.includes(key)) {
-                    return iconMap[key];
-                }
+                if (nombreLower.includes(key)) return iconMap[key];
             }
             return 'fas fa-scissors';
         },
-        scrollTo(element) {
-            document.querySelector(element).scrollIntoView({
-                behavior: 'smooth'
-            });
-        },
         abrirWhatsApp() {
             const mensaje = encodeURIComponent(
-                "¡Hola! Me gustaría reservar un turno en Peluquería Luna. " +
-                "Horarios de atención:\n" +
-                "📅 Lunes a Viernes: 7:00 AM - 12:00 PM y 1:00 PM - 5:00 PM\n" +
-                "📅 Sábados: 7:00 AM - 12:00 PM"
+                "¡Hola! Me gustaría reservar un turno en Peluquería Luna.\n" +
+                "Horarios:\n📅 Lunes a Viernes: 7:00 AM - 12:00 PM y 1:00 PM - 5:00 PM\n📅 Sábados: 7:00 AM - 12:00 PM"
             );
-            window.open(`https://bot-whatsapp.netlify.app/?message=${mensaje}`, '_blank');
+            window.open(`https://wa.me/595976763408?text=${mensaje}`, '_blank');
         },
         verificarPromociones() {
             const promocionesGuardadas = localStorage.getItem('promociones');

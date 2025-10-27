@@ -546,6 +546,12 @@ public class FrontController {
         return "landing-promociones";
     }
 
+    @GetMapping("/web/landing-contacto")
+    public String mostrarLandingContacto(Model model) {
+        LOGGER.info("IN: mostrarLandingContacto");
+        return "landing-contacto";
+    }
+
     @GetMapping("/web/admin-promociones")
     public String mostrarAdminPromociones(Model model) {
         LOGGER.info("IN: mostrarAdminPromociones");
