@@ -2,49 +2,51 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Productos - Peluquería Luna</title>
-    <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="../style-content.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="../landing-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body style="padding-top: 80px; background: #f5f5dc; min-height: 100vh;">
-<div id="navbar"></div>
+<body>
+    <div id="app">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <i class="fas fa-cut"></i>
+                    <span>Peluquería Luna</span>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="/web/landing" class="nav-link">Inicio</a></li>
+                    <li><a href="/web/landing-servicios" class="nav-link">Servicios</a></li>
+                    <li><a href="/web/landing-productos" class="nav-link active">Productos</a></li>
+                    <li><a href="/web/landing-promociones" class="nav-link" v-if="tienePromociones">Promociones</a></li>
+                    <li><a href="/web/landing-contacto" class="nav-link">Contacto</a></li>
+                    <li><a href="/login" class="btn-login">Iniciar Sesión</a></li>
+                </ul>
+            </div>
+        </nav>
 
-<div class="content">
-    <div class="glass-container">
-        <h1 class="page-title">Nuestros Productos</h1>
-        
-        <main style="padding: 20px;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin: 40px 0;">
-                <div class="product-card" style="background: rgba(255,255,255,0.9); padding: 20px; border-radius: 15px; text-align: center;">
-                    <i class="fas fa-spray-can" style="font-size: 3em; color: #66bb6a; margin-bottom: 15px;"></i>
-                    <h3>Productos para el Cabello</h3>
-                    <p>Shampoos, acondicionadores y tratamientos de las mejores marcas para todo tipo de cabello.</p>
-                </div>
-                
-                <div class="product-card" style="background: rgba(255,255,255,0.9); padding: 20px; border-radius: 15px; text-align: center;">
-                    <i class="fas fa-palette" style="font-size: 3em; color: #66bb6a; margin-bottom: 15px;"></i>
-                    <h3>Coloración</h3>
-                    <p>Tintes profesionales, mechas y productos para coloración con resultados duraderos.</p>
-                </div>
-                
-                <div class="product-card" style="background: rgba(255,255,255,0.9); padding: 20px; border-radius: 15px; text-align: center;">
-                    <i class="fas fa-cut" style="font-size: 3em; color: #66bb6a; margin-bottom: 15px;"></i>
-                    <h3>Herramientas</h3>
-                    <p>Tijeras, secadores, planchas y todo el equipamiento profesional para el cuidado capilar.</p>
-                </div>
-                
-                <div class="product-card" style="background: rgba(255,255,255,0.9); padding: 20px; border-radius: 15px; text-align: center;">
-                    <i class="fas fa-spa" style="font-size: 3em; color: #66bb6a; margin-bottom: 15px;"></i>
-                    <h3>Cuidado Facial</h3>
-                    <p>Cremas, mascarillas y productos especializados para el cuidado y belleza del rostro.</p>
+        <section class="section" style="padding-top: 100px;">
+            <div class="container">
+                <h2 class="section-title">Nuestros Productos</h2>
+                <div class="cards-grid">
+                    <div v-for="producto in productos" :key="producto.id" class="card">
+                        <i class="fas fa-box"></i>
+                        <h3>{{ producto.nombre }}</h3>
+                        <p>{{ producto.descripcion }}</p>
+                        <p class="price">₲ {{ formatearPrecio(producto.precio) }}</p>
+                    </div>
                 </div>
             </div>
-        </main>
-    </div>
-</div>
+        </section>
 
-<script src="../script.js"></script>
+        <footer class="footer">
+            <p>&copy; 2024 Peluquería Luna. Todos los derechos reservados.</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script type="module" src="../landing-app.js"></script>
 </body>
 </html>

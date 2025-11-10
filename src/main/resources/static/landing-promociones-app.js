@@ -4,39 +4,34 @@ new Vue({
     el: '#app',
     data() {
         return {
-            promociones: []
+            promociones: [],
+            tienePromociones: false
         };
     },
     mounted() {
         this.cargarPromociones();
+        this.verificarPromociones();
     },
     methods: {
-        cargarPromociones() {
-            const promocionesGuardadas = localStorage.getItem('promociones');
-            if (promocionesGuardadas) {
-                this.promociones = JSON.parse(promocionesGuardadas);
-            } else {
-                // Datos por defecto si no hay promociones guardadas
-                this.promociones = [
-                    {
-                        id: 1,
-                        titulo: 'Combo Completo',
-                        descripcion: 'Corte + Lavado + Peinado',
-                        precio: 60000
-                    },
-                    {
-                        id: 2,
-                        titulo: 'Tratamiento Capilar',
-                        descripcion: 'Hidratación profunda + Corte',
-                        precio: 90000
-                    },
-                    {
-                        id: 3,
-                        titulo: 'Manicure + Pedicure',
-                        descripcion: 'Cuidado completo de uñas',
-                        precio: 50000
-                    }
-                ];
+        async cargarPromociones() {
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/promociones/activas`);
+                if (response.ok) {
+                    this.promociones = await response.json();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        },
+        async verificarPromociones() {
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/promociones/activas`);
+                if (response.ok) {
+                    const data = await response.json();
+                    this.tienePromociones = data.length > 0;
+                }
+            } catch (error) {
+                this.tienePromociones = false;
             }
         },
         formatearPrecio(precio) {
@@ -47,12 +42,10 @@ new Vue({
         },
         abrirWhatsApp() {
             const mensaje = encodeURIComponent(
-                "¡Hola! Me gustaría reservar un turno en Peluquería Luna. " +
-                "Horarios de atención:\n" +
-                "📅 Lunes a Viernes: 7:00 AM - 12:00 PM y 1:00 PM - 5:00 PM\n" +
-                "📅 Sábados: 7:00 AM - 12:00 PM"
+                "¡Hola! Me gustaría consultar sobre las promociones de Peluquería Luna.\n" +
+                "Horarios:\n📅 Lunes a Viernes: 7:00 AM - 12:00 PM y 1:00 PM - 5:00 PM\n📅 Sábados: 7:00 AM - 12:00 PM"
             );
-            window.open(`https://bot-whatsapp.netlify.app/?message=${mensaje}`, '_blank');
+            window.open(`https://wa.me/595976763408?text=${mensaje}`, '_blank');
         },
         capitalizarTexto(texto) {
             if (!texto) return '';

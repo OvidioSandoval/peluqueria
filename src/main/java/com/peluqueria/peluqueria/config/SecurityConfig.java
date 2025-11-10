@@ -25,7 +25,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/web/landing", "/web/landing-servicios", "/web/landing-productos", "/web/landing-promociones", "/web/landing-contacto", "/landing", "/css/**", "/js/**", "/images/**", "/*.css", "/*.js", "/landing-*.css", "/landing-*.js", "/config.js", "/api/servicios", "/api/productos", "/config/**").permitAll()
+                .requestMatchers("/web/landing", "/web/landing-servicios", "/web/landing-productos", "/web/landing-promociones", "/web/landing-contacto", "/landing", "/css/**", "/js/**", "/images/**", "/*.css", "/*.js", "/landing-*.css", "/landing-*.js", "/config.js", "/api/servicios", "/api/productos", "/config/**", "/webhook/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

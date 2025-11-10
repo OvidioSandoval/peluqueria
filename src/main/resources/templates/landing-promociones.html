@@ -2,61 +2,58 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Promociones - Peluquería Luna</title>
-    <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="../style-content.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="../landing-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body style="padding-top: 80px; background: #f5f5dc; min-height: 100vh;">
-<div id="navbar"></div>
+<body>
+    <div id="app">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <i class="fas fa-cut"></i>
+                    <span>Peluquería Luna</span>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="/web/landing" class="nav-link">Inicio</a></li>
+                    <li><a href="/web/landing-servicios" class="nav-link">Servicios</a></li>
+                    <li><a href="/web/landing-productos" class="nav-link">Productos</a></li>
+                    <li><a href="/web/landing-promociones" class="nav-link active">Promociones</a></li>
+                    <li><a href="/web/landing-contacto" class="nav-link">Contacto</a></li>
+                    <li><a href="/login" class="btn-login">Iniciar Sesión</a></li>
+                </ul>
+            </div>
+        </nav>
 
-<div class="content">
-    <div class="glass-container">
-        <h1 class="page-title">Promociones Especiales</h1>
-        
-        <main style="padding: 20px;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; margin: 40px 0;">
-                <div class="promo-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; border-left: 5px solid #66bb6a;">
-                    <h3 style="color: #66bb6a; margin-bottom: 15px;">Corte + Peinado</h3>
-                    <p style="font-size: 1.1em; margin-bottom: 10px;">Corte profesional + peinado de tu elección</p>
-                    <div style="font-size: 1.5em; font-weight: bold; color: #cd853f;">$25.000</div>
-                    <small style="color: #666;">Precio normal: $35.000</small>
+        <section class="section" style="padding-top: 100px;">
+            <div class="container">
+                <h2 class="section-title">Promociones Especiales</h2>
+                <div v-if="promociones.length > 0" class="cards-grid">
+                    <div v-for="promo in promociones" :key="promo.id" class="card">
+                        <i class="fas fa-gift"></i>
+                        <h3>{{ promo.titulo || promo.nombre }}</h3>
+                        <p>{{ promo.descripcion }}</p>
+                        <p class="price">₲ {{ formatearPrecio(promo.precio) }}</p>
+                    </div>
                 </div>
-                
-                <div class="promo-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; border-left: 5px solid #66bb6a;">
-                    <h3 style="color: #66bb6a; margin-bottom: 15px;">Coloración Completa</h3>
-                    <p style="font-size: 1.1em; margin-bottom: 10px;">Tinte + mechas + tratamiento hidratante</p>
-                    <div style="font-size: 1.5em; font-weight: bold; color: #cd853f;">$45.000</div>
-                    <small style="color: #666;">Precio normal: $60.000</small>
-                </div>
-                
-                <div class="promo-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; border-left: 5px solid #66bb6a;">
-                    <h3 style="color: #66bb6a; margin-bottom: 15px;">Paquete Completo</h3>
-                    <p style="font-size: 1.1em; margin-bottom: 10px;">Corte + color + tratamiento + peinado</p>
-                    <div style="font-size: 1.5em; font-weight: bold; color: #cd853f;">$65.000</div>
-                    <small style="color: #666;">Precio normal: $85.000</small>
-                </div>
-                
-                <div class="promo-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; border-left: 5px solid #66bb6a;">
-                    <h3 style="color: #66bb6a; margin-bottom: 15px;">Tratamiento Facial</h3>
-                    <p style="font-size: 1.1em; margin-bottom: 10px;">Limpieza + hidratación + mascarilla</p>
-                    <div style="font-size: 1.5em; font-weight: bold; color: #cd853f;">$20.000</div>
-                    <small style="color: #666;">Precio normal: $30.000</small>
+                <div v-else class="promo-banner">
+                    <i class="fas fa-gift"></i>
+                    <p>¡Próximamente nuevas promociones!</p>
+                    <button @click="abrirWhatsApp" class="btn-promo">
+                        <i class="fab fa-whatsapp"></i> Consultar por WhatsApp
+                    </button>
                 </div>
             </div>
-            
-            <div style="text-align: center; margin: 40px 0; padding: 20px; background: rgba(255,255,255,0.8); border-radius: 15px;">
-                <h3>¡Reserva tu cita ahora!</h3>
-                <p>Promociones válidas hasta fin de mes</p>
-                <a href="/login" class="btn" style="display: inline-block; padding: 15px 30px; text-decoration: none; margin-top: 15px;">
-                    <i class="fas fa-calendar-alt"></i> Reservar Cita
-                </a>
-            </div>
-        </main>
+        </section>
+
+        <footer class="footer">
+            <p>&copy; 2024 Peluquería Luna. Todos los derechos reservados.</p>
+        </footer>
     </div>
-</div>
 
-<script src="../script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script type="module" src="../landing-promociones-app.js"></script>
 </body>
 </html>

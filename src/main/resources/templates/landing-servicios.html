@@ -2,67 +2,51 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Servicios - Peluquería Luna</title>
-    <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="../style-content.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="../landing-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body style="padding-top: 80px; background: #f5f5dc; min-height: 100vh;">
-<div id="navbar"></div>
+<body>
+    <div id="app">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <i class="fas fa-cut"></i>
+                    <span>Peluquería Luna</span>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="/web/landing" class="nav-link">Inicio</a></li>
+                    <li><a href="/web/landing-servicios" class="nav-link active">Servicios</a></li>
+                    <li><a href="/web/landing-productos" class="nav-link">Productos</a></li>
+                    <li><a href="/web/landing-promociones" class="nav-link" v-if="tienePromociones">Promociones</a></li>
+                    <li><a href="/web/landing-contacto" class="nav-link">Contacto</a></li>
+                    <li><a href="/login" class="btn-login">Iniciar Sesión</a></li>
+                </ul>
+            </div>
+        </nav>
 
-<div class="content">
-    <div class="glass-container">
-        <h1 class="page-title">Nuestros Servicios</h1>
-        
-        <main style="padding: 20px;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin: 40px 0;">
-                <div class="service-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; text-align: center;">
-                    <i class="fas fa-cut" style="font-size: 3em; color: #66bb6a; margin-bottom: 15px;"></i>
-                    <h3>Cortes de Cabello</h3>
-                    <p>Cortes modernos y clásicos para hombres y mujeres. Adaptamos cada estilo a tu personalidad.</p>
-                    <div style="font-weight: bold; color: #cd853f; margin-top: 15px;">Desde $15.000</div>
-                </div>
-                
-                <div class="service-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; text-align: center;">
-                    <i class="fas fa-palette" style="font-size: 3em; color: #66bb6a; margin-bottom: 15px;"></i>
-                    <h3>Coloración</h3>
-                    <p>Tintes, mechas, balayage y técnicas de coloración con productos de primera calidad.</p>
-                    <div style="font-weight: bold; color: #cd853f; margin-top: 15px;">Desde $25.000</div>
-                </div>
-                
-                <div class="service-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; text-align: center;">
-                    <i class="fas fa-spa" style="font-size: 3em; color: #66bb6a; margin-bottom: 15px;"></i>
-                    <h3>Tratamientos Capilares</h3>
-                    <p>Hidratación, reparación y nutrición profunda para todo tipo de cabello.</p>
-                    <div style="font-weight: bold; color: #cd853f; margin-top: 15px;">Desde $20.000</div>
-                </div>
-                
-                <div class="service-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; text-align: center;">
-                    <i class="fas fa-magic" style="font-size: 3em; color: #66bb6a; margin-bottom: 15px;"></i>
-                    <h3>Peinados</h3>
-                    <p>Peinados para eventos especiales, bodas, graduaciones y ocasiones importantes.</p>
-                    <div style="font-weight: bold; color: #cd853f; margin-top: 15px;">Desde $18.000</div>
-                </div>
-                
-                <div class="service-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; text-align: center;">
-                    <i class="fas fa-user-circle" style="font-size: 3em; color: #66bb6a; margin-bottom: 15px;"></i>
-                    <h3>Cuidado Facial</h3>
-                    <p>Limpiezas faciales, tratamientos anti-edad y cuidado personalizado de la piel.</p>
-                    <div style="font-weight: bold; color: #cd853f; margin-top: 15px;">Desde $22.000</div>
-                </div>
-                
-                <div class="service-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; text-align: center;">
-                    <i class="fas fa-hand-sparkles" style="font-size: 3em; color: #66bb6a; margin-bottom: 15px;"></i>
-                    <h3>Manicure y Pedicure</h3>
-                    <p>Cuidado completo de manos y pies con esmaltado tradicional y semipermanente.</p>
-                    <div style="font-weight: bold; color: #cd853f; margin-top: 15px;">Desde $12.000</div>
+        <section class="section" style="padding-top: 100px;">
+            <div class="container">
+                <h2 class="section-title">Nuestros Servicios</h2>
+                <div class="cards-grid">
+                    <div v-for="servicio in servicios" :key="servicio.id" class="card">
+                        <i :class="getServiceIcon(servicio.nombre)"></i>
+                        <h3>{{ servicio.nombre }}</h3>
+                        <p>{{ servicio.descripcion }}</p>
+                        <p class="price">₲ {{ formatearPrecio(servicio.precio) }}</p>
+                    </div>
                 </div>
             </div>
-        </main>
-    </div>
-</div>
+        </section>
 
-<script src="../script.js"></script>
+        <footer class="footer">
+            <p>&copy; 2024 Peluquería Luna. Todos los derechos reservados.</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script type="module" src="../landing-app.js"></script>
 </body>
 </html>

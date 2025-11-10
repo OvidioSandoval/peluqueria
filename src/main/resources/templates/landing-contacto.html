@@ -2,45 +2,100 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Contacto - Peluquería Luna</title>
-    <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="../style-content.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="../landing-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body style="padding-top: 80px; background: #f5f5dc; min-height: 100vh;">
-<div id="navbar"></div>
+<body>
+    <div id="app">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <i class="fas fa-cut"></i>
+                    <span>Peluquería Luna</span>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="/web/landing" class="nav-link">Inicio</a></li>
+                    <li><a href="/web/landing-servicios" class="nav-link">Servicios</a></li>
+                    <li><a href="/web/landing-productos" class="nav-link">Productos</a></li>
+                    <li><a href="/web/landing-promociones" class="nav-link" v-if="tienePromociones">Promociones</a></li>
+                    <li><a href="/web/landing-contacto" class="nav-link active">Contacto</a></li>
+                    <li><a href="/login" class="btn-login">Iniciar Sesión</a></li>
+                </ul>
+            </div>
+        </nav>
 
-<div class="content">
-    <div class="glass-container">
-        <h1 class="page-title">Contacto</h1>
-        
-        <main style="padding: 20px;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 40px 0;">
-                <div>
-                    <h2>Información de Contacto</h2>
-                    <div style="margin: 20px 0;">
-                        <p><i class="fas fa-map-marker-alt"></i> Dirección: Calle Principal 123</p>
-                        <p><i class="fas fa-phone"></i> Teléfono: (555) 123-4567</p>
-                        <p><i class="fas fa-envelope"></i> Email: info@peluquerialuna.com</p>
-                        <p><i class="fas fa-clock"></i> Horarios: Lun-Sáb 9:00-18:00</p>
+        <section class="section" style="padding-top: 100px;">
+            <div class="container">
+                <h2 class="section-title">Contacto y Horarios</h2>
+                <div class="contact-info">
+                    <div class="info-card">
+                        <i class="fas fa-clock"></i>
+                        <h3>Horarios</h3>
+                        <p>Lunes a Viernes: 7:00 AM - 12:00 PM y 1:00 PM - 5:00 PM</p>
+                        <p>Sábados: 7:00 AM - 12:00 PM</p>
+                    </div>
+                    <div class="info-card">
+                        <i class="fas fa-phone"></i>
+                        <h3>Teléfono</h3>
+                        <p>+595 976 763 408</p>
+                        <button @click="abrirWhatsApp" class="btn-contact" style="background: #25d366;">
+                            <i class="fab fa-whatsapp"></i> WhatsApp
+                        </button>
+                    </div>
+                    <div class="info-card">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <h3>Ubicación</h3>
+                        <p>Peluquería Luna</p>
+                        <p style="font-size: 0.9rem; color: #666;">Villarrica, Paraguay</p>
+                        <button @click="abrirMaps" class="btn-contact" style="background: #4285f4; margin-top: 10px;">
+                            <i class="fas fa-map-marked-alt"></i> Ver en Maps
+                        </button>
                     </div>
                 </div>
-                
-                <div>
-                    <h2>Envíanos un Mensaje</h2>
-                    <form style="display: flex; flex-direction: column; gap: 15px;">
-                        <input type="text" placeholder="Nombre" required style="padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
-                        <input type="email" placeholder="Email" required style="padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
-                        <textarea placeholder="Mensaje" rows="5" required style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; resize: vertical;"></textarea>
-                        <button type="submit" class="btn">Enviar Mensaje</button>
-                    </form>
-                </div>
             </div>
-        </main>
-    </div>
-</div>
+        </section>
 
-<script src="../script.js"></script>
+        <footer class="footer">
+            <p>&copy; 2024 Peluquería Luna. Todos los derechos reservados.</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script type="module">
+import config from '../config.js';
+
+new Vue({
+    el: '#app',
+    data() {
+        return {
+            tienePromociones: false
+        };
+    },
+    mounted() {
+        this.verificarPromociones();
+    },
+    methods: {
+        abrirWhatsApp() {
+            const mensaje = encodeURIComponent(
+                "¡Hola! Me gustaría reservar un turno en Peluquería Luna.\n" +
+                "Horarios:\n📅 Lunes a Viernes: 7:00 AM - 12:00 PM y 1:00 PM - 5:00 PM\n📅 Sábados: 7:00 AM - 12:00 PM"
+            );
+            window.open(`https://wa.me/595976763408?text=${mensaje}`, '_blank');
+        },
+        verificarPromociones() {
+            const promocionesGuardadas = localStorage.getItem('promociones');
+            this.tienePromociones = promocionesGuardadas && JSON.parse(promocionesGuardadas).length > 0;
+        },
+        abrirMaps() {
+            const lat = -25.78422336248415;
+            const lng = -56.43555306434461;
+            window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+        }
+    }
+});
+    </script>
 </body>
 </html>

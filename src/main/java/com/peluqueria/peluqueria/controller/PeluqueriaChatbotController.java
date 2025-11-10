@@ -22,18 +22,20 @@ public class PeluqueriaChatbotController{
     }
 
     private String procesarMensaje(String msg) {
-        if (msg.contains("hola") || msg.contains("buenos días")) {
+        if (msg.contains("hola") || msg.contains("buenos") || msg.contains("buenas")) {
             return "¡Hola! Bienvenido/a a Peluquería Luna ✂️\n¿En qué puedo ayudarte?\n• servicios\n• horario\n• ubicación\n• reservar";
         } else if (msg.contains("servicio")) {
-            return "📋 Nuestros servicios:\n• Corte: $25\n• Tinte: $40\n• Peinado: $30\n• Barba: $15\nEscribe *reservar*.";
+            return "📋 Nuestros servicios:\n• Cortes de cabello\n• Coloración y tintes\n• Peinados\n• Tratamientos capilares\n• Manicure y pedicure\n\nEscribe *reservar* para agendar tu cita.";
         } else if (msg.contains("horario")) {
-            return "🕐 Lunes a Sábado: 9:00 AM - 7:00 PM\n❌ Domingo cerrado";
-        } else if (msg.contains("ubicación")) {
-            return "📍 Av. Siempre Viva 123, Ciudad Moderna\n👉 https://maps.example.com";
-        } else if (msg.contains("reservar")) {
-            return "📞 Llama al *0976763408* o escríbenos aquí tu nombre y hora preferida.";
+            return "🕐 Horarios de atención:\n📅 Lunes a Viernes: 7:00 AM - 12:00 PM y 1:00 PM - 5:00 PM\n📅 Sábados: 7:00 AM - 12:00 PM\n❌ Domingos: Cerrado";
+        } else if (msg.contains("ubicación") || msg.contains("ubicacion") || msg.contains("dirección") || msg.contains("direccion") || msg.contains("donde")) {
+            return "📍 Ubicación:\nPeluquería Luna\nVillarrica, Paraguay\n\nVer en Google Maps: https://www.google.com/maps?q=-25.78422336248415,-56.43555306434461";
+        } else if (msg.contains("reservar") || msg.contains("turno") || msg.contains("cita")) {
+            return "📞 Para reservar tu turno:\n• Llámanos: +595 976 763 408\n• WhatsApp: +595 976 763 408\n• Ubicación: Villarrica, Paraguay\n\n¡Te esperamos!";
+        } else if (msg.contains("precio") || msg.contains("costo") || msg.contains("cuanto")) {
+            return "💰 Para consultar precios específicos, por favor contáctanos al +595 976 763 408 o visita nuestra sección de servicios en la web.";
         } else {
-            return "No entendí. Usa: hola, servicios, horario, ubicación, reservar.";
+            return "No entendí tu mensaje. 🤔\nPuedes preguntar sobre:\n• servicios\n• horario\n• ubicación\n• reservar";
         }
     }
 

@@ -7,17 +7,101 @@
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="../style-content.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.css">
+
 </head>
 <body class="page-registro-promocion" style="padding-top: 80px; background: #f5f5dc; min-height: 100vh;">
 <div id="navbar"></div>
 <div id="sidebar"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.js"></script>
-
 <div class="content" id="app">
+    <div class="glass-container">
+        <h1 class="page-title"><i class="fas fa-tag"></i> Registrar Promoción</h1>
+        
+        <form class="form-container" @submit.prevent="guardar">
+            <div class="form-row">
+                <div class="form-group" style="flex: 2;">
+                    <label for="nombre">Nombre *</label>
+                    <input 
+                        type="text" 
+                        id="nombre"
+                        v-model="promocion.nombre" 
+                        required
+                        placeholder="Ej: Combo Verano"
+                        style="width: 100%;"
+                    />
+                </div>
+
+                <div class="form-group" style="flex: 1;">
+                    <label for="precio">Precio *</label>
+                    <input 
+                        type="number" 
+                        id="precio"
+                        v-model.number="promocion.precio" 
+                        required
+                        placeholder="0"
+                        style="width: 100%;"
+                    />
+                </div>
+
+                <div class="form-group" style="flex: 0.5;">
+                    <label class="checkbox-label" style="margin-top: 25px;">
+                        <input type="checkbox" v-model="promocion.activo">
+                        Activo
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Servicio</label>
+                <input 
+                    type="text" 
+                    v-model="searchServicio"
+                    @input="filtrarServicios"
+                    placeholder="Buscar servicio..."
+                    list="servicios-list"
+                    style="width: 300px;"
+                />
+                <datalist id="servicios-list">
+                    <option v-for="s in serviciosFiltrados" :key="s.id" :value="s.nombre"></option>
+                </datalist>
+                <select v-model="promocion.servicioId" style="width: 300px; margin-top: 10px;">
+                    <option value="">Seleccione un servicio</option>
+                    <option v-for="s in servicios" :key="s.id" :value="s.id">{{ s.nombre }}</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Producto</label>
+                <input 
+                    type="text" 
+                    v-model="searchProducto"
+                    @input="filtrarProductos"
+                    placeholder="Buscar producto..."
+                    list="productos-list"
+                    style="width: 300px;"
+                />
+                <datalist id="productos-list">
+                    <option v-for="p in productosFiltrados" :key="p.id" :value="p.nombre"></option>
+                </datalist>
+                <select v-model="promocion.productoId" style="width: 300px; margin-top: 10px;">
+                    <option value="">Seleccione un producto</option>
+                    <option v-for="p in productos" :key="p.id" :value="p.id">{{ p.nombre }}</option>
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar Promoción
+                </button>
+                <button type="button" class="btn btn-secondary" @click="limpiar">
+                    <i class="fas fa-broom"></i> Limpiar
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
 
 <script src="../script.js"></script>
 <script type="module" src="../registro-promocion.js"></script>
