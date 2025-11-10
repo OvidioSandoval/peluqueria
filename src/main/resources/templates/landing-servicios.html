@@ -4,47 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Servicios - Peluquería Luna</title>
-    <link rel="stylesheet" href="/landing-style-compact.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../style-content.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
-<body>
-    <div id="app">
-        <header class="header">
-            <nav class="navbar">
-                <div class="nav-brand">
-                    <h1><i class="fas fa-cut"></i> Peluquería Luna</h1>
-                </div>
-                <ul class="nav-menu">
-                    <li><a href="/web/landing">Inicio</a></li>
-                    <li><a href="/web/landing-servicios">Servicios</a></li>
-                    <li><a href="/web/landing-productos">Productos</a></li>
-                    <li><a href="/web/landing-promociones">Promociones</a></li>
-                    <li><a href="/web/landing-contacto">Contacto</a></li>
-                    <li><a href="/web/login" class="user-icon"><i class="fas fa-user"></i></a></li>
-                </ul>
-            </nav>
-        </header>
+<body style="padding-top: 80px; background: #f5f5dc; min-height: 100vh;">
+<div id="navbar"></div>
 
-        <section class="servicios" style="padding-top: 120px;">
-            <div class="container">
-                <h2><i class="fas fa-scissors"></i> Nuestros Servicios</h2>
-                <div class="servicios-grid">
-                    <div v-for="servicio in servicios" :key="servicio.id" class="servicio-card">
-                        <i :class="getServiceIcon(servicio.nombre)"></i>
-                        <h3>{{ servicio.nombre }}</h3>
-                        <p>{{ servicio.descripcion }}</p>
-                        <div class="precio">{{ formatearPrecio(servicio.precioBase || 0) }}</div>
-                    </div>
+<div class="content">
+    <div class="glass-container">
+        <h1 class="page-title">Nuestros Servicios</h1>
+        
+        <main style="padding: 20px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin: 40px 0;">
+                <div class="service-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; text-align: center;">
+                    <i class="fas fa-cut" style="font-size: 3em; color: #66bb6a; margin-bottom: 15px;"></i>
+                    <h3>Cortes de Cabello</h3>
+                    <p>Cortes modernos y clásicos para hombres y mujeres. Adaptamos cada estilo a tu personalidad.</p>
+                    <div style="font-weight: bold; color: #cd853f; margin-top: 15px;">Desde $15.000</div>
+                </div>
+                
+                <div class="service-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; text-align: center;">
+                    <i class="fas fa-palette" style="font-size: 3em; color: #66bb6a; margin-bottom: 15px;"></i>
+                    <h3>Coloración</h3>
+                    <p>Tintes, mechas, balayage y técnicas de coloración con productos de primera calidad.</p>
+                    <div style="font-weight: bold; color: #cd853f; margin-top: 15px;">Desde $25.000</div>
+                </div>
+                
+                <div class="service-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; text-align: center;">
+                    <i class="fas fa-spa" style="font-size: 3em; color: #66bb6a; margin-bottom: 15px;"></i>
+                    <h3>Tratamientos Capilares</h3>
+                    <p>Hidratación, reparación y nutrición profunda para todo tipo de cabello.</p>
+                    <div style="font-weight: bold; color: #cd853f; margin-top: 15px;">Desde $20.000</div>
+                </div>
+                
+                <div class="service-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; text-align: center;">
+                    <i class="fas fa-magic" style="font-size: 3em; color: #66bb6a; margin-bottom: 15px;"></i>
+                    <h3>Peinados</h3>
+                    <p>Peinados para eventos especiales, bodas, graduaciones y ocasiones importantes.</p>
+                    <div style="font-weight: bold; color: #cd853f; margin-top: 15px;">Desde $18.000</div>
+                </div>
+                
+                <div class="service-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; text-align: center;">
+                    <i class="fas fa-user-circle" style="font-size: 3em; color: #66bb6a; margin-bottom: 15px;"></i>
+                    <h3>Cuidado Facial</h3>
+                    <p>Limpiezas faciales, tratamientos anti-edad y cuidado personalizado de la piel.</p>
+                    <div style="font-weight: bold; color: #cd853f; margin-top: 15px;">Desde $22.000</div>
+                </div>
+                
+                <div class="service-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; text-align: center;">
+                    <i class="fas fa-hand-sparkles" style="font-size: 3em; color: #66bb6a; margin-bottom: 15px;"></i>
+                    <h3>Manicure y Pedicure</h3>
+                    <p>Cuidado completo de manos y pies con esmaltado tradicional y semipermanente.</p>
+                    <div style="font-weight: bold; color: #cd853f; margin-top: 15px;">Desde $12.000</div>
                 </div>
             </div>
-        </section>
-
-        <div class="whatsapp-float" @click="abrirWhatsApp()">
-            <i class="fab fa-whatsapp"></i>
-        </div>
+        </main>
     </div>
+</div>
 
-    <script type="module" src="/landing-app.js"></script>
+<script src="../script.js"></script>
 </body>
 </html>

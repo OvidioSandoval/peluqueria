@@ -1,0 +1,1 @@
+-- todo los cambios solicitados verificar si se aplico de forma correcta a toda las paginas afectadas, sin necida deestar verificancdo de forma manual

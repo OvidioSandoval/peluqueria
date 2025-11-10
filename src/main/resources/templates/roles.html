@@ -1,29 +1,66 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roles</title>
-  <link rel="stylesheet" href="/style.css">
-  <link rel="stylesheet" href="/style-content.css">
-  
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Roles - Peluquería Luna</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../style-content.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
-<body class="page-roles" style="padding-top: 80px; background: linear-gradient(135deg, #fce4ec, #f8bbd9); min-height: 100vh;">
+<body class="page-roles" style="padding-top: 80px; background: #f5f5dc; min-height: 100vh;">
 <div id="navbar"></div>
-<div id="sidebar"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
 <div class="content" id="app">
+    <div class="glass-container">
+        <h1 class="page-title">Gestión de Roles</h1>
+        <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
+        
+        <main style="padding: 20px;">
+            <div class="filters-container" style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap; width: fit-content; padding: 15px; margin: 15px 0; background: #f5f5dc; backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3);">
+                <div class="filter-group" style="flex: none; width: auto;">
+                    <label>Buscar Rol:</label>
+                    <input type="text" v-model="filtroBusqueda" @input="filtrarRoles" placeholder="Buscar por nombre..." class="search-bar" style="width: 300px;"/>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: end;">
+                    <button @click="mostrarFormulario = true" class="btn btn-small">
+                        <i class="fas fa-plus"></i> Nuevo Rol
+                    </button>
+                    <button @click="exportarPDF" class="btn btn-small">
+                        <i class="fas fa-file-pdf"></i> Exportar PDF
+                    </button>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Permisos</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="rol in rolesFiltrados" :key="rol.id">
+                        <td>{{ capitalizarTexto(rol.nombre) }}</td>
+                        <td>{{ rol.descripcion }}</td>
+                        <td>{{ rol.permisos ? rol.permisos.length : 0 }} permisos</td>
+                        <td>
+                            <button @click="editarRol(rol)" class="btn-small btn-edit">Editar</button>
+                            <button @click="eliminarRol(rol.id)" class="btn-small btn-danger">Eliminar</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </main>
+    </div>
 </div>
 
-<script src="/script.js"></script>
-<script type="module" src="/app-roles.js"></script>
-
+<script src="../script.js"></script>
+<script type="module" src="../roles-app.js"></script>
 </body>
 </html>

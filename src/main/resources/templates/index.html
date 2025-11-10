@@ -2,66 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Peluquería Luna</title>
 </head>
 <body>
-<script type="module" src="/landing-app.js">
-const express = require('express');
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
-const app = express();
-const fs = require('fs');
-
-app.use(express.json());
-
-let sock = null;
-
-async function startBot() {
-const { state, saveCreds } = await useMultiFileAuthState('./auth');
-
-sock = makeWASocket({
-auth: state,
-printQRInTerminal: true,
-syncFullHistory: false
-});
-
-sock.ev.process(async (ev) => {
-if (ev['connection.update']) {
-const { connection, lastDisconnect } = ev['connection.update'];
-console.log('Conexión:', connection);
-if (connection === 'close') {
-const shouldReconnect = lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut;
-if (shouldReconnect) setTimeout(startBot, 3000);
-}
-}
-if (ev['creds.update']) await saveCreds();
-});
-}
-
-startBot();
-
-// Escuchar mensajes entrantes
-sock?.ev.on('messages.upsert', async (chatUpdate) => {
-const msg = chatUpdate.messages[0];
-if (!msg.key.fromMe && msg.message) {
-const from = msg.key.remoteJid;
-const body = msg.message.conversation || msg.message.extendedTextMessage?.text || '';
-
-let reply = '';
-const lower = body.toLowerCase();
-
-if (lower.includes('hola')) reply = "¡Hola! Gracias por contactar a Peluquería Luna. ¿Necesitas servicios, horario o reservar?";
-else if (lower.includes('gracias')) reply = "¡De nada! Estamos para servirte.";
-else if (lower.includes('reservar')) reply = "Para agendar, llama al 0976763408 o envía tu nombre y hora.";
-else reply = "Gracias por tu mensaje. Te responderemos pronto.";
-
-if (reply) await sock.sendMessage(from, { text: reply }, { quoted: msg });
-}
-});
-
-// Iniciar servidor
-app.listen(3001, () => {
-console.log("✅ Bot de WhatsApp listo en puerto 3001");
-});
-</script>
+<script type="module" src="../landing-app.js"></script>
 </body>
 </html>

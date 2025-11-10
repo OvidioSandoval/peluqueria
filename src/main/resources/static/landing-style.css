@@ -7,7 +7,7 @@
 body {
     font-family: 'Arial', sans-serif;
     line-height: 1.6;
-    color: #333;
+    color: #8b4513;
 }
 
 .container {
@@ -18,7 +18,7 @@ body {
 
 /* Header */
 .header {
-    background: linear-gradient(135deg, #fce4ec, #f8bbd9);
+    background: linear-gradient(135deg, #f5f5dc, #ddbf94);
     position: fixed;
     top: 0;
     width: 100%;
@@ -34,7 +34,7 @@ body {
 }
 
 .nav-brand h1 {
-    color: #5d4037;
+    color: #8b4513;
     font-size: 1.8rem;
 }
 
@@ -46,17 +46,17 @@ body {
 
 .nav-menu a {
     text-decoration: none;
-    color: #5d4037;
+    color: #8b4513;
     font-weight: 500;
     transition: color 0.3s;
 }
 
 .nav-menu a:hover {
-    color: #e91e63;
+    color: #cd853f;
 }
 
 .user-icon {
-    background: #e91e63;
+    background: #cd853f;
     color: white !important;
     padding: 8px 12px;
     border-radius: 50%;
@@ -65,14 +65,14 @@ body {
 }
 
 .user-icon:hover {
-    background: #c2185b !important;
+    background: #a0522d !important;
     color: white !important;
     transform: scale(1.1);
 }
 
 /* Hero Section */
 .hero {
-    background: linear-gradient(135deg, #fce4ec, #f8bbd9);
+    background: linear-gradient(135deg, #f5f5dc, #ddbf94);
     height: 100vh;
     display: flex;
     align-items: center;
@@ -83,13 +83,13 @@ body {
 
 .hero-content h1 {
     font-size: 3.5rem;
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 1rem;
 }
 
 .hero-content p {
     font-size: 1.3rem;
-    color: #666;
+    color: #8b4513;
     margin-bottom: 2rem;
 }
 
@@ -112,23 +112,23 @@ body {
 }
 
 .btn-primary {
-    background: #e91e63;
+    background: #cd853f;
     color: white;
 }
 
 .btn-primary:hover {
-    background: #c2185b;
+    background: #a0522d;
     transform: translateY(-2px);
 }
 
 .btn-secondary {
     background: transparent;
-    color: #5d4037;
-    border: 2px solid #5d4037;
+    color: #8b4513;
+    border: 2px solid #8b4513;
 }
 
 .btn-secondary:hover {
-    background: #5d4037;
+    background: #8b4513;
     color: white;
 }
 
@@ -140,7 +140,7 @@ body {
 
 .horarios h2 {
     text-align: center;
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 3rem;
     font-size: 2.5rem;
 }
@@ -154,7 +154,7 @@ body {
 }
 
 .horario-item {
-    background: #fce4ec;
+    background: #f5f5dc;
     padding: 2rem;
     border-radius: 15px;
     text-align: center;
@@ -162,26 +162,26 @@ body {
 }
 
 .horario-item h3 {
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 1rem;
     font-size: 1.5rem;
 }
 
 .horario-item p {
     font-size: 1.2rem;
-    color: #666;
+    color: #8b4513;
     margin: 0.5rem 0;
 }
 
 /* Promociones */
 .promociones {
     padding: 4rem 0;
-    background: linear-gradient(135deg, #f8bbd9, #fce4ec);
+    background: linear-gradient(135deg, #ddbf94, #f5f5dc);
 }
 
 .promociones h2 {
     text-align: center;
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 3rem;
     font-size: 2.5rem;
 }
@@ -193,7 +193,7 @@ body {
 }
 
 .promo-card {
-    background: #fce4ec;
+    background: #f5f5dc;
     padding: 2rem;
     border-radius: 15px;
     text-align: center;
@@ -206,7 +206,7 @@ body {
 }
 
 .promo-card h3 {
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 1rem;
     font-size: 1.5rem;
 }
@@ -223,7 +223,7 @@ body {
 }
 
 .precio-ahora {
-    color: #e91e63;
+    color: #cd853f;
     font-size: 1.5rem;
     font-weight: bold;
 }
@@ -236,7 +236,7 @@ body {
 
 .servicios h2 {
     text-align: center;
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 3rem;
     font-size: 2.5rem;
 }
@@ -248,7 +248,7 @@ body {
 }
 
 .servicio-card {
-    background: #fce4ec;
+    background: #f5f5dc;
     padding: 2rem;
     border-radius: 15px;
     text-align: center;
@@ -261,17 +261,17 @@ body {
 
 .servicio-card i {
     font-size: 3rem;
-    color: #e91e63;
+    color: #cd853f;
     margin-bottom: 1rem;
 }
 
 .servicio-card h3 {
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 1rem;
 }
 
 .servicio-card .precio {
-    color: #e91e63;
+    color: #cd853f;
     font-size: 1.3rem;
     font-weight: bold;
     margin-top: 1rem;
@@ -280,12 +280,12 @@ body {
 /* Productos */
 .productos {
     padding: 4rem 0;
-    background: linear-gradient(135deg, #f8bbd9, #fce4ec);
+    background: linear-gradient(135deg, #ddbf94, #f5f5dc);
 }
 
 .productos h2 {
     text-align: center;
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 3rem;
     font-size: 2.5rem;
 }
@@ -297,7 +297,7 @@ body {
 }
 
 .producto-card {
-    background: #fce4ec;
+    background: #f5f5dc;
     padding: 2rem;
     border-radius: 15px;
     text-align: center;
@@ -310,17 +310,17 @@ body {
 
 .producto-card i {
     font-size: 3rem;
-    color: #e91e63;
+    color: #cd853f;
     margin-bottom: 1rem;
 }
 
 .producto-card h3 {
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 1rem;
 }
 
 .producto-card .precio {
-    color: #e91e63;
+    color: #cd853f;
     font-size: 1.3rem;
     font-weight: bold;
     margin-top: 1rem;
@@ -348,7 +348,7 @@ body {
 
 .contacto h2 {
     text-align: center;
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 3rem;
     font-size: 2.5rem;
 }
@@ -368,7 +368,7 @@ body {
 
 .contacto-item i {
     font-size: 1.5rem;
-    color: #e91e63;
+    color: #cd853f;
 }
 
 /* WhatsApp Float */

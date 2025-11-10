@@ -4,48 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Promociones - Peluquería Luna</title>
-    <link rel="stylesheet" href="/landing-style-compact.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../style-content.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
-<body>
-    <div id="app">
-        <header class="header">
-            <nav class="navbar">
-                <div class="nav-brand">
-                    <h1><i class="fas fa-cut"></i> Peluquería Luna</h1>
-                </div>
-                <ul class="nav-menu">
-                    <li><a href="/web/landing">Inicio</a></li>
-                    <li><a href="/web/landing-servicios">Servicios</a></li>
-                    <li><a href="/web/landing-productos">Productos</a></li>
-                    <li><a href="/web/landing-promociones">Promociones</a></li>
-                    <li><a href="/web/landing-contacto">Contacto</a></li>
-                    <li><a href="/web/login" class="user-icon"><i class="fas fa-user"></i></a></li>
-                </ul>
-            </nav>
-        </header>
+<body style="padding-top: 80px; background: #f5f5dc; min-height: 100vh;">
+<div id="navbar"></div>
 
-        <section class="promociones" style="padding-top: 120px;">
-            <div class="container">
-                <h2><i class="fas fa-tags"></i> Promociones Especiales</h2>
-                <div class="promociones-grid">
-                    <div v-for="promo in promociones" :key="promo.id" class="promo-card">
-                        <h3>{{ capitalizarTexto(promo.titulo) }}</h3>
-                        <p>{{ capitalizarTexto(promo.descripcion) }}</p>
-                        <div class="precio">
-                            <span class="precio-ahora">{{ formatearPrecio(promo.precio) }}</span>
-                        </div>
-                    </div>
+<div class="content">
+    <div class="glass-container">
+        <h1 class="page-title">Promociones Especiales</h1>
+        
+        <main style="padding: 20px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; margin: 40px 0;">
+                <div class="promo-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; border-left: 5px solid #66bb6a;">
+                    <h3 style="color: #66bb6a; margin-bottom: 15px;">Corte + Peinado</h3>
+                    <p style="font-size: 1.1em; margin-bottom: 10px;">Corte profesional + peinado de tu elección</p>
+                    <div style="font-size: 1.5em; font-weight: bold; color: #cd853f;">$25.000</div>
+                    <small style="color: #666;">Precio normal: $35.000</small>
+                </div>
+                
+                <div class="promo-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; border-left: 5px solid #66bb6a;">
+                    <h3 style="color: #66bb6a; margin-bottom: 15px;">Coloración Completa</h3>
+                    <p style="font-size: 1.1em; margin-bottom: 10px;">Tinte + mechas + tratamiento hidratante</p>
+                    <div style="font-size: 1.5em; font-weight: bold; color: #cd853f;">$45.000</div>
+                    <small style="color: #666;">Precio normal: $60.000</small>
+                </div>
+                
+                <div class="promo-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; border-left: 5px solid #66bb6a;">
+                    <h3 style="color: #66bb6a; margin-bottom: 15px;">Paquete Completo</h3>
+                    <p style="font-size: 1.1em; margin-bottom: 10px;">Corte + color + tratamiento + peinado</p>
+                    <div style="font-size: 1.5em; font-weight: bold; color: #cd853f;">$65.000</div>
+                    <small style="color: #666;">Precio normal: $85.000</small>
+                </div>
+                
+                <div class="promo-card" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; border-left: 5px solid #66bb6a;">
+                    <h3 style="color: #66bb6a; margin-bottom: 15px;">Tratamiento Facial</h3>
+                    <p style="font-size: 1.1em; margin-bottom: 10px;">Limpieza + hidratación + mascarilla</p>
+                    <div style="font-size: 1.5em; font-weight: bold; color: #cd853f;">$20.000</div>
+                    <small style="color: #666;">Precio normal: $30.000</small>
                 </div>
             </div>
-        </section>
-
-        <div class="whatsapp-float" @click="abrirWhatsApp()">
-            <i class="fab fa-whatsapp"></i>
-        </div>
+            
+            <div style="text-align: center; margin: 40px 0; padding: 20px; background: rgba(255,255,255,0.8); border-radius: 15px;">
+                <h3>¡Reserva tu cita ahora!</h3>
+                <p>Promociones válidas hasta fin de mes</p>
+                <a href="/login" class="btn" style="display: inline-block; padding: 15px 30px; text-decoration: none; margin-top: 15px;">
+                    <i class="fas fa-calendar-alt"></i> Reservar Cita
+                </a>
+            </div>
+        </main>
     </div>
+</div>
 
-    <script type="module" src="/landing-promociones-app.js"></script>
+<script src="../script.js"></script>
 </body>
 </html>

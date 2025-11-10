@@ -14,7 +14,7 @@ public class FrontController {
     @GetMapping("/")
     public String mostrarIndex(Model model) {
         LOGGER.info("IN: [{}]");
-        return "panel-control";
+        return "landing";
     }
 
     // Encoded URLs

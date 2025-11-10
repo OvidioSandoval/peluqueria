@@ -1,27 +1,51 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registrar Usuario</title>
-  <link rel="stylesheet" href="/style.css">
-  <link rel="stylesheet" href="/style-content.css">
-  
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Usuario - Peluquería Luna</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../style-content.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
 </head>
-<body class="page-registro-usuario" style="padding-top: 80px; background: linear-gradient(135deg, #fce4ec, #f8bbd9); min-height: 100vh;">
+<body class="page-registro" style="padding-top: 80px; background: #f5f5dc; min-height: 100vh;">
 <div id="navbar"></div>
-<div id="sidebar"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.js"></script>
 
 <div class="content" id="app">
+    <div class="glass-container">
+        <h1 class="page-title">Registro de Usuario</h1>
+        <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
+        
+        <main style="padding: 20px;">
+            <form @submit.prevent="registrarUsuario" class="form-registro">
+                <div class="form-group">
+                    <label>Nombre:</label>
+                    <input type="text" v-model="usuario.nombre" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" v-model="usuario.email" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Contraseña:</label>
+                    <input type="password" v-model="usuario.password" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Rol:</label>
+                    <select v-model="usuario.rol" required class="form-control">
+                        <option value="ADMIN">Administrador</option>
+                        <option value="EMPLEADO">Empleado</option>
+                        <option value="CLIENTE">Cliente</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Registrar Usuario</button>
+            </form>
+        </main>
+    </div>
 </div>
 
-<script src="/script.js"></script>
-<script type="module" src="/registro-usuario.js"></script>
-
+<script src="../script.js"></script>
+<script type="module" src="../registro-usuario-app.js"></script>
 </body>
 </html>

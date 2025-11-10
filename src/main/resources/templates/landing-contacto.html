@@ -4,69 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contacto - Peluquería Luna</title>
-    <link rel="stylesheet" href="/landing-style-compact.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../style-content.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
-<body>
-    <div id="app">
-        <header class="header">
-            <nav class="navbar">
-                <div class="nav-brand">
-                    <h1><i class="fas fa-cut"></i> Peluquería Luna</h1>
-                </div>
-                <ul class="nav-menu">
-                    <li><a href="/web/landing">Inicio</a></li>
-                    <li><a href="/web/landing-servicios">Servicios</a></li>
-                    <li><a href="/web/landing-productos">Productos</a></li>
-                    <li><a href="/web/landing-promociones">Promociones</a></li>
-                    <li><a href="/web/landing-contacto">Contacto</a></li>
-                    <li><a href="/web/login" class="user-icon"><i class="fas fa-user"></i></a></li>
-                </ul>
-            </nav>
-        </header>
+<body style="padding-top: 80px; background: #f5f5dc; min-height: 100vh;">
+<div id="navbar"></div>
 
-        <section class="contacto" style="padding-top: 100px;">
-            <div class="container">
-                <h2><i class="fas fa-phone"></i> Contacto</h2>
-                <div class="contacto-info">
-                    <div class="contacto-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <p>Dirección: TTE. Fariña</p>
+<div class="content">
+    <div class="glass-container">
+        <h1 class="page-title">Contacto</h1>
+        
+        <main style="padding: 20px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 40px 0;">
+                <div>
+                    <h2>Información de Contacto</h2>
+                    <div style="margin: 20px 0;">
+                        <p><i class="fas fa-map-marker-alt"></i> Dirección: Calle Principal 123</p>
+                        <p><i class="fas fa-phone"></i> Teléfono: (555) 123-4567</p>
+                        <p><i class="fas fa-envelope"></i> Email: info@peluquerialuna.com</p>
+                        <p><i class="fas fa-clock"></i> Horarios: Lun-Sáb 9:00-18:00</p>
                     </div>
-                    <div class="contacto-item" style="cursor: pointer;" @click="abrirInstagram()">
-                        <i class="fab fa-instagram"></i>
-                        <p>Instagram: _soelsandoval</p>
-                    </div>
-                    <div class="contacto-item" style="cursor: pointer;" @click="abrirWhatsApp()">
-                        <i class="fab fa-whatsapp"></i>
-                        <p>WhatsApp: 0976763408</p>
-                    </div>
+                </div>
+                
+                <div>
+                    <h2>Envíanos un Mensaje</h2>
+                    <form style="display: flex; flex-direction: column; gap: 15px;">
+                        <input type="text" placeholder="Nombre" required style="padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                        <input type="email" placeholder="Email" required style="padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                        <textarea placeholder="Mensaje" rows="5" required style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; resize: vertical;"></textarea>
+                        <button type="submit" class="btn">Enviar Mensaje</button>
+                    </form>
                 </div>
             </div>
-        </section>
-
-
-
-        <div class="whatsapp-float" @click="abrirWhatsApp()">
-            <i class="fab fa-whatsapp"></i>
-        </div>
+        </main>
     </div>
+</div>
 
-    <script>
-        new Vue({
-            el: '#app',
-            methods: {
-                abrirWhatsApp() {
-                    const mensaje = '¡Hola! 💈 Me interesa conocer más sobre los servicios de Peluquería Luna. ¿Podrían brindarme información sobre horarios y precios? ✨';
-                    const url = `https://wa.me/595976763408?text=${encodeURIComponent(mensaje)}`;
-                    window.open(url, '_blank');
-                },
-                abrirInstagram() {
-                    window.open('https://www.instagram.com/_soelsandoval', '_blank');
-                }
-            }
-        });
-    </script>
+<script src="../script.js"></script>
 </body>
 </html>

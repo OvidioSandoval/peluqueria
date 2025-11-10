@@ -1,76 +1,162 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reportes</title>
-  <link rel="stylesheet" href="/style.css">
-  <link rel="stylesheet" href="/style-content.css">
-  
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes - Peluquería Luna</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../style-content.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
-<body class="page-reportes" style="padding-top: 80px; background: linear-gradient(135deg, #fce4ec, #f8bbd9); min-height: 100vh;">
+<body class="page-reportes" style="padding-top: 80px; background: #f5f5dc; min-height: 100vh;">
 <div id="navbar"></div>
-<div id="sidebar"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.js"></script>
+<div class="content" id="app">
+    <div class="glass-container">
+        <h1 class="page-title">Reportes del Sistema</h1>
+        <button @click="window.history.back()" class="btn"><i class="fas fa-arrow-left"></i> Volver</button>
+        
+        <main style="padding: 20px;">
+            <div class="filters-container" style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap; width: fit-content; padding: 15px; margin: 15px 0; background: #f5f5dc; backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(233, 30, 99, 0.1); border: 1px solid rgba(179, 229, 252, 0.3);">
+                <div class="filter-group" style="flex: none; width: auto;">
+                    <label>Tipo de Reporte:</label>
+                    <select v-model="tipoReporte" @change="cargarReporte" class="search-bar" style="width: 200px;">
+                        <option value="ventas">Ventas</option>
+                        <option value="citas">Citas</option>
+                        <option value="productos">Productos</option>
+                        <option value="empleados">Empleados</option>
+                    </select>
+                </div>
+                <div class="filter-group" style="flex: none; width: auto;">
+                    <label>Fecha Desde:</label>
+                    <input type="date" v-model="fechaDesde" @change="cargarReporte" class="search-bar" style="width: 150px;"/>
+                </div>
+                <div class="filter-group" style="flex: none; width: auto;">
+                    <label>Fecha Hasta:</label>
+                    <input type="date" v-model="fechaHasta" @change="cargarReporte" class="search-bar" style="width: 150px;"/>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: end;">
+                    <button @click="exportarPDF" class="btn btn-small">
+                        <i class="fas fa-file-pdf"></i> Exportar PDF
+                    </button>
+                    <button @click="cargarReporte" class="btn btn-small">
+                        <i class="fas fa-sync"></i> Actualizar
+                    </button>
+                </div>
+            </div>
 
-<div class="content" id="app"></div>
+            <div v-if="tipoReporte === 'ventas'">
+                <h3>Reporte de Ventas</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Servicio</th>
+                            <th>Empleado</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="venta in reporteData" :key="venta.id">
+                            <td>{{ formatearFecha(venta.fecha) }}</td>
+                            <td>{{ venta.cliente }}</td>
+                            <td>{{ venta.servicio }}</td>
+                            <td>{{ venta.empleado }}</td>
+                            <td>{{ formatearPrecio(venta.total) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="resumen" style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.8); border-radius: 10px;">
+                    <h4>Resumen</h4>
+                    <p><strong>Total de Ventas:</strong> {{ totalVentas }}</p>
+                    <p><strong>Ingresos Totales:</strong> {{ formatearPrecio(ingresosTotales) }}</p>
+                </div>
+            </div>
 
-<script src="/script.js"></script>
-<script type="module" src="/reportes.js"></script>
+            <div v-if="tipoReporte === 'citas'">
+                <h3>Reporte de Citas</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Cliente</th>
+                            <th>Servicio</th>
+                            <th>Empleado</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="cita in reporteData" :key="cita.id">
+                            <td>{{ formatearFecha(cita.fecha) }}</td>
+                            <td>{{ cita.hora }}</td>
+                            <td>{{ cita.cliente }}</td>
+                            <td>{{ cita.servicio }}</td>
+                            <td>{{ cita.empleado }}</td>
+                            <td><span :class="'estado-' + cita.estado">{{ cita.estado }}</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-<style>
-.reportes-nav .btn.active {
-  background: linear-gradient(135deg, #4fc3f7, #29b6f6) !important;
-  color: white !important;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(79, 195, 247, 0.4);
-}
+            <div v-if="tipoReporte === 'productos'">
+                <h3>Reporte de Productos</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Stock Actual</th>
+                            <th>Stock Mínimo</th>
+                            <th>Precio</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="producto in reporteData" :key="producto.id">
+                            <td>{{ producto.nombre }}</td>
+                            <td>{{ producto.categoria }}</td>
+                            <td>{{ producto.stock }}</td>
+                            <td>{{ producto.stockMinimo }}</td>
+                            <td>{{ formatearPrecio(producto.precio) }}</td>
+                            <td><span :class="producto.stock <= producto.stockMinimo ? 'estado-bajo' : 'estado-ok'">{{ producto.stock <= producto.stockMinimo ? 'Stock Bajo' : 'OK' }}</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  min-width: fit-content;
-}
+            <div v-if="tipoReporte === 'empleados'">
+                <h3>Reporte de Empleados</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Empleado</th>
+                            <th>Área</th>
+                            <th>Citas Atendidas</th>
+                            <th>Ventas Realizadas</th>
+                            <th>Ingresos Generados</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="empleado in reporteData" :key="empleado.id">
+                            <td>{{ empleado.nombre }}</td>
+                            <td>{{ empleado.area }}</td>
+                            <td>{{ empleado.citasAtendidas }}</td>
+                            <td>{{ empleado.ventasRealizadas }}</td>
+                            <td>{{ formatearPrecio(empleado.ingresosGenerados) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</div>
 
-.filter-group label {
-  font-weight: bold;
-  margin-bottom: 5px;
-  color: #66bb6a;
-}
-
-.search-bar {
-  padding: 8px 12px;
-  border: 2px solid #b3e5fc;
-  border-radius: 12px;
-  font-size: 14px;
-  background: rgba(255, 255, 255, 0.95);
-  color: #66bb6a;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.search-bar:focus {
-  border-color: #81d4fa;
-  box-shadow: 0 0 15px rgba(129, 212, 250, 0.3);
-  transform: translateY(-1px);
-  outline: none;
-}
-
-.loading {
-  text-align: center;
-  padding: 40px;
-  font-size: 18px;
-  color: #66bb6a;
-}
-</style>
-
+<script src="../script.js"></script>
+<script type="module" src="../reportes-app.js"></script>
 </body>
 </html>
-
-

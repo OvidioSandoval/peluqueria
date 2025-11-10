@@ -7,8 +7,8 @@
 body {
     font-family: 'Arial', sans-serif;
     line-height: 1.4;
-    color: #333;
-    background: linear-gradient(135deg, #fce4ec, #f8bbd9);
+    color: #8b4513;
+    background: linear-gradient(135deg, #f5f5dc, #ddbf94);
     min-height: 100vh;
 }
 
@@ -20,7 +20,7 @@ body {
 
 /* Header - Reduced height */
 .header {
-    background: linear-gradient(135deg, #fce4ec, #f8bbd9);
+    background: linear-gradient(135deg, #f5f5dc, #ddbf94);
     position: fixed;
     top: 0;
     width: 100%;
@@ -36,7 +36,7 @@ body {
 }
 
 .nav-brand h1 {
-    color: #5d4037;
+    color: #8b4513;
     font-size: 1.4rem;
 }
 
@@ -48,18 +48,18 @@ body {
 
 .nav-menu a {
     text-decoration: none;
-    color: #5d4037;
+    color: #8b4513;
     font-weight: 500;
     font-size: 0.9rem;
     transition: color 0.3s;
 }
 
 .nav-menu a:hover {
-    color: #e91e63;
+    color: #cd853f;
 }
 
 .user-icon {
-    background: #e91e63;
+    background: #cd853f;
     color: white !important;
     padding: 6px 10px;
     border-radius: 50%;
@@ -68,14 +68,14 @@ body {
 }
 
 .user-icon:hover {
-    background: #c2185b !important;
+    background: #a0522d !important;
     color: white !important;
     transform: scale(1.1);
 }
 
 /* Hero Section - Reduced height */
 .hero {
-    background: linear-gradient(135deg, #fce4ec, #f8bbd9);
+    background: linear-gradient(135deg, #f5f5dc, #ddbf94);
     height: 70vh;
     display: flex;
     align-items: center;
@@ -86,13 +86,13 @@ body {
 
 .hero-content h1 {
     font-size: 2.5rem;
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 0.5rem;
 }
 
 .hero-content p {
     font-size: 1.1rem;
-    color: #666;
+    color: #8b4513;
     margin-bottom: 1.5rem;
 }
 
@@ -115,23 +115,23 @@ body {
 }
 
 .btn-primary {
-    background: #e91e63;
+    background: #cd853f;
     color: white;
 }
 
 .btn-primary:hover {
-    background: #c2185b;
+    background: #a0522d;
     transform: translateY(-2px);
 }
 
 .btn-secondary {
     background: transparent;
-    color: #5d4037;
-    border: 2px solid #5d4037;
+    color: #8b4513;
+    border: 2px solid #8b4513;
 }
 
 .btn-secondary:hover {
-    background: #5d4037;
+    background: #8b4513;
     color: white;
 }
 
@@ -143,7 +143,7 @@ body {
 
 .horarios h2 {
     text-align: center;
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 1.5rem;
     font-size: 1.8rem;
 }
@@ -165,14 +165,14 @@ body {
 }
 
 .horario-item h3 {
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 0.8rem;
     font-size: 1.3rem;
 }
 
 .horario-item p {
     font-size: 1rem;
-    color: #666;
+    color: #8b4513;
     margin: 0.3rem 0;
 }
 
@@ -184,7 +184,7 @@ body {
 
 .promociones h2 {
     text-align: center;
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 1.5rem;
     font-size: 1.8rem;
 }
@@ -209,7 +209,7 @@ body {
 }
 
 .promo-card h3 {
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 0.8rem;
     font-size: 1.3rem;
 }
@@ -231,7 +231,7 @@ body {
 }
 
 .precio-ahora {
-    color: #e91e63;
+    color: #cd853f;
     font-size: 1.3rem;
     font-weight: bold;
 }
@@ -244,7 +244,7 @@ body {
 
 .servicios h2 {
     text-align: center;
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 1.5rem;
     font-size: 1.8rem;
 }
@@ -269,12 +269,12 @@ body {
 
 .servicio-card i {
     font-size: 2.2rem;
-    color: #e91e63;
+    color: #cd853f;
     margin-bottom: 0.8rem;
 }
 
 .servicio-card h3 {
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 0.8rem;
     font-size: 1.2rem;
 }
@@ -285,7 +285,7 @@ body {
 }
 
 .servicio-card .precio {
-    color: #e91e63;
+    color: #cd853f;
     font-size: 1.2rem;
     font-weight: bold;
     margin-top: 0.8rem;
@@ -299,7 +299,7 @@ body {
 
 .productos h2 {
     text-align: center;
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 1.5rem;
     font-size: 1.8rem;
 }
@@ -324,12 +324,12 @@ body {
 
 .producto-card i {
     font-size: 2.2rem;
-    color: #e91e63;
+    color: #cd853f;
     margin-bottom: 0.8rem;
 }
 
 .producto-card h3 {
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 0.8rem;
     font-size: 1.2rem;
 }
@@ -340,7 +340,7 @@ body {
 }
 
 .producto-card .precio {
-    color: #e91e63;
+    color: #cd853f;
     font-size: 1.2rem;
     font-weight: bold;
     margin-top: 0.8rem;
@@ -368,7 +368,7 @@ body {
 
 .contacto h2 {
     text-align: center;
-    color: #5d4037;
+    color: #8b4513;
     margin-bottom: 1.5rem;
     font-size: 1.8rem;
 }
@@ -388,7 +388,7 @@ body {
 
 .contacto-item i {
     font-size: 1.3rem;
-    color: #e91e63;
+    color: #cd853f;
 }
 
 /* WhatsApp Float - Slightly smaller */
